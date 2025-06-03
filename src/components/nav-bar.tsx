@@ -2,7 +2,7 @@
 import Link from "next/link";
 import React from "react";
 
-// import ThemeToggle from "./ThemeToggle";
+import ThemeToggle from "./theme-toggler";
 // import AuthButton from "./AuthButton";
 // import StarUs from "./StarUs";
 
@@ -20,7 +20,7 @@ const NavBar: React.FC = () => {
           </Link>
           <div className="flex flex-row items-center justify-center gap-1">
             {/* <StarUs /> */}
-            {/* <ThemeToggle /> */}
+            <ThemeToggle />
             {/* <AuthButton /> */}
             <span>star</span>
             <span>theme</span>

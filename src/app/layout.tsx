@@ -5,6 +5,7 @@ import { Geist } from "next/font/google";
 
 import { TRPCReactProvider } from "~/trpc/react";
 import NavBar from "~/components/nav-bar";
+import { ThemeProvider as NextThemeProvider } from "~/components/theme-provider";
 
 export const metadata: Metadata = {
   title: "🥟 UNSUCKify",
@@ -21,11 +22,18 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${geist.variable}`}>
+    <html lang="en" className={`${geist.variable}`} suppressHydrationWarning>
       <body>
         <TRPCReactProvider>
-          <NavBar />
-          {children}
+          <NextThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <NavBar />
+            {children}
+          </NextThemeProvider>
         </TRPCReactProvider>
       </body>
     </html>
