@@ -16,6 +16,14 @@ export function generateRandomString(length: number) {
   return result;
 }
 
-export function errorResponseJson(error: string, status_code: number) {
+export function getInitials(name: string) {
+  return name
+    .split(" ")
+    .filter((word) => word.length > 0) // Filter out empty strings
+    .map((word) => word[0].toUpperCase())
+    .join("");
+}
+
+export function assertError(error: string, status_code: number) {
   return Response.json({ error }, { status: status_code });
 }

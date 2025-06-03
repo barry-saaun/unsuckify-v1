@@ -4,7 +4,7 @@ import { env } from "~/env";
 
 import { cookies } from "next/headers";
 import { tryCatch } from "~/lib/try-catch";
-import { errorResponseJson } from "~/lib/utils";
+import { assertError } from "~/lib/utils";
 
 const SPOTIFY_CLIENT_ID = env.SPOTIFY_CLIENT_ID;
 const SPOTIFY_CLIENT_SECRET = env.SPOTIFY_CLIENT_SECRET;
@@ -49,7 +49,7 @@ export async function GET(req: Request) {
   );
 
   if (tokenError || !tokenData) {
-    return errorResponseJson("Failed to get token from Spotify", 400);
+    return assertError("Failed to get token from Spotify", 400);
   }
 
   const { access_token, expires_in, refresh_token } = tokenData.data;
