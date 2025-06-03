@@ -15,3 +15,7 @@ export function generateRandomString(length: number) {
   }
   return result;
 }
+
+export function errorResponseJson(error: string, status_code: number) {
+  return Response.json({ error }, { status: status_code });
+}

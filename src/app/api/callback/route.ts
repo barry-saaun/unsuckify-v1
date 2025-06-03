@@ -11,14 +11,16 @@ const SPOTIFY_CLIENT_SECRET = env.SPOTIFY_CLIENT_SECRET;
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
+  console.log(JSON.stringify(searchParams));
 
   const code = searchParams.get("code");
   const state = searchParams.get("state");
   const error = searchParams.get("error");
 
-  if (state === null) {
-    const params = new URLSearchParams({ error: "state_mismatch" });
-    redirect("/#" + params.toString());
+  const storedState = (await cookies()).get("spotify-auth-state")?.value;
+
+  if (!state || !storedState || state !== storedState) {
+    redirect("/?error=state_mismatch");
   }
 
   if (error) {
@@ -30,7 +32,7 @@ export async function GET(req: Request) {
     `${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`,
   ).toString("base64");
 
-  const { data, error: tokenError } = await tryCatch(
+  const { data: tokenData, error: tokenError } = await tryCatch(
     axios({
       url: tokenEndpoint,
       method: "post",
@@ -38,19 +40,19 @@ export async function GET(req: Request) {
         "Content-Type": "application/x-www-form-urlencoded",
         Authorization: `Basic ${credentials}`,
       },
-      params: {
-        code,
+      data: new URLSearchParams({
+        code: code ?? "",
         redirect_uri: env.NEXT_PUBLIC_SPOTIFY_REDIRECT_URI,
         grant_type: "authorization_code",
-      },
+      }).toString(),
     }),
   );
 
-  if (tokenError || data) {
+  if (tokenError || !tokenData) {
     return errorResponseJson("Failed to get token from Spotify", 400);
   }
 
-  const { access_token, expires_in, refresh_token } = data;
+  const { access_token, expires_in, refresh_token } = tokenData.data;
 
   const cookiesData: Record<string, string> = {
     access_token,
