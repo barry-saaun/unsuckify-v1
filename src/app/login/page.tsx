@@ -1,12 +1,10 @@
 "use client";
 import { Icons, Spinner } from "~/components/Icons";
 import { Button } from "~/components/ui/button";
-import { useRouter } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { useState } from "react";
 
 const LoginPage = () => {
-  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = () => {
@@ -19,7 +17,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="flex min-h-[00vh] w-full flex-col items-center justify-center">
+    <div className="flex min-h-[100vh] w-full flex-col items-center justify-center">
       <Button onClick={handleGoBack} className="absolute top-20 left-10 flex">
         <ChevronLeft />
         <span className="font-medium">Back</span>
