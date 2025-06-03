@@ -3,11 +3,10 @@ import { motion } from "framer-motion";
 import { HeroHighlight, Highlight } from "~/components/ui/hero-highlight";
 import Link from "next/link";
 import { HoverBorderGradient } from "~/components/ui/hover-border-gradient";
-import { useState } from "react";
+import useIsAuthenticated from "~/hooks/useIsAuthenticated";
 
 const HeroSection = () => {
-  // const { isAuthenticated } = useIsAuthenticated();
-  const [isAuthenticated, useIsAuthenticated] = useState(false);
+  const { isAuthenticated } = useIsAuthenticated();
   return (
     <HeroHighlight>
       <motion.h1
