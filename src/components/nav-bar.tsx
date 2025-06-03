@@ -4,7 +4,7 @@ import React from "react";
 
 import ThemeToggle from "./theme-toggler";
 // import AuthButton from "./AuthButton";
-// import StarUs from "./StarUs";
+import StarUs from "./star-us";
 
 const NavBar: React.FC = () => {
   return (
@@ -19,11 +19,9 @@ const NavBar: React.FC = () => {
             <span className="text-primary text-xl font-bold">UNSUCKify</span>
           </Link>
           <div className="flex flex-row items-center justify-center gap-1">
-            {/* <StarUs /> */}
+            <StarUs />
             <ThemeToggle />
             {/* <AuthButton /> */}
-            <span>star</span>
-            <span>theme</span>
             <span>auth</span>
           </div>
         </div>
