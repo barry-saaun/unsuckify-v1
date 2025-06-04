@@ -35,13 +35,13 @@ const AuthButton = () => {
     }
   };
 
-  // if (isLoading) {
-  //   return (
-  //     <div className="bg-muted mx-2 flex h-10 w-10 items-center justify-center rounded-full">
-  //       <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />
-  //     </div>
-  //   );
-  // }
+  if (isLoading) {
+    return (
+      <div className="bg-muted mx-2 flex h-10 w-10 items-center justify-center rounded-full">
+        <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className={cn(isAuthenticated && userInfo ? "mx-2" : "")}>
