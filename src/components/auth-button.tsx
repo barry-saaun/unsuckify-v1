@@ -18,8 +18,11 @@ const AuthButton = () => {
   const router = useRouter();
   const utils = api.useUtils();
 
-  const { data: userInfo, isLoading } =
-    api.user.getCurrentUserProfile.useQuery();
+  const {
+    data: userInfo,
+    isLoading,
+    error: userProfileError,
+  } = api.user.getCurrentUserProfile.useQuery();
 
   const { isAuthenticated } = useIsAuthenticated();
 
@@ -34,6 +37,14 @@ const AuthButton = () => {
       router.push("/");
     }
   };
+
+  if (!userInfo || userProfileError) {
+    //TODO: add a toast
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   if (isLoading) {
     return (
