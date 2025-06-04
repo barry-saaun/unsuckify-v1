@@ -5,20 +5,6 @@ import { cookies } from "next/headers";
 export const userRouter = createTRPCRouter({
   getCurrentUserProfile: publicProcedure.query(async () => {
     const profile = await spotifyApi.getCurrentUsersProfile();
-    console.log("profile", profile);
-
-    try {
-      const serializedProfile = JSON.parse(JSON.stringify(profile));
-      console.log(
-        "profile (server-side, after JSON roundtrip):",
-        serializedProfile,
-      );
-      // Optionally, compare profile with serializedProfile to see if anything was lost
-    } catch (e) {
-      console.error("Serialization error on server for profile:", e);
-      // If this logs an error, you've found your culprit!
-    }
-    // --- END ADDITION ---
 
     if (profile && typeof profile === "object" && "id" in profile) {
       const userId = profile.id;

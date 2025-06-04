@@ -12,51 +12,36 @@ import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { cn, getInitials } from "~/lib/utils";
 import useIsAuthenticated from "~/hooks/useIsAuthenticated";
 import { api } from "~/trpc/react";
-import { tryCatch } from "~/lib/try-catch";
+import { Loader2 } from "lucide-react";
 
 const AuthButton = () => {
   const router = useRouter();
   const utils = api.useUtils();
 
-  const {
-    data: userInfo,
-    isLoading,
-    error: userProfileError,
-  } = api.user.getCurrentUserProfile.useQuery();
-
-  console.log("Client - isLoading:", isLoading);
-  console.log("Client - userInfo:", userInfo);
-  console.log("Client - userProfileError:", userProfileError);
+  const { data: userInfo, isLoading } =
+    api.user.getCurrentUserProfile.useQuery();
 
   const { isAuthenticated } = useIsAuthenticated();
 
-  const logoutMutation = api.auth.logout.useMutation();
-
   const handleLogout = async () => {
-    const { error } = await tryCatch(logoutMutation.mutateAsync());
-    if (error) {
-      //TODO: add a toast
-      return;
-    }
+    const res = await fetch("/api/logout", {
+      method: "POST",
+      credentials: "include",
+    });
 
-    await utils.auth.check.invalidate();
-    router.push("/");
+    if (res.ok) {
+      await utils.auth.check.invalidate();
+      router.push("/");
+    }
   };
 
-  if (!userInfo) {
-    return <div>User info cant be fetched</div>;
-  }
-
-  if (isLoading) {
-    return (
-      <div className="mx-2">
-        <Button
-          disabled
-          className="h-9 w-9 animate-pulse rounded-full bg-gray-100 font-semibold dark:bg-gray-600"
-        />
-      </div>
-    );
-  }
+  // if (isLoading) {
+  //   return (
+  //     <div className="bg-muted mx-2 flex h-10 w-10 items-center justify-center rounded-full">
+  //       <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className={cn(isAuthenticated && userInfo ? "mx-2" : "")}>
