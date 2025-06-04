@@ -44,7 +44,16 @@ async function spotifyFetch<T>(
   );
 
   if (error) {
-    assertError("Error in fetching data from spotify API", 500);
+    console.error(
+      "Error fetching data from Spotify API in spotifyFetch:",
+      error,
+    );
+
+    const message = "Error in fetching data from Spotify API";
+    const statusCode = 500;
+    assertError(message, statusCode);
+
+    throw new Error(`Spotify API request failed (fallback): ${message}`);
   }
 
   return res?.data as T;
