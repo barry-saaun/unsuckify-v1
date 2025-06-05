@@ -1,9 +1,9 @@
 import { spotifyApi } from "~/lib/spotify";
-import { createTRPCRouter, publicProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { cookies } from "next/headers";
 
 export const userRouter = createTRPCRouter({
-  getCurrentUserProfile: publicProcedure.query(async () => {
+  getCurrentUserProfile: protectedProcedure.query(async () => {
     const profile = await spotifyApi.getCurrentUsersProfile();
 
     if (profile && typeof profile === "object" && "id" in profile) {

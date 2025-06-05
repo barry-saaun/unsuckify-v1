@@ -6,7 +6,8 @@
  * TL;DR - This is where all the tRPC server stuff is created and plugged in. The pieces you will
  * need to use are documented accordingly near the end.
  */
-import { initTRPC } from "@trpc/server";
+import { initTRPC, TRPCError } from "@trpc/server";
+import { cookies } from "next/headers";
 import superjson from "superjson";
 import { ZodError } from "zod";
 
@@ -23,8 +24,13 @@ import { ZodError } from "zod";
  * @see https://trpc.io/docs/server/context
  */
 export const createTRPCContext = async (opts: { headers: Headers }) => {
+  const cookieStores = await cookies();
+  const accessToken = cookieStores.get("access_token")?.value;
+
   return {
     ...opts,
+    authenticated: !!accessToken,
+    accessToken,
   };
 };
 
@@ -93,6 +99,22 @@ const timingMiddleware = t.middleware(async ({ next, path }) => {
   return result;
 });
 
+const authMiddleware = t.middleware(async ({ next, ctx }) => {
+  if (!ctx.authenticated) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "You must be logged in to access the dashboard.",
+    });
+  }
+
+  return next({
+    ctx: {
+      ...ctx,
+      authenticated: true as const,
+    },
+  });
+});
+
 /**
  * Public (unauthenticated) procedure
  *
@@ -101,3 +123,7 @@ const timingMiddleware = t.middleware(async ({ next, path }) => {
  * are logged in.
  */
 export const publicProcedure = t.procedure.use(timingMiddleware);
+
+export const protectedProcedure = t.procedure
+  .use(timingMiddleware)
+  .use(authMiddleware);
