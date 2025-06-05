@@ -8,7 +8,6 @@ import {
 import { DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { LogOutIcon, UserRound } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
-// import { CurrentUsersProfileResponse } from "spotify-api"
 import { cn, getInitials } from "~/lib/utils";
 import useIsAuthenticated from "~/hooks/useIsAuthenticated";
 import { api } from "~/trpc/react";
@@ -18,14 +17,15 @@ const AuthButton = () => {
   const router = useRouter();
   const utils = api.useUtils();
 
+  const { isAuthenticated } = useIsAuthenticated();
+
   const {
     data: userInfo,
     isLoading,
     error: userProfileError,
-  } = api.user.getCurrentUserProfile.useQuery();
-
-  const { isAuthenticated } = useIsAuthenticated();
-
+  } = api.user.getCurrentUserProfile.useQuery(undefined, {
+    enabled: isAuthenticated,
+  });
   const handleLogout = async () => {
     const res = await fetch("/api/logout", {
       method: "POST",
