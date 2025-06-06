@@ -12,6 +12,7 @@ import { cn, getInitials } from "~/lib/utils";
 import useIsAuthenticated from "~/hooks/useIsAuthenticated";
 import { api } from "~/trpc/react";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 const AuthButton = () => {
   const router = useRouter();
@@ -38,7 +39,15 @@ const AuthButton = () => {
     }
   };
 
-  if (!userInfo || userProfileError) {
+  if (
+    userProfileError &&
+    userProfileError.shape?.data.code === "UNAUTHORIZED"
+  ) {
+    toast.error("Please log in to continue");
+    router.push("/login");
+  }
+
+  if (!userInfo) {
     //TODO: add a toast
   }
 

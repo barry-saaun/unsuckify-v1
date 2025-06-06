@@ -1,6 +1,7 @@
 import { spotifyApi } from "~/lib/spotify";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { cookies } from "next/headers";
+import type { UsersPlaylistMetadata } from "~/types";
 
 export const userRouter = createTRPCRouter({
   getCurrentUserProfile: protectedProcedure.query(async () => {
@@ -25,14 +26,16 @@ export const userRouter = createTRPCRouter({
     const playlists = await spotifyApi.getListOfCurrentUsersPlaylists();
 
     if (playlists && typeof playlists === "object") {
-      const formattedData = playlists.items.map((item) => ({
-        id: item.id,
-        description: item.description ?? "",
-        url: item.images?.[0]?.url ?? "",
-        name: item.name,
-        display_name: item.owner.display_name ?? "",
-        total: item.tracks.total,
-      }));
+      const formattedData: UsersPlaylistMetadata[] = playlists.items.map(
+        (item) => ({
+          id: item.id,
+          description: item.description ?? "",
+          url: item.images?.[0]?.url ?? "",
+          name: item.name,
+          display_name: item.owner.display_name ?? "",
+          total: item.tracks.total,
+        }),
+      );
 
       return formattedData;
     }

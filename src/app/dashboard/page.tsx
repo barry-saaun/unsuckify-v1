@@ -1,3 +1,4 @@
+import MyPlaylistsTabContent from "~/components/my-playlists-tab-content";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 
 function Dashboard() {
@@ -17,8 +18,7 @@ function Dashboard() {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="my-playlists">
-            {/* <MyPlaylistsTabContent /> */}
-            <h1>Tab 1</h1>
+            <MyPlaylistsTabContent />
           </TabsContent>
           <TabsContent value="public-playlist">
             {/* <PublicPlaylistTabContent /> */}
