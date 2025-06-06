@@ -21,4 +21,22 @@ export const userRouter = createTRPCRouter({
 
     return null;
   }),
+  getListOfCurrentUsersPlaylists: protectedProcedure.query(async () => {
+    const playlists = await spotifyApi.getListOfCurrentUsersPlaylists();
+
+    if (playlists && typeof playlists === "object") {
+      const formattedData = playlists.items.map((item) => ({
+        id: item.id,
+        description: item.description ?? "",
+        url: item.images?.[0]?.url ?? "",
+        name: item.name,
+        display_name: item.owner.display_name ?? "",
+        total: item.tracks.total,
+      }));
+
+      return formattedData;
+    }
+
+    return null;
+  }),
 });

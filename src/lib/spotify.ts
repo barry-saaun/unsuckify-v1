@@ -62,4 +62,6 @@ async function spotifyFetch<T>(
 export const spotifyApi = {
   getCurrentUsersProfile: () =>
     spotifyFetch<CurrentUsersProfileResponse>("/me"),
+  getListOfCurrentUsersPlaylists: () =>
+    spotifyFetch<ListOfCurrentUsersPlaylistsResponse>("/me/playlists"),
 };
