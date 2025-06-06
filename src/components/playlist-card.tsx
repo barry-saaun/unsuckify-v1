@@ -54,7 +54,7 @@ const PlaylistCard = ({
       </CardContent>
       <CardFooter>
         <Button
-          className="mx-2 h-full w-full"
+          className="mx-2 h-full w-full hover:cursor-pointer"
           onClick={() => router.push(`dashboard/${playlistId}`)}
         >
           <Link href={`dashboard/${playlistId}`} className="font-semibold">
