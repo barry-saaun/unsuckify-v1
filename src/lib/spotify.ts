@@ -8,8 +8,8 @@ import {
 import queryString from "query-string";
 import axios from "axios";
 import { tryCatch } from "./try-catch";
-import { assertError } from "./utils";
 import { cookies } from "next/headers";
+import { TRPCError } from "@trpc/server";
 
 async function spotifyFetch<T>(
   endpoint: string,
@@ -17,6 +17,13 @@ async function spotifyFetch<T>(
   queryParams?: Record<string, number | string>,
 ) {
   const access_token = (await cookies()).get("access_token")?.value;
+
+  if (!access_token) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "No access token found. Please log in.",
+    });
+  }
 
   const baseUrl = "https://api.spotify.com/v1";
   let resolvedEndpoint = endpoint || "";
@@ -44,16 +51,32 @@ async function spotifyFetch<T>(
   );
 
   if (error) {
-    console.error(
-      "Error fetching data from Spotify API in spotifyFetch:",
-      error,
-    );
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status;
+      const data = error.response?.data;
 
-    const message = "Error in fetching data from Spotify API";
-    const statusCode = 500;
-    assertError(message, statusCode);
+      let code:
+        | "UNAUTHORIZED"
+        | "NOT_FOUND"
+        | "BAD_REQUEST"
+        | "INTERNAL_SERVER_ERROR" = "INTERNAL_SERVER_ERROR";
 
-    throw new Error(`Spotify API request failed (fallback): ${message}`);
+      if (status === 401) code = "UNAUTHORIZED";
+      else if (status === 404) code = "NOT_FOUND";
+      else if (status && status >= 400 && status < 500) code = "BAD_REQUEST";
+
+      throw new TRPCError({
+        code,
+        message:
+          data?.error?.message ?? data?.error?.description ?? error.message,
+        cause: error,
+      });
+    }
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Unknown error occured when contacting Spotify API.",
+      cause: error,
+    });
   }
 
   return res?.data as T;
