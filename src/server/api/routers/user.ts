@@ -43,17 +43,4 @@ export const userRouter = createTRPCRouter({
 
     return null;
   }),
-  getPlaylist: protectedProcedure
-    .input(
-      z.object({
-        playlist_id: z.string(),
-      }),
-    )
-    .query(async ({ input }) => {
-      const p_data = await spotifyApi.getSinglePlaylistResponse(
-        input.playlist_id,
-      );
-
-      return p_data;
-    }),
 });
