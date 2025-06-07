@@ -1,6 +1,8 @@
 import { spotifyApi } from "~/lib/spotify";
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { tryCatch } from "~/lib/try-catch";
+import { TRPCError } from "@trpc/server";
 
 export const playlistRouter = createTRPCRouter({
   getPlaylist: protectedProcedure
@@ -10,10 +12,19 @@ export const playlistRouter = createTRPCRouter({
       }),
     )
     .query(async ({ input }) => {
-      const p_data = await spotifyApi.getSinglePlaylistResponse(
-        input.playlist_id,
+      const res = await tryCatch(
+        spotifyApi.getSinglePlaylistResponse(input.playlist_id),
       );
 
-      return p_data;
+      if (res.error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            "Erorr in fetching recommendation, make sure Playlist ID is valid.",
+          cause: res.error,
+        });
+      }
+
+      return res.data;
     }),
 });

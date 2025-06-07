@@ -1,9 +1,7 @@
 import {
-  type CreatePlaylistResponse,
   type SinglePlaylistResponse,
   type CurrentUsersProfileResponse,
   type ListOfCurrentUsersPlaylistsResponse,
-  type PlaylistTrackResponse,
 } from "spotify-api";
 import queryString from "query-string";
 import axios from "axios";
