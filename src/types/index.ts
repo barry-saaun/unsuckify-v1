@@ -54,3 +54,7 @@ export type GetTracksReturnType = {
   hasMoreInCurrentBatch: boolean;
   nextBatch: number | null;
 };
+
+export type ServerComponentProps = {
+  searchParams: { [key: string]: string | string[] | undefined };
+};
