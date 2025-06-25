@@ -31,9 +31,9 @@ const HeroSection = () => {
             Playlist Sucks?
             <Highlight isBlock>Let&apos;s unsuck it.</Highlight>
           </h1>
-          <p className="mx-auto max-w-[700px] text-gray-500 sm:text-lg md:text-xl dark:text-gray-400">
-            Transform your <span className="font-bold">mid</span> spotify
-            playlist to JSON format and received songs recommendation from AI.
+          <p className="mx-auto max-w-[700px] text-center text-gray-700 sm:text-lg md:text-xl dark:text-gray-300">
+            Transform your <span className="font-bold">mid</span> Spotify
+            playlist to JSON format and receive song recommendations from AI.
           </p>
           <div className="flex items-center justify-center py-8 md:py-12">
             <HoverBorderGradient as="button">
