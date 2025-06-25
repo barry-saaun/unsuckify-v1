@@ -20,7 +20,7 @@ export const playlistRouter = createTRPCRouter({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message:
-            "Erorr in fetching recommendation, make sure Playlist ID is valid.",
+            "Invalid Spotify Playlist ID. Please check the ID and try again.",
           cause: res.error,
         });
       }
