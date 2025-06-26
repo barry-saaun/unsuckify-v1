@@ -7,6 +7,7 @@ import { TRPCReactProvider } from "~/trpc/react";
 import NavBar from "~/components/nav-bar";
 import { ThemeProvider as NextThemeProvider } from "~/components/theme-provider";
 import { Toaster } from "sonner";
+import ToasterProvider from "~/components/toaster-provider";
 
 export const metadata: Metadata = {
   title: "🥟 UNSUCKify",
@@ -32,7 +33,7 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <Toaster />
+            <ToasterProvider />
             <NavBar />
             {children}
           </NextThemeProvider>
