@@ -13,7 +13,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export interface PlaylistCardProps {
-  playlistImg: string;
+  playlistImg: string | React.ReactNode;
   playlistName: string;
   owner: string;
   numberOfTracks: number;
@@ -31,14 +31,18 @@ const PlaylistCard = ({
   return (
     <Card className="overflow-hidden">
       <div className="relative aspect-square">
-        <Image
-          fill
-          src={playlistImg}
-          alt={playlistName}
-          priority
-          className="object-cover shadow"
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-        />
+        {typeof playlistImg === "string" ? (
+          <Image
+            fill
+            src={playlistImg}
+            alt={playlistName}
+            priority
+            className="object-cover shadow"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          />
+        ) : (
+          playlistImg
+        )}
       </div>
       <CardHeader>
         <CardTitle className="line-clamp-1">{playlistName}</CardTitle>

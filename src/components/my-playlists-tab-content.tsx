@@ -11,8 +11,7 @@ import { api } from "~/trpc/react";
 import type { UsersPlaylistMetadata } from "~/types/index";
 import CardSkeleton from "./card-skeleton";
 import PlaylistCard from "./playlist-card";
-
-import PlaylistImagePlaceholder from "../../public/playlist_image_placeholder.svg";
+import ImagePlaceholder from "./image-placeholder";
 
 export default function MyPlaylistsTabContent() {
   const [playlists, setPlaylists] = useState<UsersPlaylistMetadata[] | null>(
@@ -66,7 +65,7 @@ export default function MyPlaylistsTabContent() {
             return (
               <PlaylistCard
                 key={item.id}
-                playlistImg={item.url || PlaylistImagePlaceholder}
+                playlistImg={item.url ? item.url : <ImagePlaceholder />}
                 owner={item.display_name}
                 playlistName={item.name}
                 numberOfTracks={item.total}
