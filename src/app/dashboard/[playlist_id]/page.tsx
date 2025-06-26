@@ -1,11 +1,8 @@
-"use client";
-import { useParams, useSearchParams } from "next/navigation";
 import { PlaylistContent } from "~/components/playlist-content-dashboard-server";
 
-function PlaylistContentDashboard() {
-  const searchParams = useSearchParams();
-  const params = useParams<{ playlist_id: string }>();
+type ParamsType = { params: { playlist_id: string } };
 
+function PlaylistContentDashboard({ params }: ParamsType) {
   const playlist_id = params.playlist_id;
 
   return (
