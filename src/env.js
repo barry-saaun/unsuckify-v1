@@ -12,6 +12,7 @@ export const env = createEnv({
     SPOTIFY_CLIENT_SECRET: z
       .string()
       .min(1, "SPOTIFY_CLIENT_SECRET is required"),
+    DATABASE_URL: z.string().url(),
   },
 
   /**
@@ -37,6 +38,7 @@ export const env = createEnv({
     NEXT_PUBLIC_SPOTIFY_REDIRECT_URI:
       process.env.NEXT_PUBLIC_SPOTIFY_REDIRECT_URI,
 
+    DATABASE_URL: process.env.DATABASE_URL,
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },
   /**
