@@ -49,6 +49,8 @@ const AuthButton = () => {
 
   if (!userInfo) {
     //TODO: add a toast
+    toast.error("Error getting your profile.");
+    return;
   }
 
   if (!isAuthenticated) {
