@@ -11,8 +11,8 @@ import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { cn, getInitials } from "~/lib/utils";
 import useIsAuthenticated from "~/hooks/useIsAuthenticated";
 import { api } from "~/trpc/react";
-import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import Spinner from "./spinner";
 
 const AuthButton = () => {
   const router = useRouter();
@@ -26,6 +26,10 @@ const AuthButton = () => {
     error: userProfileError,
   } = api.user.getCurrentUserProfile.useQuery(undefined, {
     enabled: isAuthenticated,
+    staleTime: 24 * 60 * 60 * 1000,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    retry: 1,
   });
   const handleLogout = async () => {
     const res = await fetch("/api/logout", {
@@ -43,13 +47,8 @@ const AuthButton = () => {
     userProfileError &&
     userProfileError.shape?.data.code === "UNAUTHORIZED"
   ) {
-    toast.error("Please log in to continue");
+    toast.error("Please log in to continue", { id: "auth-error" });
     router.push("/login");
-  }
-
-  if (!userInfo) {
-    //TODO: add a toast
-    toast.error("Error getting your profile.");
     return;
   }
 
@@ -60,9 +59,19 @@ const AuthButton = () => {
   if (isLoading) {
     return (
       <div className="bg-muted mx-2 flex h-10 w-10 items-center justify-center rounded-full">
-        <Loader2 className="text-muted-foreground h-5 w-5 animate-spin" />
+        <Spinner />
       </div>
     );
+  }
+
+  if (userProfileError) {
+    console.error("Profile Error:", userProfileError);
+    return null;
+  }
+
+  if (!userInfo) {
+    console.warn("No user profile data received.");
+    return null;
   }
 
   return (
@@ -70,7 +79,10 @@ const AuthButton = () => {
       {isAuthenticated && userInfo ? (
         <DropdownMenu>
           <DropdownMenuTrigger asChild className="h-9 w-9">
-            <Button variant="ghost" className="rounded-full">
+            <Button
+              variant="outline"
+              className="rounded-full ring-2 ring-purple-100 dark:ring-purple-700"
+            >
               <Avatar className="h-8 w-8">
                 <AvatarImage src={userInfo?.images?.[0]?.url} />
                 <AvatarFallback>

@@ -4,22 +4,19 @@ import { toast } from "sonner";
 import { api } from "~/trpc/react";
 import { useRouter } from "next/navigation";
 import Spinner from "~/components/spinner";
+import ErrorScreen from "~/components/error-screen";
 
 export default function PlaylistConetnt() {
   const params = useParams<{ playlist_id: string }>();
 
   const playlist_id = params.playlist_id;
-  const router = useRouter();
 
   const { data, isLoading, error } = api.playlist.getPlaylist.useQuery({
     playlist_id,
   });
 
   if (error) {
-    toast.error(error.message);
-    router.back();
-
-    return;
+    return <ErrorScreen message={error.message} />;
   }
 
   if (isLoading) {

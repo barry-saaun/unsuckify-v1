@@ -2,6 +2,7 @@ import { spotifyApi } from "~/lib/spotify";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { cookies } from "next/headers";
 import type { UsersPlaylistMetadata } from "~/types";
+import { TRPCError } from "@trpc/server";
 
 export const userRouter = createTRPCRouter({
   getCurrentUserProfile: protectedProcedure.query(async () => {
@@ -20,7 +21,10 @@ export const userRouter = createTRPCRouter({
       return profile;
     }
 
-    return null;
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Failed to load your profile data.",
+    });
   }),
   getListOfCurrentUsersPlaylists: protectedProcedure.query(async () => {
     const playlists = await spotifyApi.getListOfCurrentUsersPlaylists();
@@ -40,6 +44,9 @@ export const userRouter = createTRPCRouter({
       return formattedData;
     }
 
-    return null;
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Failed to load your playlists. Please try again later.",
+    });
   }),
 });

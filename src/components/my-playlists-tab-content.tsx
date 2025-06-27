@@ -1,56 +1,44 @@
 "use client";
-import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import {
-  getCachedPlaylistIds,
-  getCachedPlaylists,
-  areIdSetsEqual,
-  setCachedPlaylists,
-} from "~/lib/playlist-cache";
 import { api } from "~/trpc/react";
-import type { UsersPlaylistMetadata } from "~/types/index";
 import CardSkeleton from "./card-skeleton";
 import PlaylistCard from "./playlist-card";
 import ImagePlaceholder from "./image-placeholder";
+import useIsAuthenticated from "~/hooks/useIsAuthenticated";
+import Spinner from "./spinner";
+import ErrorScreen from "./error-screen";
 
 export default function MyPlaylistsTabContent() {
-  const [playlists, setPlaylists] = useState<UsersPlaylistMetadata[] | null>(
-    [],
-  );
+  const { isAuthenticated } = useIsAuthenticated();
   const {
     data: fresh,
     isLoading,
     error,
-  } = api.user.getListOfCurrentUsersPlaylists.useQuery();
+  } = api.user.getListOfCurrentUsersPlaylists.useQuery(undefined, {
+    enabled: isAuthenticated,
+    staleTime: 5 * 60 * 1000,
+  });
 
-  if (error) {
-    toast.error("Cannot query your playlists at the moment!");
+  if (error && !isLoading) {
+    toast.error("Cannot query your playlists at the moment!", {
+      id: "playlist-error",
+    });
   }
 
-  useEffect(() => {
-    const cached = getCachedPlaylists();
+  if (!isAuthenticated) {
+    return null;
+  }
 
-    if (cached) {
-      setPlaylists(cached);
-    }
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Spinner extraCN="h-10 w-10" />
+      </div>
+    );
+  }
 
-    if (fresh) {
-      const cachedIds = getCachedPlaylistIds();
-      const freshIds = new Set(fresh.map((playlist) => playlist.id));
-
-      if (!cachedIds || !areIdSetsEqual(cachedIds, freshIds)) {
-        setPlaylists(fresh);
-        setCachedPlaylists(fresh);
-      } else if (!cached) {
-        // If no cache, but fresh data exists, set it
-        setPlaylists(fresh);
-        setCachedPlaylists(fresh);
-      }
-    }
-  }, [fresh]);
-
-  if (!playlists || playlists?.length === 0) {
-    return <div>There is no playlist</div>;
+  if (error) {
+    return <ErrorScreen message={error.message} />;
   }
 
   const numberOfSkeleton = 6;
