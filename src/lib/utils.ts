@@ -20,7 +20,7 @@ export function getInitials(name: string) {
   return name
     .split(" ")
     .filter((word) => word.length > 0) // Filter out empty strings
-    .map((word) => word[0].toUpperCase())
+    .map((word) => word[0]!.toUpperCase())
     .join("");
 }
 
