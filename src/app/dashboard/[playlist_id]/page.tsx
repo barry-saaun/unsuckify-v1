@@ -1,7 +1,6 @@
 "use client";
 import { useParams } from "next/navigation";
 import { api } from "~/trpc/react";
-import Spinner from "~/components/spinner";
 import ErrorScreen from "~/components/error-screen";
 
 export default function PlaylistConetnt() {
@@ -9,11 +8,11 @@ export default function PlaylistConetnt() {
 
   const playlist_id = params.playlist_id;
 
-  const { data, isLoading, error } = api.playlist.getPlaylistItems.useQuery({
+  const { data, isLoading, error } = api.playlist.getPlaylistItemsAll.useQuery({
     playlist_id,
-    offset: 0,
-    limit: 20,
   });
+
+  console.log("data length: ", data?.length);
 
   if (error) {
     return <ErrorScreen message={error.message} />;
@@ -22,10 +21,10 @@ export default function PlaylistConetnt() {
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <Spinner extraCN="h-10 w-10" />
+        <div className="hungry-loader" />
       </div>
     );
   }
 
-  return <div>{JSON.stringify(data)}</div>;
+  return <div>{JSON.stringify(data[0])}</div>;
 }

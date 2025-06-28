@@ -9,7 +9,6 @@ import { tryCatch } from "./try-catch";
 import { cookies } from "next/headers";
 import { TRPCError } from "@trpc/server";
 import { type PlaylistTrackResponse } from "spotify-api";
-import type { ParsePlaylistTracks } from "./parse-playlists-tracks";
 
 async function spotifyFetch<T>(
   endpoint: string,
