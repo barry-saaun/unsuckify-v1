@@ -1,8 +1,6 @@
 "use client";
 import { useParams } from "next/navigation";
-import { toast } from "sonner";
 import { api } from "~/trpc/react";
-import { useRouter } from "next/navigation";
 import Spinner from "~/components/spinner";
 import ErrorScreen from "~/components/error-screen";
 
@@ -11,8 +9,10 @@ export default function PlaylistConetnt() {
 
   const playlist_id = params.playlist_id;
 
-  const { data, isLoading, error } = api.playlist.getPlaylist.useQuery({
+  const { data, isLoading, error } = api.playlist.getPlaylistItems.useQuery({
     playlist_id,
+    offset: 0,
+    limit: 20,
   });
 
   if (error) {
