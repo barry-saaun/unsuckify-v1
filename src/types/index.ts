@@ -11,35 +11,22 @@ export const UsersPlaylistMetadataSchema = z.object({
 
 export type UsersPlaylistMetadata = z.infer<typeof UsersPlaylistMetadataSchema>;
 
-export type BreakpointValues = {
-  DEFAULT: string;
-  SM: string;
-  MD: string;
-  LG: string;
-};
+export const RecommendedTracksSchema = z.array(
+  z.object({
+    track: z.string().describe("The title of the recommended track"),
+    album: z
+      .string()
+      .describe("The name of the album of the recommended tracks"),
+    artist: z.string().describe("The name of artists of the recommended track"),
+  }),
+);
 
-export type OffsetLimitParams = {
-  offset: string | number;
-  limit: string | number;
-};
-
-export type ModifiedDataType = {
-  album?: string;
-  artists?: string;
-  track?: string;
-}[];
+export type TRecommendedTracks = z.infer<typeof RecommendedTracksSchema>;
 
 export type TrackDescriptorSummaryResType = Record<
   "emotional_tones" | "genres" | "instrumentation" | "rhythm" | "themes",
   string[]
 >;
-
-export type PaginatedQueryKeyType = [string, { playlist_id: string }];
-
-export type ScoredMemberType = {
-  score: number;
-  member: string;
-};
 
 export type PaginatedRecommendationsType = {
   data: string[];
