@@ -9,6 +9,73 @@
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
+/* Custom CSS for animations and pseudo-elements */
+.hungry-loader {
+  isolation: isolate;
+  @apply relative h-20 w-[35px];
+}
+
+.hungry-loader::after {
+  content: "";
+  @apply absolute inset-0 p-[3px_5px];
+  border-top: 1px solid #bbb6aa;
+  border-bottom: 4px solid #bbb6aa;
+  background:
+    /* coffee stripe */
+    linear-gradient(#612329 0 0) bottom no-repeat content-box,
+    /* cup */ #e4e0d7;
+  mix-blend-mode: normal; /* no blend in light mode */
+  animation: l1 1.5s infinite linear;
+}
+
+.hungry-loader::before {
+  content: "";
+  position: absolute;
+  inset: -18px calc(50% - 2px) 8px;
+  background: #eb6b3e; /* straw */
+  transform-origin: bottom;
+  transform: rotate(8deg);
+}
+
+@keyframes l1 {
+  0% {
+    background-size: 100% 100%;
+  }
+  100% {
+    background-size: 100% 5%;
+  }
+}
+
+/* Dark mode using Tailwind's dark: prefix */
+.dark .hungry-loader::after {
+  border-top: 1px solid #444;
+  border-bottom: 4px solid #444;
+  background:
+    /* lemonade stripe */
+    linear-gradient(#ffe066 0 0) bottom no-repeat content-box,
+    /* dark cup */ #22232a;
+  mix-blend-mode: lighten; /* only blend in dark mode */
+}
+
+.dark .hungry-loader::before {
+  background: #f7c948; /* lemonade straw */
+}
+
+/* OS-level dark mode fallback (if not using Tailwind's dark mode class) */
+@media (prefers-color-scheme: dark) {
+  .hungry-loader::after {
+    border-top: 1px solid #444;
+    border-bottom: 4px solid #444;
+    background:
+      /* lemonade stripe */
+      linear-gradient(#ffe066 0 0) bottom no-repeat content-box,
+      /* dark cup */ #22232a;
+    mix-blend-mode: lighten; /* only blend in dark mode */
+  }
+  .hungry-loader::before {
+    background: #f7c948; /* lemonade straw */
+  }
+}
 @theme inline {
   --animate-aurora: aurora 60s linear infinite;
   @keyframes aurora {
