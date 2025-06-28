@@ -13,6 +13,7 @@ import useIsAuthenticated from "~/hooks/useIsAuthenticated";
 import { api } from "~/trpc/react";
 import { toast } from "sonner";
 import Spinner from "./spinner";
+import { useEffect } from "react";
 
 const AuthButton = () => {
   const router = useRouter();
@@ -31,6 +32,22 @@ const AuthButton = () => {
     refetchOnWindowFocus: false,
     retry: 1,
   });
+  useEffect(() => {
+    if (!userInfo?.id) return;
+
+    const setUserId = async () => {
+      await fetch("/api/set-user-id", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId: userInfo?.id }),
+      });
+    };
+    void setUserId();
+  }, [userInfo]);
+
   const handleLogout = async () => {
     const res = await fetch("/api/logout", {
       method: "POST",

@@ -13,9 +13,12 @@ export default function PlaylistConetnt() {
     data: playlistData,
     isLoading: isLoadingPlaylist,
     error: playlistError,
-  } = api.playlist.getPlaylistItemsAll.useQuery({
-    playlist_id,
-  });
+  } = api.playlist.getPlaylistItemsAll.useQuery(
+    {
+      playlist_id,
+    },
+    { staleTime: 86400 * 1000 },
+  );
 
   const {
     data: rec_data,
@@ -23,6 +26,7 @@ export default function PlaylistConetnt() {
     error: recommendationsError,
   } = api.track.getRecommendations.useQuery(playlistData ?? skipToken, {
     enabled: !!playlistData,
+    staleTime: 86400 * 1000,
   });
 
   // Handle errors for either query

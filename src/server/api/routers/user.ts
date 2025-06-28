@@ -1,6 +1,5 @@
 import { spotifyApi } from "~/lib/spotify";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { cookies } from "next/headers";
 import type { UsersPlaylistMetadata } from "~/types";
 import { TRPCError } from "@trpc/server";
 
@@ -9,15 +8,6 @@ export const userRouter = createTRPCRouter({
     const profile = await spotifyApi.getCurrentUsersProfile();
 
     if (profile && typeof profile === "object" && "id" in profile) {
-      const userId = profile.id;
-      const cookieStore = await cookies();
-
-      cookieStore.set("userId", userId, {
-        httpOnly: true,
-        secure: true,
-        maxAge: 3600,
-      });
-
       return profile;
     }
 
