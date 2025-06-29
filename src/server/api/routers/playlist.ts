@@ -61,6 +61,7 @@ export const playlistRouter = createTRPCRouter({
         headers: ctx.headers,
         authenticated: ctx.authenticated,
         accessToken: ctx.accessToken,
+        db: ctx.db,
       });
 
       let offset = 0;

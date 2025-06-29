@@ -10,6 +10,7 @@ import { initTRPC, TRPCError } from "@trpc/server";
 import { cookies } from "next/headers";
 import superjson from "superjson";
 import { ZodError } from "zod";
+import { db } from "../db";
 
 /**
  * 1. CONTEXT
@@ -31,6 +32,7 @@ export const createTRPCContext = async (opts: { headers: Headers }) => {
     ...opts,
     authenticated: !!accessToken,
     accessToken,
+    db,
   };
 };
 
