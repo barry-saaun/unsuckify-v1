@@ -5,6 +5,7 @@ import { skipToken } from "@tanstack/react-query";
 import ErrorScreen from "~/components/error-screen";
 import { useEffect, useRef } from "react";
 import type { TRecommendedTracks } from "~/types";
+import { isDeepStrictEqual } from "util";
 
 export default function PlaylistContent() {
   const params = useParams<{ playlist_id: string }>();
@@ -40,7 +41,7 @@ export default function PlaylistContent() {
   useEffect(() => {
     if (!rec_tracks) return;
 
-    if (JSON.stringify(lastSentRef.current) === JSON.stringify(rec_tracks)) {
+    if (isDeepStrictEqual(lastSentRef.current, rec_tracks)) {
       return;
     }
 
