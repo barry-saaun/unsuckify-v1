@@ -1,0 +1,1 @@
+ALTER TABLE "rec_batches" ADD CONSTRAINT "rec_batches_user_id_playlist_id_unique" UNIQUE("user_id","playlist_id");

@@ -10,6 +10,7 @@ import {
   recommendationTracks,
   users,
 } from "~/server/db/schema";
+import { and, desc, eq } from "drizzle-orm";
 
 export const trackRouter = createTRPCRouter({
   getRecommendations: protectedProcedure
@@ -58,5 +59,28 @@ export const trackRouter = createTRPCRouter({
 
       await ctx.db.insert(recommendationTracks).values(tracksToInsert);
       return { success: true, batchId: batch!.id };
+    }),
+
+  getLatestBatch: protectedProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+        playlist_id: z.string(),
+        newTracks: RecommendedTracksSchema,
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const latestBatch = await ctx.db
+        .select()
+        .from(recommendationBatches)
+        .where(
+          and(
+            eq(recommendationBatches.userId, input.userId),
+            eq(recommendationBatches.playlistId, input.playlist_id),
+          ),
+        )
+        .orderBy(desc(recommendationBatches.generatedAt))
+        .limit(1)
+        .then((rows) => rows[0]);
     }),
 });
