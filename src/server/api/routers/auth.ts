@@ -1,3 +1,4 @@
+import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import { cookies } from "next/headers";
 
@@ -5,6 +6,13 @@ export const authRouter = createTRPCRouter({
   check: publicProcedure.query(async () => {
     const cookieStore = await cookies();
     const isAuthenticated = cookieStore.has("access_token");
+
+    if (!isAuthenticated) {
+      throw new TRPCError({
+        code: "TIMEOUT",
+        message: "Your session is expired.",
+      });
+    }
 
     return { isAuthenticated };
   }),

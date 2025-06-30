@@ -31,7 +31,7 @@ export const trackRouter = createTRPCRouter({
     .input(
       z.object({
         userId: z.string(),
-        playlistId: z.string(),
+        playlist_id: z.string(),
         recommendations: RecommendedTracksSchema,
       }),
     )
@@ -45,7 +45,7 @@ export const trackRouter = createTRPCRouter({
         .insert(recommendationBatches)
         .values({
           userId: input.userId,
-          playlistId: input.playlistId,
+          playlistId: input.playlist_id,
           generatedAt: new Date(),
         })
         .returning();
