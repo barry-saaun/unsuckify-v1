@@ -32,20 +32,12 @@ const AuthButton = () => {
     refetchOnWindowFocus: false,
     retry: 1,
   });
-  useEffect(() => {
-    if (!userInfo?.id) return;
 
-    const setUserId = async () => {
-      await fetch("/api/set-user-id", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ userId: userInfo?.id }),
-      });
-    };
-    void setUserId();
+  useEffect(() => {
+    const userId = localStorage.getItem("userId");
+    if (!userId && userInfo) {
+      localStorage.setItem("userId", userInfo?.id);
+    }
   }, [userInfo]);
 
   const handleLogout = async () => {
