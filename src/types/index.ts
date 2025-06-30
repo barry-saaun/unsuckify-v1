@@ -17,7 +17,9 @@ export const RecommendedTracksSchema = z.array(
     album: z
       .string()
       .describe("The name of the album of the recommended tracks"),
-    artist: z.string().describe("The name of artists of the recommended track"),
+    artists: z
+      .string()
+      .describe("The name of artists of the recommended track"),
   }),
 );
 

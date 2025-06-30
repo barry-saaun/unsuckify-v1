@@ -10,7 +10,7 @@ import {
   recommendationTracks,
   users,
 } from "~/server/db/schema";
-import { and, desc, eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 export const trackRouter = createTRPCRouter({
   getRecommendations: protectedProcedure
@@ -51,9 +51,9 @@ export const trackRouter = createTRPCRouter({
         .returning();
 
       const tracksToInsert = input.recommendations.map((rec) => ({
-        trackName: rec.track,
-        albumName: rec.album,
-        artistsName: rec.artist,
+        track: rec.track,
+        album: rec.album,
+        artists: rec.artists,
         batchId: batch?.id,
       }));
 
@@ -79,8 +79,8 @@ export const trackRouter = createTRPCRouter({
             eq(recommendationBatches.playlistId, input.playlist_id),
           ),
         )
-        .orderBy(desc(recommendationBatches.generatedAt))
-        .limit(1)
         .then((rows) => rows[0]);
+
+      return latestBatch;
     }),
 });
