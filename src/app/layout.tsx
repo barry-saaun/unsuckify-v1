@@ -8,6 +8,8 @@ import NavBar from "~/components/nav-bar";
 import { ThemeProvider as NextThemeProvider } from "~/components/theme-provider";
 import { Toaster } from "sonner";
 import ToasterProvider from "~/components/toaster-provider";
+import { AuthErrorProvider } from "~/components/auth-error-provider";
+import SessionExpiredAlertDialog from "~/components/session-expired-alert-dialog";
 
 export const metadata: Metadata = {
   title: "🥟 UNSUCKify",
@@ -26,18 +28,21 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geist.variable}`} suppressHydrationWarning>
       <body>
-        <TRPCReactProvider>
-          <NextThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <ToasterProvider />
-            <NavBar />
-            {children}
-          </NextThemeProvider>
-        </TRPCReactProvider>
+        <AuthErrorProvider>
+          <TRPCReactProvider>
+            <NextThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+            >
+              <SessionExpiredAlertDialog />
+              <ToasterProvider />
+              <NavBar />
+              {children}
+            </NextThemeProvider>
+          </TRPCReactProvider>
+        </AuthErrorProvider>
       </body>
     </html>
   );
