@@ -42,10 +42,16 @@ function PublicPlaylistTabContent() {
   const onSubmit = (data: z.infer<typeof FormSchema>) => {
     const playlistUrlObject = FormSchema.safeParse(data);
 
-    const playlistUrl = playlistUrlObject.data?.url;
+    if (!playlistUrlObject.success || !playlistUrlObject.data.url) {
+      return;
+    }
+    const playlistId = playlistUrlObject.data.url
+      .split("?si")[0]
+      ?.split("playlist/")[1];
 
-    const playlist_id = playlistUrl?.split("?si")[0].split("playlist/")[1];
-    router.push(`/dashboard/${playlist_id}`);
+    if (playlistId) {
+      router.push(`/dashboard/${playlistId}`);
+    }
   };
 
   const errorOnSubmit = (errors: FieldErrors<z.infer<typeof FormSchema>>) => {
