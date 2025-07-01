@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server";
 import { match } from "path-to-regexp";
 
-const publicRoutes = ["/api/login", "/api/callback", "/login"];
+const loginRoutes = ["/login"];
 const protectedRoutes = ["/dashboard", "/dashboard/:playlist_id"];
 
 const matchesRoute = (patterns: string[], path: string) =>
@@ -14,15 +14,15 @@ const matchesRoute = (patterns: string[], path: string) =>
 export async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
 
-  const isPublicRoute = matchesRoute(publicRoutes, path);
+  const isLoginRoute = matchesRoute(loginRoutes, path);
   const isProtectedRoute = matchesRoute(protectedRoutes, path);
 
   const cookiesStore = await cookies();
   const authenticated = cookiesStore.has("access_token");
 
   // Redirect authenticated users away from login pages
-  if (isPublicRoute && authenticated) {
-    return NextResponse.redirect(new URL("/", req.nextUrl));
+  if (isLoginRoute && authenticated) {
+    return NextResponse.redirect(new URL("/dashboard", req.nextUrl));
   }
 
   // Redirect unauthenticated users to login for protected pages

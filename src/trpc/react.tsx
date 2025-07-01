@@ -1,12 +1,7 @@
 "use client";
 
 import { QueryClientProvider, type QueryClient } from "@tanstack/react-query";
-import {
-  httpBatchStreamLink,
-  loggerLink,
-  type TRPCClientError,
-  type TRPCLink,
-} from "@trpc/client";
+import { httpBatchStreamLink, loggerLink, TRPCClientError } from "@trpc/client";
 import { createTRPCReact } from "@trpc/react-query";
 import { type inferRouterInputs, type inferRouterOutputs } from "@trpc/server";
 import { useState } from "react";
@@ -57,16 +52,26 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
             process.env.NODE_ENV === "development" ||
             (op.direction === "down" && op.result instanceof Error),
         }),
-        (() => {
-          return ({ next, op }) => {
-            return observable((observer) => {
+        () =>
+          ({ next, op }) =>
+            observable((observer) => {
               const unsubscribe = next(op).subscribe({
                 next(value) {
                   observer.next(value);
                 },
-                error(err: TRPCClientError<AppRouter>) {
-                  if (err.data?.code === "UNAUTHORIZED") {
+                error(err) {
+                  if (
+                    err instanceof TRPCClientError &&
+                    err.data?.code === "UNAUTHORIZED"
+                  ) {
+                    // Clear all queries immediately
+                    queryClient.clear();
+
+                    // Set session expired for all UNAUTHORIZED errors
                     setSessionExpired(true);
+
+                    observer.complete();
+                    return;
                   }
                   observer.error(err);
                 },
@@ -75,9 +80,7 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
                 },
               });
               return unsubscribe;
-            });
-          };
-        }) satisfies TRPCLink<AppRouter>,
+            }),
         httpBatchStreamLink({
           transformer: SuperJSON,
           url: getBaseUrl() + "/api/trpc",

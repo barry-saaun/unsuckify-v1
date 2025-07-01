@@ -12,18 +12,23 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "./ui/alert-dialog";
+import { api } from "~/trpc/react";
 
 export default function SessionExpiredAlertDialog() {
   const { sessionExpired, setSessionExpired } = useAuthError();
 
   const router = useRouter();
+  const utils = api.useUtils();
 
-  if (!sessionExpired) return null;
+  const handleConfirm = async () => {
+    await utils.invalidate();
+    localStorage.clear();
 
-  const handleDialogAction = () => {
     setSessionExpired(false);
     router.push("/");
   };
+
+  if (!sessionExpired) return null;
 
   return (
     <AlertDialog open={sessionExpired}>
@@ -39,7 +44,7 @@ export default function SessionExpiredAlertDialog() {
         </AlertDialogHeader>
         <AlertDialogFooter>
           {/* <AlertDialogCancel>Cancel</AlertDialogCancel> */}
-          <AlertDialogAction onClick={handleDialogAction}>
+          <AlertDialogAction onClick={handleConfirm}>
             Continue
           </AlertDialogAction>
         </AlertDialogFooter>

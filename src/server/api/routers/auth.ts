@@ -18,14 +18,6 @@ export const authRouter = createTRPCRouter({
   }),
 
   logout: publicProcedure.mutation(async () => {
-    const cookieStore = await cookies();
-    const keys = ["access_token", "expires_at", "refresh_token", "userId"];
-
-    // Remove each cookie
-    for (const key of keys) {
-      cookieStore.set(key, "", { maxAge: -1, path: "/" });
-    }
-
     // Optionally, return a message
     return { success: true };
   }),

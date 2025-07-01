@@ -14,10 +14,10 @@ import { api } from "~/trpc/react";
 import { toast } from "sonner";
 import Spinner from "./spinner";
 import { useEffect } from "react";
+import { useAuth } from "~/hooks/useAuth";
 
 const AuthButton = () => {
   const router = useRouter();
-  const utils = api.useUtils();
 
   const { isAuthenticated } = useIsAuthenticated();
 
@@ -33,6 +33,8 @@ const AuthButton = () => {
     retry: 1,
   });
 
+  const { logout, isLoggingOut } = useAuth();
+
   useEffect(() => {
     const userId = localStorage.getItem("userId");
     if (!userId && userInfo) {
@@ -40,16 +42,8 @@ const AuthButton = () => {
     }
   }, [userInfo]);
 
-  const handleLogout = async () => {
-    const res = await fetch("/api/logout", {
-      method: "POST",
-      credentials: "include",
-    });
-
-    if (res.ok) {
-      await utils.auth.check.invalidate();
-      router.push("/");
-    }
+  const handleLogout = () => {
+    logout();
   };
 
   if (
@@ -58,14 +52,14 @@ const AuthButton = () => {
   ) {
     toast.error("Please log in to continue", { id: "auth-error" });
     router.push("/login");
-    return;
+    return null;
   }
 
   if (!isAuthenticated) {
     return null;
   }
 
-  if (isLoading) {
+  if (isLoading || isLoggingOut) {
     return (
       <div className="bg-muted mx-2 flex h-10 w-10 items-center justify-center rounded-full">
         <Spinner />
@@ -87,7 +81,11 @@ const AuthButton = () => {
     <div className={cn(isAuthenticated && userInfo ? "mx-2" : "")}>
       {isAuthenticated && userInfo ? (
         <DropdownMenu>
-          <DropdownMenuTrigger asChild className="h-9 w-9">
+          <DropdownMenuTrigger
+            asChild
+            className="h-9 w-9"
+            disabled={isLoggingOut}
+          >
             <Button
               variant="outline"
               className="rounded-full ring-2 ring-purple-100 dark:ring-purple-700"
@@ -123,9 +121,10 @@ const AuthButton = () => {
             <DropdownMenuItem
               className="text-red-600 focus:bg-red-50 focus:text-red-600"
               onClick={handleLogout}
+              disabled={isLoggingOut}
             >
               <LogOutIcon className="mr-2 h-4 w-4" />
-              <span>Log out</span>
+              <span>{isLoggingOut ? "Logging out..." : "Log out"}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
