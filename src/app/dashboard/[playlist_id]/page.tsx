@@ -3,9 +3,18 @@ import { useParams } from "next/navigation";
 import { api } from "~/trpc/react";
 import { skipToken } from "@tanstack/react-query";
 import ErrorScreen from "~/components/error-screen";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { TRecommendedTracks } from "~/types";
-import { isDeepStrictEqual } from "util";
+
+function useUserId() {
+  const [userId, setUserId] = useState<string>("");
+
+  useEffect(() => {
+    const id = localStorage.getItem("userId");
+    setUserId(id!);
+  }, []);
+  return userId;
+}
 
 export default function PlaylistContent() {
   const params = useParams<{ playlist_id: string }>();
@@ -32,24 +41,27 @@ export default function PlaylistContent() {
     staleTime: 86400 * 1000,
   });
 
+  const userId = useUserId();
+
+  console.log("[playlist_id] userId: ", userId);
+
   const lastSentRef = useRef<TRecommendedTracks>(null);
 
   const { mutate } = api.track.pushRecommendations.useMutation();
 
-  const userId = "31y3qs5dnfs6cyuivogbn5fgl3au";
-
-  useEffect(() => {
-    if (!rec_tracks) return;
-
-    if (isDeepStrictEqual(lastSentRef.current, rec_tracks)) {
-      return;
-    }
-
-    mutate({ playlistId: playlist_id, userId, recommendations: rec_tracks });
-    lastSentRef.current = rec_tracks;
-  }, [rec_tracks, playlist_id, mutate]);
+  // useEffect(() => {
+  //   if (!rec_tracks) return;
+  //
+  //   if (isDeepStrictEqual(lastSentRef.current, rec_tracks)) {
+  //     return;
+  //   }
+  //
+  //   mutate({ playlist_id: playlist_id, userId, recommendations: rec_tracks });
+  //   lastSentRef.current = rec_tracks;
+  // }, [rec_tracks, playlist_id, mutate]);
 
   // Handle errors for either query
+
   if (playlistError) {
     return <ErrorScreen message={playlistError.message} />;
   }

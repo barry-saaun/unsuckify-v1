@@ -1,3 +1,4 @@
+import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import { cookies } from "next/headers";
 import { spotifyApi } from "~/lib/spotify";
