@@ -5,6 +5,8 @@ import React from "react";
 type AuthErrorContextType = {
   sessionExpired: boolean;
   setSessionExpired: (expired: boolean) => void;
+  isHandled: boolean;
+  setIsHandled: (handled: boolean) => void;
 };
 
 const AuthErrorContext = createContext<AuthErrorContextType | undefined>(
@@ -17,9 +19,12 @@ export const AuthErrorProvider = ({
   children: React.ReactNode;
 }) => {
   const [sessionExpired, setSessionExpired] = useState(false);
+  const [isHandled, setIsHandled] = useState(false);
 
   return (
-    <AuthErrorContext.Provider value={{ sessionExpired, setSessionExpired }}>
+    <AuthErrorContext.Provider
+      value={{ sessionExpired, setSessionExpired, isHandled, setIsHandled }}
+    >
       {children}
     </AuthErrorContext.Provider>
   );

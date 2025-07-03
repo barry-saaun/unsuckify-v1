@@ -42,7 +42,7 @@ export type RouterOutputs = inferRouterOutputs<AppRouter>;
 
 export function TRPCReactProvider(props: { children: React.ReactNode }) {
   const queryClient = getQueryClient();
-  const { setSessionExpired } = useAuthError();
+  const { setSessionExpired, isHandled, setIsHandled } = useAuthError();
 
   const [trpcClient] = useState(() =>
     api.createClient({
@@ -64,11 +64,16 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
                     err instanceof TRPCClientError &&
                     err.data?.code === "UNAUTHORIZED"
                   ) {
+                    if (isHandled) {
+                      observer.complete();
+                      return;
+                    }
                     // Clear all queries immediately
                     queryClient.clear();
 
                     // Set session expired for all UNAUTHORIZED errors
                     setSessionExpired(true);
+                    setIsHandled(true);
 
                     observer.complete();
                     return;

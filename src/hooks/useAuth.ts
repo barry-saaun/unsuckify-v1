@@ -8,7 +8,7 @@ export const useAuth = () => {
   const router = useRouter();
   const utils = api.useUtils();
 
-  const { setSessionExpired } = useAuthError();
+  const { setSessionExpired, isHandled, setIsHandled } = useAuthError();
 
   const logout = api.auth.logout.useMutation({
     onSuccess: async () => {
@@ -27,10 +27,13 @@ export const useAuth = () => {
   });
 
   const handleSessionExpired = async () => {
+    if (isHandled) return;
+
     await utils.invalidate();
 
     localStorage.removeItem("userId");
     setSessionExpired(true);
+    setIsHandled(true);
   };
 
   return {

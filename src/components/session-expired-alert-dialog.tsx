@@ -15,7 +15,7 @@ import {
 import { api } from "~/trpc/react";
 
 export default function SessionExpiredAlertDialog() {
-  const { sessionExpired, setSessionExpired } = useAuthError();
+  const { sessionExpired, setSessionExpired, setIsHandled } = useAuthError();
 
   const router = useRouter();
   const utils = api.useUtils();
@@ -25,6 +25,7 @@ export default function SessionExpiredAlertDialog() {
     localStorage.clear();
 
     setSessionExpired(false);
+    setIsHandled(false);
     router.push("/");
   };
 
