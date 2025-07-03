@@ -42,7 +42,7 @@ export type RouterOutputs = inferRouterOutputs<AppRouter>;
 
 export function TRPCReactProvider(props: { children: React.ReactNode }) {
   const queryClient = getQueryClient();
-  const { setSessionExpired, isHandled, setIsHandled } = useAuthError();
+  const { setSessionExpired, isHandlingSessionExpiryRef } = useAuthError();
 
   const [trpcClient] = useState(() =>
     api.createClient({
@@ -64,16 +64,23 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
                     err instanceof TRPCClientError &&
                     err.data?.code === "UNAUTHORIZED"
                   ) {
-                    if (isHandled) {
+                    const manualLogout = localStorage.getItem("manualLogout");
+
+                    if (manualLogout || isHandlingSessionExpiryRef.current) {
+                      // Don't trigger session expired dialog if we're already handling it
+                      // or if it's a manual logout
+                      if (manualLogout) {
+                        localStorage.removeItem("manualLogout");
+                      }
                       observer.complete();
                       return;
                     }
+
                     // Clear all queries immediately
                     queryClient.clear();
 
                     // Set session expired for all UNAUTHORIZED errors
                     setSessionExpired(true);
-                    setIsHandled(true);
 
                     observer.complete();
                     return;

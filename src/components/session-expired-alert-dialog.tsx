@@ -1,41 +1,59 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useAuthError } from "./auth-error-provider";
+import { useCallback } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "./ui/alert-dialog";
-import { api } from "~/trpc/react";
 
 export default function SessionExpiredAlertDialog() {
-  const { sessionExpired, setSessionExpired, setIsHandled } = useAuthError();
-
+  const { sessionExpired, setSessionExpired, isHandlingSessionExpiryRef } =
+    useAuthError();
   const router = useRouter();
-  const utils = api.useUtils();
 
-  const handleConfirm = async () => {
-    await utils.invalidate();
-    localStorage.clear();
+  const handleConfirm = useCallback(async () => {
+    try {
+      isHandlingSessionExpiryRef.current = true;
 
-    setSessionExpired(false);
-    setIsHandled(false);
-    router.push("/");
-  };
+      localStorage.setItem("manualLogout", "true");
+
+      // Clear session state
+      setSessionExpired(false);
+
+      // Clear localStorage
+      localStorage.clear();
+
+      // Navigate
+      router.push("/");
+    } catch (error) {
+      console.error("Error during session cleanup:", error);
+      router.push("/");
+    } finally {
+      setTimeout(() => {
+        isHandlingSessionExpiryRef.current = false;
+      }, 1000);
+    }
+  }, [setSessionExpired, isHandlingSessionExpiryRef, router]);
+
+  const handleOpenChange = useCallback(
+    (open: boolean) => {
+      if (!open) {
+        setSessionExpired(false);
+      }
+    },
+    [setSessionExpired],
+  );
 
   if (!sessionExpired) return null;
 
   return (
-    <AlertDialog open={sessionExpired}>
-      {/* <AlertDialogTrigger asChild> */}
-      {/*   <Button variant="outline">Show Dialog</Button> */}
-      {/* </AlertDialogTrigger> */}
+    <AlertDialog open={sessionExpired} onOpenChange={handleOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Session Expired</AlertDialogTitle>
@@ -44,7 +62,6 @@ export default function SessionExpiredAlertDialog() {
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          {/* <AlertDialogCancel>Cancel</AlertDialogCancel> */}
           <AlertDialogAction onClick={handleConfirm}>
             Continue
           </AlertDialogAction>

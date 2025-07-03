@@ -8,16 +8,18 @@ export const useAuth = () => {
   const router = useRouter();
   const utils = api.useUtils();
 
-  const { setSessionExpired, isHandled, setIsHandled } = useAuthError();
+  const { setSessionExpired } = useAuthError();
 
   const logout = api.auth.logout.useMutation({
+    onMutate: () => {
+      localStorage.setItem("manualLogout", "true");
+    },
     onSuccess: async () => {
       await fetch("/api/logout", { method: "POST" });
 
       await utils.invalidate();
 
       localStorage.removeItem("userId");
-
       router.push("/");
     },
     onError: (error) => {
@@ -27,13 +29,10 @@ export const useAuth = () => {
   });
 
   const handleSessionExpired = async () => {
-    if (isHandled) return;
-
     await utils.invalidate();
 
     localStorage.removeItem("userId");
     setSessionExpired(true);
-    setIsHandled(true);
   };
 
   return {

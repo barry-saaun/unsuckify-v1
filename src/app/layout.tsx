@@ -6,7 +6,6 @@ import { Geist } from "next/font/google";
 import { TRPCReactProvider } from "~/trpc/react";
 import NavBar from "~/components/nav-bar";
 import { ThemeProvider as NextThemeProvider } from "~/components/theme-provider";
-import { Toaster } from "sonner";
 import ToasterProvider from "~/components/toaster-provider";
 import { AuthErrorProvider } from "~/components/auth-error-provider";
 import SessionExpiredAlertDialog from "~/components/session-expired-alert-dialog";

@@ -1,6 +1,6 @@
-import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import { cookies } from "next/headers";
+import { spotifyApi } from "~/lib/spotify";
 
 export const authRouter = createTRPCRouter({
   check: publicProcedure.query(async () => {
@@ -8,11 +8,10 @@ export const authRouter = createTRPCRouter({
     const isAuthenticated = cookieStore.has("access_token");
 
     if (!isAuthenticated) {
-      throw new TRPCError({
-        code: "UNAUTHORIZED",
-        message: "Your session has expired.",
-      });
+      return { isAuthenticated: false };
     }
+
+    await spotifyApi.getCurrentUsersProfile();
 
     return { isAuthenticated };
   }),

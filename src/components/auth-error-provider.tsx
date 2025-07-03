@@ -1,12 +1,11 @@
 "use client";
-import { useContext, createContext, useState } from "react";
+import { useContext, createContext, useState, useRef } from "react";
 import React from "react";
 
 type AuthErrorContextType = {
   sessionExpired: boolean;
   setSessionExpired: (expired: boolean) => void;
-  isHandled: boolean;
-  setIsHandled: (handled: boolean) => void;
+  isHandlingSessionExpiryRef: React.MutableRefObject<boolean>;
 };
 
 const AuthErrorContext = createContext<AuthErrorContextType | undefined>(
@@ -19,11 +18,14 @@ export const AuthErrorProvider = ({
   children: React.ReactNode;
 }) => {
   const [sessionExpired, setSessionExpired] = useState(false);
-  const [isHandled, setIsHandled] = useState(false);
-
+  const isHandlingSessionExpiryRef = useRef(false);
   return (
     <AuthErrorContext.Provider
-      value={{ sessionExpired, setSessionExpired, isHandled, setIsHandled }}
+      value={{
+        sessionExpired,
+        setSessionExpired,
+        isHandlingSessionExpiryRef,
+      }}
     >
       {children}
     </AuthErrorContext.Provider>
