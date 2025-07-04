@@ -35,6 +35,11 @@ export type TPushRecommendationsInput = z.infer<
   typeof PushRecommendationsInputSchema
 >;
 
+export type HandleReccomendationsTracksReturn = {
+  resolvedTracks: TRecommendedTracks;
+  timeLeft: number | null;
+};
+
 export type TrackDescriptorSummaryResType = Record<
   "emotional_tones" | "genres" | "instrumentation" | "rhythm" | "themes",
   string[]

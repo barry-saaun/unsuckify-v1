@@ -3,15 +3,23 @@ import { useParams } from "next/navigation";
 import { api } from "~/trpc/react";
 import { skipToken } from "@tanstack/react-query";
 import ErrorScreen from "~/components/error-screen";
-import { useEffect, useRef, useState } from "react";
-import type { TRecommendedTracks } from "~/types";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 function useUserId() {
   const [userId, setUserId] = useState<string>("");
 
   useEffect(() => {
     const id = localStorage.getItem("userId");
-    setUserId(id!);
+
+    if (!id) {
+      toast.error("Failed to get your Spotify ID.", {
+        id: "failed-retrieving-userId",
+      });
+      return;
+    }
+
+    setUserId(id);
   }, []);
   return userId;
 }
@@ -45,23 +53,54 @@ export default function PlaylistContent() {
 
   console.log("[playlist_id] userId: ", userId);
 
-  const lastSentRef = useRef<TRecommendedTracks>(null);
+  // const {
+  //   mutate,
+  //   isPending: isPushingRecommendations,
+  //   error: pushingRecommendationsError,
+  // } = api.track.pushRecommendations.useMutation();
 
-  const { mutate } = api.track.pushRecommendations.useMutation();
+  const {
+    data: resolvedTracks,
+    error: resolvingRecsError,
+    isLoading: isLoadingResolvedTracks,
+  } = api.track.getOrCreateRecommendations.useQuery(
+    {
+      userId,
+      playlist_id,
+      newTracks: rec_tracks!,
+    },
+    { enabled: !!rec_tracks && !!userId },
+  );
 
   // useEffect(() => {
-  //   if (!rec_tracks) return;
-  //
-  //   if (isDeepStrictEqual(lastSentRef.current, rec_tracks)) {
+  //   if (!playlist_id || !userId || isLoadingRecommendations || !rec_tracks) {
   //     return;
   //   }
   //
-  //   mutate({ playlist_id: playlist_id, userId, recommendations: rec_tracks });
-  //   lastSentRef.current = rec_tracks;
-  // }, [rec_tracks, playlist_id, mutate]);
+  //   if (
+  //     Array.isArray(rec_tracks) &&
+  //     rec_tracks.length === 0 &&
+  //     !recommendationsError
+  //   ) {
+  //     toast.info("No recommendations found for this playlist.", {
+  //       id: "no-rec-for-playlist",
+  //     });
+  //     return;
+  //   }
+  //
+  //   mutate({ playlist_id, userId, recommendations: rec_tracks });
+  //
+  //   console.log(rec_tracks);
+  // }, [
+  //   isLoadingRecommendations,
+  //   recommendationsError,
+  //   rec_tracks,
+  //   mutate,
+  //   playlist_id,
+  //   userId,
+  // ]);
 
   // Handle errors for either query
-
   if (playlistError) {
     return <ErrorScreen message={playlistError.message} />;
   }
@@ -70,11 +109,22 @@ export default function PlaylistContent() {
     return <ErrorScreen message={recommendationsError.message} />;
   }
 
+  if (resolvingRecsError) {
+    return <ErrorScreen message={resolvingRecsError.message} />;
+  }
+
   // Handle loading states for either query
-  if (isLoadingPlaylist || isLoadingRecommendations) {
+  if (
+    isLoadingPlaylist ||
+    isLoadingRecommendations ||
+    isLoadingResolvedTracks
+  ) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-2">
         <div className="hungry-loader" />
+        <h1 className="font-semibold">
+          We&apos;re crunching your recommendations...
+        </h1>
       </div>
     );
   }
@@ -86,7 +136,8 @@ export default function PlaylistContent() {
 
   if (!rec_tracks) {
     console.error("No recommendation data found.");
+    return <ErrorScreen message="No recommendation data found." />;
   }
 
-  return <div>{JSON.stringify(rec_tracks)}</div>;
+  return <div>{JSON.stringify(resolvedTracks)}</div>;
 }

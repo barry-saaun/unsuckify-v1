@@ -9,5 +9,8 @@ export async function ensureUserExistence({
   input: TPushRecommendationsInput;
   ctx: TRPCCtxType;
 }) {
+  if (!input.userId) {
+    return;
+  }
   await ctx.db.insert(users).values({ id: input.userId }).onConflictDoNothing();
 }
