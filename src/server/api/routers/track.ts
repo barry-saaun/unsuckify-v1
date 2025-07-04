@@ -8,9 +8,9 @@ import SuperJSON from "superjson";
 import {
   recommendationBatches,
   recommendationTracks,
-  users,
 } from "~/server/db/schema";
 import { and, eq } from "drizzle-orm";
+import { ensureUserExistence } from "~/lib/utils/user";
 
 export const trackRouter = createTRPCRouter({
   getRecommendations: protectedProcedure
@@ -36,10 +36,7 @@ export const trackRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      await ctx.db
-        .insert(users)
-        .values({ id: input.userId })
-        .onConflictDoNothing();
+      await ensureUserExistence({ input, ctx });
 
       const [batch] = await ctx.db
         .insert(recommendationBatches)

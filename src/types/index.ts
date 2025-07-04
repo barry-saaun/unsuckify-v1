@@ -25,6 +25,16 @@ export const RecommendedTracksSchema = z.array(
 
 export type TRecommendedTracks = z.infer<typeof RecommendedTracksSchema>;
 
+export const PushRecommendationsInputSchema = z.object({
+  userId: z.string(),
+  playlist_id: z.string(),
+  recommendations: RecommendedTracksSchema,
+});
+
+export type TPushRecommendationsInput = z.infer<
+  typeof PushRecommendationsInputSchema
+>;
+
 export type TrackDescriptorSummaryResType = Record<
   "emotional_tones" | "genres" | "instrumentation" | "rhythm" | "themes",
   string[]
