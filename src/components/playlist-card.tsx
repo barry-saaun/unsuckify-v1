@@ -15,6 +15,7 @@ export interface PlaylistCardProps {
   playlistImg: string | React.ReactNode;
   playlistName: string;
   owner: string;
+  ownerId: string;
   numberOfTracks: number;
   playlistId: string;
 }
@@ -23,6 +24,7 @@ const PlaylistCard = ({
   playlistImg,
   playlistName,
   owner,
+  ownerId,
   numberOfTracks,
   playlistId,
 }: PlaylistCardProps) => {
@@ -58,7 +60,9 @@ const PlaylistCard = ({
       <CardFooter>
         <Button
           className="mx-2 h-full w-full hover:cursor-pointer"
-          onClick={() => router.push(`dashboard/${playlistId}`)}
+          onClick={() =>
+            router.push(`dashboard/${playlistId}?ownerId=${ownerId}`)
+          }
         >
           <span className="font-semibold">Unsuckify</span>
         </Button>

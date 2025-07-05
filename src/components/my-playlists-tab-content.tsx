@@ -52,9 +52,10 @@ export default function MyPlaylistsTabContent() {
         : fresh?.map((item) => {
             return (
               <PlaylistCard
+                ownerId={item.ownerId}
                 key={item.id}
                 playlistImg={item.url ? item.url : <ImagePlaceholder />}
-                owner={item.display_name}
+                owner={item.owner}
                 playlistName={item.name}
                 numberOfTracks={item.total}
                 playlistId={item.id}

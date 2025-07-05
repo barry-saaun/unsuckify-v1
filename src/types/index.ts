@@ -4,7 +4,8 @@ export const UsersPlaylistMetadataSchema = z.object({
   id: z.string(),
   description: z.string(),
   url: z.string(),
-  display_name: z.string(),
+  owner: z.string(),
+  ownerId: z.string(),
   total: z.number(),
   name: z.string(),
 });

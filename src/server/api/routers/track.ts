@@ -34,7 +34,7 @@ export const trackRouter = createTRPCRouter({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message:
-            "Failed to generate recommendations.\nThe AI model did not return valid reocmmendations.",
+            "Failed to generate recommendations.\nThe AI model did not return valid recommendations.",
         });
       }
 

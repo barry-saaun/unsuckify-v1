@@ -26,7 +26,8 @@ export const userRouter = createTRPCRouter({
           description: item.description ?? "",
           url: item.images?.[0]?.url ?? "",
           name: item.name,
-          display_name: item.owner.display_name ?? "",
+          owner: item.owner.display_name ?? "",
+          ownerId: item.owner.id ?? "",
           total: item.tracks.total,
         }),
       );
