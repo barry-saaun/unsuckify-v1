@@ -53,12 +53,6 @@ export default function PlaylistContent() {
 
   console.log("[playlist_id] userId: ", userId);
 
-  // const {
-  //   mutate,
-  //   isPending: isPushingRecommendations,
-  //   error: pushingRecommendationsError,
-  // } = api.track.pushRecommendations.useMutation();
-
   const {
     data: resolvedTracks,
     error: resolvingRecsError,
@@ -71,34 +65,6 @@ export default function PlaylistContent() {
     },
     { enabled: !!rec_tracks && !!userId },
   );
-
-  // useEffect(() => {
-  //   if (!playlist_id || !userId || isLoadingRecommendations || !rec_tracks) {
-  //     return;
-  //   }
-  //
-  //   if (
-  //     Array.isArray(rec_tracks) &&
-  //     rec_tracks.length === 0 &&
-  //     !recommendationsError
-  //   ) {
-  //     toast.info("No recommendations found for this playlist.", {
-  //       id: "no-rec-for-playlist",
-  //     });
-  //     return;
-  //   }
-  //
-  //   mutate({ playlist_id, userId, recommendations: rec_tracks });
-  //
-  //   console.log(rec_tracks);
-  // }, [
-  //   isLoadingRecommendations,
-  //   recommendationsError,
-  //   rec_tracks,
-  //   mutate,
-  //   playlist_id,
-  //   userId,
-  // ]);
 
   // Handle errors for either query
   if (playlistError) {

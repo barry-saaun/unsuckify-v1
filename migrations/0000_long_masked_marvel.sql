@@ -2,15 +2,16 @@ CREATE TABLE "rec_batches" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"user_id" varchar(64),
 	"playlist_id" varchar(64),
-	"generated_at" timestamp DEFAULT now() NOT NULL
+	"generated_at" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "rec_batches_user_id_playlist_id_unique" UNIQUE("user_id","playlist_id")
 );
 --> statement-breakpoint
 CREATE TABLE "rec_tracks" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"batchId" integer,
-	"track_name" varchar(255) NOT NULL,
-	"album_name" varchar(255) NOT NULL,
-	"artists_name" varchar(255) NOT NULL
+	"track" varchar(255) NOT NULL,
+	"album" varchar(255) NOT NULL,
+	"artists" varchar(255) NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "users" (

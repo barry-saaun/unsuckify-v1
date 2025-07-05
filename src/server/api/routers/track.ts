@@ -16,6 +16,7 @@ import { and, eq } from "drizzle-orm";
 import { ensureUserExistence } from "~/lib/utils/user";
 import { TRPCError } from "@trpc/server";
 import { tryCatch } from "~/lib/try-catch";
+import { deleteExpiredBatchAndTracks } from "~/lib/utils/track";
 
 export const trackRouter = createTRPCRouter({
   getRecommendations: protectedProcedure
@@ -143,6 +144,8 @@ export const trackRouter = createTRPCRouter({
           within24hours = msSince < ms24h;
           if (within24hours) {
             timeLeft = ms24h - msSince;
+          } else {
+            await deleteExpiredBatchAndTracks({ ctx, batchId });
           }
         }
 
@@ -153,7 +156,14 @@ export const trackRouter = createTRPCRouter({
             .from(recommendationTracks)
             .where(eq(recommendationTracks.batchId, batchId));
 
-          return { resolvedTracks, timeLeft };
+          return {
+            resolvedTracks: resolvedTracks.map((track) => ({
+              track: track.track,
+              album: track.album,
+              artists: track.artists,
+            })),
+            timeLeft,
+          };
         } else {
           const { success } = await caller.pushRecommendations({
             userId: input.userId,
@@ -161,14 +171,15 @@ export const trackRouter = createTRPCRouter({
             recommendations: input.newTracks,
           });
 
-          if (!success)
+          if (!success) {
             return {
               resolvedTracks: input.newTracks,
               timeLeft: new Date().getTime(),
             };
-        }
+          }
 
-        return { resolvedTracks: input.newTracks, timeLeft: null };
+          return { resolvedTracks: input.newTracks, timeLeft: null };
+        }
       },
     ),
 });
