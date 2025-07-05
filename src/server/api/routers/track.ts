@@ -117,6 +117,29 @@ export const trackRouter = createTRPCRouter({
 
       return latestBatch;
     }),
+  getFirstTrackOfBatch: protectedProcedure
+    .input(
+      z.object({
+        batchId: z.number(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const firstTrack = await ctx.db
+        .select()
+        .from(recommendationTracks)
+        .where(eq(recommendationTracks.batchId, input.batchId))
+        .orderBy(recommendationTracks.id)
+        .then((rows) => rows[0]);
+
+      if (!firstTrack) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Could not retrieve the first track of the batch",
+        });
+      }
+
+      return firstTrack.id;
+    }),
   getOrCreateRecommendations: protectedProcedure
     .input(
       z.object({
@@ -182,4 +205,14 @@ export const trackRouter = createTRPCRouter({
         }
       },
     ),
+  infiniteTracks: protectedProcedure
+    .input(
+      z.object({
+        limit: z.number().min(1).max(100).nullish(),
+        cursor: z.number().nullish(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      return null;
+    }),
 });
