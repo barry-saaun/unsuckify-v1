@@ -5,6 +5,7 @@ import { skipToken } from "@tanstack/react-query";
 import ErrorScreen from "~/components/error-screen";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import LoadingMessages from "~/components/loading-messages";
 
 function useUserId() {
   const [userId, setUserId] = useState<string>("");
@@ -86,11 +87,9 @@ export default function PlaylistContent() {
     isLoadingResolvedTracks
   ) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-2">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4">
         <div className="hungry-loader" />
-        <h1 className="font-semibold">
-          We&apos;re crunching your recommendations...
-        </h1>
+        <LoadingMessages interval={1000} />
       </div>
     );
   }
