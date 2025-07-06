@@ -1,7 +1,7 @@
 "use client";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { api } from "~/trpc/react";
-import { skipToken } from "@tanstack/react-query";
+import { skipToken, useInfiniteQuery } from "@tanstack/react-query";
 import ErrorScreen from "~/components/error-screen";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -26,7 +26,14 @@ function useUserId() {
 }
 
 export default function PlaylistContent() {
+  const userId = useUserId();
   const params = useParams<{ playlist_id: string }>();
+
+  const searchParams = useSearchParams();
+
+  const ownerId = searchParams.get("ownerId");
+
+  const isOwned = ownerId && userId === ownerId;
 
   const playlist_id = params.playlist_id;
 
@@ -50,10 +57,6 @@ export default function PlaylistContent() {
     staleTime: 86400 * 1000,
   });
 
-  const userId = useUserId();
-
-  console.log("[playlist_id] userId: ", userId);
-
   const {
     data: resolvedTracks,
     error: resolvingRecsError,
@@ -66,6 +69,26 @@ export default function PlaylistContent() {
     },
     { enabled: !!rec_tracks && !!userId },
   );
+
+  const batchId = resolvedTracks?.batchId;
+
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: isLoadingInfTracks,
+  } = api.track.infiniteTracks.useInfiniteQuery(
+    {
+      limit: 2,
+      batchId: batchId!,
+    },
+    { enabled: !!batchId, getNextPageParam: (lastPage) => lastPage.nextCursor },
+  );
+
+  const handleFetchNextPage = async () => {
+    await fetchNextPage();
+  };
 
   // Handle errors for either query
   if (playlistError) {
@@ -104,5 +127,18 @@ export default function PlaylistContent() {
     return <ErrorScreen message="No recommendation data found." />;
   }
 
-  return <div>{JSON.stringify(resolvedTracks)}</div>;
+  return (
+    <div className="flex min-h-screen w-full flex-col">
+      <div className="flex flex-col">
+        {data?.pages.map((page, i) => (
+          <div key={`${i} + ${JSON.stringify(page)}`}>
+            {page.items.map((item) => (
+              <div key={item.id}>{item.track}</div>
+            ))}
+          </div>
+        ))}
+      </div>
+      <button onClick={async () => await fetchNextPage()}>Load More</button>
+    </div>
+  );
 }
