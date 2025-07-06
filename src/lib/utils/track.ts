@@ -45,11 +45,5 @@ export async function getFirstTrackOfBatchId({
     });
   }
 
-  return firstTrack;
-}
-
-export async function fetchPaginatedRecommendedTracks(
-  ctx: QueryFunctionContext<PaginatedQueryKeyType, PageParamType>,
-) {
-  return null;
+  return firstTrack.id;
 }

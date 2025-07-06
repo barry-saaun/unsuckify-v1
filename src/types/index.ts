@@ -36,15 +36,19 @@ export type TPushRecommendationsInput = z.infer<
   typeof PushRecommendationsInputSchema
 >;
 
-export type HandleReccomendationsTracksReturn = {
+export type HandleRecommendationTracksReturn = {
   resolvedTracks: TRecommendedTracks;
   timeLeft: number | null;
+  batchId: number | null;
+  success: boolean;
 };
 
-export type TrackDescriptorSummaryResType = Record<
-  "emotional_tones" | "genres" | "instrumentation" | "rhythm" | "themes",
-  string[]
->;
+export type PaginatedQueryKeyType = [string, { playlist_id: string }];
+
+export type PageParamType = {
+  cursor: number;
+  page: number;
+};
 
 export type PaginatedRecommendationsType = {
   data: string[];
@@ -58,8 +62,4 @@ export type GetTracksReturnType = {
   hasMore: boolean;
   hasMoreInCurrentBatch: boolean;
   nextBatch: number | null;
-};
-
-export type ServerComponentProps = {
-  searchParams: { [key: string]: string | string[] | undefined };
 };

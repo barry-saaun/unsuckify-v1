@@ -4,7 +4,7 @@ import { generateObject } from "ai";
 import { google } from "@ai-sdk/google";
 import {
   RecommendedTracksSchema,
-  type HandleReccomendationsTracksReturn,
+  type HandleRecommendationTracksReturn,
 } from "~/types";
 import { systemPrompt } from "~/constants/system-prompt";
 import SuperJSON from "superjson";
@@ -12,11 +12,14 @@ import {
   recommendationBatches,
   recommendationTracks,
 } from "~/server/db/schema";
-import { and, eq } from "drizzle-orm";
+import { and, eq, gte } from "drizzle-orm";
 import { ensureUserExistence } from "~/lib/utils/user";
 import { TRPCError } from "@trpc/server";
 import { tryCatch } from "~/lib/try-catch";
-import { deleteExpiredBatchAndTracks } from "~/lib/utils/track";
+import {
+  deleteExpiredBatchAndTracks,
+  getFirstTrackOfBatchId,
+} from "~/lib/utils/track";
 
 export const trackRouter = createTRPCRouter({
   getRecommendations: protectedProcedure
@@ -117,29 +120,6 @@ export const trackRouter = createTRPCRouter({
 
       return latestBatch;
     }),
-  getFirstTrackOfBatch: protectedProcedure
-    .input(
-      z.object({
-        batchId: z.number(),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      const firstTrack = await ctx.db
-        .select()
-        .from(recommendationTracks)
-        .where(eq(recommendationTracks.batchId, input.batchId))
-        .orderBy(recommendationTracks.id)
-        .then((rows) => rows[0]);
-
-      if (!firstTrack) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Could not retrieve the first track of the batch",
-        });
-      }
-
-      return firstTrack.id;
-    }),
   getOrCreateRecommendations: protectedProcedure
     .input(
       z.object({
@@ -149,7 +129,7 @@ export const trackRouter = createTRPCRouter({
       }),
     )
     .query(
-      async ({ ctx, input }): Promise<HandleReccomendationsTracksReturn> => {
+      async ({ ctx, input }): Promise<HandleRecommendationTracksReturn> => {
         const caller = trackRouter.createCaller(ctx);
         const latestBatch = await caller.getLatestBatch(input);
 
@@ -173,7 +153,7 @@ export const trackRouter = createTRPCRouter({
         }
 
         if (within24hours && batchId) {
-          console.log(`Attempting to select tracks for batchId: ${batchId}`); // <-- Add this
+          console.log(`Attempting to select tracks for batchId: ${batchId}`);
           const resolvedTracks = await ctx.db
             .select()
             .from(recommendationTracks)
@@ -186,6 +166,8 @@ export const trackRouter = createTRPCRouter({
               artists: track.artists,
             })),
             timeLeft,
+            batchId,
+            success: true,
           };
         } else {
           const { success } = await caller.pushRecommendations({
@@ -198,21 +180,53 @@ export const trackRouter = createTRPCRouter({
             return {
               resolvedTracks: input.newTracks,
               timeLeft: new Date().getTime(),
+              success: false,
+              batchId: null,
             };
           }
 
-          return { resolvedTracks: input.newTracks, timeLeft: null };
+          return {
+            resolvedTracks: input.newTracks,
+            timeLeft: null,
+            success: true,
+            batchId,
+          };
         }
       },
     ),
   infiniteTracks: protectedProcedure
     .input(
       z.object({
-        limit: z.number().min(1).max(100).nullish(),
+        limit: z.number().min(1).max(100),
         cursor: z.number().nullish(),
+        batchId: z.number(),
       }),
     )
     .query(async ({ input, ctx }) => {
-      return null;
+      const { limit, cursor, batchId } = input;
+
+      const startId =
+        cursor ?? (await getFirstTrackOfBatchId({ batchId, ctx }));
+
+      const tracks = await ctx.db
+        .select()
+        .from(recommendationTracks)
+        .where(
+          and(
+            eq(recommendationTracks.batchId, batchId),
+            gte(recommendationTracks.id, startId),
+          ),
+        )
+        .orderBy(recommendationTracks.id)
+        .limit(limit + 1);
+
+      const hasNextPage = tracks.length > limit;
+      const items = hasNextPage ? tracks.slice(0, -1) : tracks;
+      const nextCursor = hasNextPage ? items[items.length - 1]!.id + 1 : null;
+
+      return {
+        items,
+        nextCursor,
+      };
     }),
 });

@@ -1,3 +1,4 @@
+import type { InferSelectModel } from "drizzle-orm";
 import {
   pgTable,
   serial,
@@ -30,3 +31,8 @@ export const recommendationTracks = pgTable("rec_tracks", {
   album: varchar("album", { length: 255 }).notNull(),
   artists: varchar("artists", { length: 255 }).notNull(),
 });
+
+export type RecBatchesSelectType = InferSelectModel<
+  typeof recommendationBatches
+>;
+export type RecTracksSelectType = InferSelectModel<typeof recommendationTracks>;
