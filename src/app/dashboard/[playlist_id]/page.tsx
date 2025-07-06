@@ -1,7 +1,7 @@
 "use client";
 import { useParams, useSearchParams } from "next/navigation";
 import { api } from "~/trpc/react";
-import { skipToken, useInfiniteQuery } from "@tanstack/react-query";
+import { skipToken } from "@tanstack/react-query";
 import ErrorScreen from "~/components/error-screen";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -48,14 +48,34 @@ export default function PlaylistContent() {
     { staleTime: 86400 * 1000 },
   );
 
-  const {
-    data: rec_tracks,
-    isLoading: isLoadingRecommendations,
-    error: recommendationsError,
-  } = api.track.getRecommendations.useQuery(playlistData ?? skipToken, {
-    enabled: !!playlistData,
-    staleTime: 86400 * 1000,
-  });
+  const isLargeInput = playlistData && playlistData.length > 100;
+
+  const recQueryResult = api.track.getRecommendations.useQuery(
+    playlistData ?? skipToken,
+    {
+      enabled: !!playlistData && !!isLargeInput,
+      staleTime: 86400 * 1000,
+      retry: false,
+    },
+  );
+
+  const getRecMutation = api.track.getRecommendationsMutate.useMutation();
+
+  useEffect(() => {
+    if (
+      playlistData &&
+      (isLargeInput || recQueryResult.error) &&
+      !getRecMutation.data &&
+      !getRecMutation.isPending
+    ) {
+      getRecMutation.mutate(playlistData);
+    }
+  }, [getRecMutation, playlistData, recQueryResult, isLargeInput]);
+
+  const rec_tracks = recQueryResult.data ?? getRecMutation.data;
+  const isLoadingRecommendations =
+    recQueryResult.isLoading ?? getRecMutation.isPending;
+  const recommendationsError = recQueryResult.error ?? getRecMutation.error;
 
   const {
     data: resolvedTracks,

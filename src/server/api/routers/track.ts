@@ -5,6 +5,7 @@ import { google } from "@ai-sdk/google";
 import {
   RecommendedTracksSchema,
   type HandleRecommendationTracksReturn,
+  type TRecommendedTracks,
 } from "~/types";
 import { systemPrompt } from "~/constants/system-prompt";
 import SuperJSON from "superjson";
@@ -42,6 +43,12 @@ export const trackRouter = createTRPCRouter({
       }
 
       return object;
+    }),
+  getRecommendationsMutate: protectedProcedure
+    .input(z.array(z.string()))
+    .mutation(async ({ input, ctx }): Promise<TRecommendedTracks> => {
+      const caller = trackRouter.createCaller(ctx);
+      return await caller.getRecommendations(input);
     }),
 
   pushRecommendations: protectedProcedure
