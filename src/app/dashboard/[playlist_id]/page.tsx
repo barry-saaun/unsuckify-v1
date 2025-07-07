@@ -1,11 +1,11 @@
 "use client";
 import { useParams, useSearchParams } from "next/navigation";
 import { api } from "~/trpc/react";
-import { skipToken } from "@tanstack/react-query";
 import ErrorScreen from "~/components/error-screen";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import LoadingMessages from "~/components/loading-messages";
+import useRecommendationsWithThreshold from "~/hooks/useRecommendationsWithThreshold";
 
 function useUserId() {
   const [userId, setUserId] = useState<string>("");
@@ -48,34 +48,13 @@ export default function PlaylistContent() {
     { staleTime: 86400 * 1000 },
   );
 
-  const isLargeInput = playlistData && playlistData.length > 100;
-
-  const recQueryResult = api.track.getRecommendations.useQuery(
-    playlistData ?? skipToken,
-    {
-      enabled: !!playlistData && !!isLargeInput,
-      staleTime: 86400 * 1000,
-      retry: false,
-    },
-  );
-
-  const getRecMutation = api.track.getRecommendationsMutate.useMutation();
-
-  useEffect(() => {
-    if (
-      playlistData &&
-      (isLargeInput || recQueryResult.error) &&
-      !getRecMutation.data &&
-      !getRecMutation.isPending
-    ) {
-      getRecMutation.mutate(playlistData);
-    }
-  }, [getRecMutation, playlistData, recQueryResult, isLargeInput]);
-
-  const rec_tracks = recQueryResult.data ?? getRecMutation.data;
-  const isLoadingRecommendations =
-    recQueryResult.isLoading ?? getRecMutation.isPending;
-  const recommendationsError = recQueryResult.error ?? getRecMutation.error;
+  const {
+    data: rec_tracks,
+    isLoading: isLoadingRecommendations,
+    error: recommendationsError,
+  } = useRecommendationsWithThreshold({
+    playlistData: playlistData,
+  });
 
   const {
     data: resolvedTracks,
@@ -110,6 +89,21 @@ export default function PlaylistContent() {
     await fetchNextPage();
   };
 
+  // Handle loading states for either query
+  if (
+    isLoadingPlaylist ||
+    isLoadingRecommendations ||
+    isLoadingResolvedTracks ||
+    isLoadingInfTracks
+  ) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4">
+        <div className="hungry-loader" />
+        <LoadingMessages interval={1000} />
+      </div>
+    );
+  }
+
   // Handle errors for either query
   if (playlistError) {
     return <ErrorScreen message={playlistError.message} />;
@@ -123,26 +117,12 @@ export default function PlaylistContent() {
     return <ErrorScreen message={resolvingRecsError.message} />;
   }
 
-  // Handle loading states for either query
-  if (
-    isLoadingPlaylist ||
-    isLoadingRecommendations ||
-    isLoadingResolvedTracks
-  ) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4">
-        <div className="hungry-loader" />
-        <LoadingMessages interval={1000} />
-      </div>
-    );
-  }
-
-  if (!playlistData) {
+  if (playlistData === null) {
     console.error("No playlist data found.");
     return <ErrorScreen message="No playlist data found." />;
   }
 
-  if (!rec_tracks) {
+  if (rec_tracks === null) {
     console.error("No recommendation data found.");
     return <ErrorScreen message="No recommendation data found." />;
   }
