@@ -35,7 +35,16 @@ export function HoverBorderGradient({
     return directions[nextIndex]!;
   };
 
-  const movingMap: Record<Direction, string> = {
+  const lightMovingMap: Record<Direction, string> = {
+    TOP: "radial-gradient(20.7% 50% at 50% 0%, hsl(220, 90%, 35%) 0%, rgba(34, 117, 248, 0) 100%)",
+    LEFT: "radial-gradient(16.6% 43.1% at 0% 50%, hsl(220, 90%, 35%) 0%, rgba(34, 117, 248, 0) 100%)",
+    BOTTOM:
+      "radial-gradient(20.7% 50% at 50% 100%, hsl(220, 90%, 35%) 0%, rgba(34, 117, 248, 0) 100%)",
+    RIGHT:
+      "radial-gradient(16.2% 41.199999999999996% at 100% 50%, hsl(220, 90%, 35%) 0%, rgba(34, 117, 248, 0) 100%)",
+  };
+
+  const darkMovingMap: Record<Direction, string> = {
     TOP: "radial-gradient(20.7% 50% at 50% 0%, hsl(0, 0%, 100%) 0%, rgba(255, 255, 255, 0) 100%)",
     LEFT: "radial-gradient(16.6% 43.1% at 0% 50%, hsl(0, 0%, 100%) 0%, rgba(255, 255, 255, 0) 100%)",
     BOTTOM:
@@ -55,6 +64,7 @@ export function HoverBorderGradient({
       return () => clearInterval(interval);
     }
   }, [hovered]);
+
   return (
     <Tag
       onMouseEnter={(event: React.MouseEvent<HTMLDivElement>) => {
@@ -85,11 +95,16 @@ export function HoverBorderGradient({
           width: "100%",
           height: "100%",
         }}
-        initial={{ background: movingMap[direction] }}
+        initial={{
+          background: `light-dark(${lightMovingMap[direction]}, ${darkMovingMap[direction]})`,
+        }}
         animate={{
           background: hovered
-            ? [movingMap[direction], highlight]
-            : movingMap[direction],
+            ? [
+                `light-dark(${lightMovingMap[direction]}, ${darkMovingMap[direction]})`,
+                highlight,
+              ]
+            : `light-dark(${lightMovingMap[direction]}, ${darkMovingMap[direction]})`,
         }}
         transition={{ ease: "linear", duration: duration ?? 1 }}
       />
