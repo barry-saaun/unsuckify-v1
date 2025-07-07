@@ -33,7 +33,13 @@ export default function PlaylistContent() {
 
   const ownerId = searchParams.get("ownerId");
 
-  const isOwned = ownerId && userId === ownerId;
+  let isOwned: boolean;
+
+  if (ownerId && ownerId === userId) {
+    isOwned = true;
+  } else {
+    isOwned = false;
+  }
 
   const playlist_id = params.playlist_id;
 
