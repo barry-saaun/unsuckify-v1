@@ -49,6 +49,12 @@ async function spotifyFetch<T>(
     }),
   );
 
+  // if the AI hallucinate and return an incorrect object, just return null
+  // and skip that error track
+  if (error && endpoint === "/search") {
+    return null;
+  }
+
   if (error) {
     if (axios.isAxiosError(error)) {
       const status = error.response?.status;
