@@ -177,13 +177,14 @@ export const trackRouter = createTRPCRouter({
             success: true,
           };
         } else {
-          const { success } = await caller.pushRecommendations({
+          const result = await caller.pushRecommendations({
             userId: input.userId,
             playlist_id: input.playlist_id,
             recommendations: input.newTracks,
           });
 
-          if (!success) {
+          if (!result.success) {
+            console.log("log from !success");
             return {
               resolvedTracks: input.newTracks,
               timeLeft: new Date().getTime(),
@@ -191,14 +192,16 @@ export const trackRouter = createTRPCRouter({
               batchId: null,
             };
           }
-
-          return {
-            resolvedTracks: input.newTracks,
-            timeLeft: null,
-            success: true,
-            batchId,
-          };
+          batchId = result.batchId;
+          timeLeft = 24 * 60 * 60 * 1000;
         }
+
+        return {
+          resolvedTracks: input.newTracks,
+          timeLeft,
+          success: true,
+          batchId,
+        };
       },
     ),
   infiniteTracks: protectedProcedure
