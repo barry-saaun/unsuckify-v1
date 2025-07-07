@@ -44,83 +44,31 @@ export default function PlaylistContent() {
   const playlist_id = params.playlist_id;
 
   const {
-    data: playlistData,
-    isLoading: isLoadingPlaylist,
-    error: playlistError,
-  } = api.playlist.getPlaylistItemsAll.useQuery(
-    {
-      playlist_id,
-    },
-    { staleTime: 86400 * 1000 },
-  );
-
-  const {
-    data: rec_tracks,
-    isLoading: isLoadingRecommendations,
-    error: recommendationsError,
-  } = useRecommendationsWithThreshold({
-    playlistData: playlistData,
-  });
-
-  const {
-    data: resolvedTracks,
-    error: resolvingRecsError,
-    isLoading: isLoadingResolvedTracks,
-  } = api.track.getOrCreateRecommendations.useQuery(
-    {
-      userId,
-      playlist_id,
-      newTracks: rec_tracks!,
-    },
-    { enabled: !!rec_tracks && !!userId },
-  );
-
-  const batchId = resolvedTracks?.batchId;
-
-  const {
     data,
+    isLoadingAny,
+    errorAny,
     fetchNextPage,
-    hasNextPage,
     isFetchingNextPage,
-    isLoading: isLoadingInfTracks,
-  } = api.track.infiniteTracks.useInfiniteQuery(
-    {
-      limit: 2,
-      batchId: batchId!,
-    },
-    { enabled: !!batchId, getNextPageParam: (lastPage) => lastPage.nextCursor },
-  );
+    playlistData,
+    rec_tracks,
+  } = useRecommendedInfTracks({ playlist_id, userId });
 
   const handleFetchNextPage = async () => {
     await fetchNextPage();
   };
 
   // Handle loading states for either query
-  if (
-    isLoadingPlaylist ||
-    isLoadingRecommendations ||
-    isLoadingResolvedTracks ||
-    isLoadingInfTracks
-  ) {
+  if (isLoadingAny) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4">
         <div className="hungry-loader" />
-        <LoadingMessages interval={1000} />
+        <LoadingMessages interval={2500} />
       </div>
     );
   }
 
-  // Handle errors for either query
-  if (playlistError) {
-    return <ErrorScreen message={playlistError.message} />;
-  }
-
-  if (recommendationsError) {
-    return <ErrorScreen message={recommendationsError.message} />;
-  }
-
-  if (resolvingRecsError) {
-    return <ErrorScreen message={resolvingRecsError.message} />;
+  if (errorAny) {
+    return <ErrorScreen message={errorAny.message} />;
   }
 
   if (playlistData === null) {
@@ -144,7 +92,7 @@ export default function PlaylistContent() {
           </div>
         ))}
       </div>
-      <button onClick={async () => await fetchNextPage()}>Load More</button>
+      <button onClick={handleFetchNextPage}>Load More</button>
     </div>
   );
 }
