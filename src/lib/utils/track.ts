@@ -6,7 +6,6 @@ import {
   recommendationTracks,
   recommendationBatches,
 } from "~/server/db/schema";
-import type { PageParamType, PaginatedQueryKeyType } from "~/types";
 
 export async function deleteExpiredBatchAndTracks({
   ctx,

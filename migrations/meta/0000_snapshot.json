@@ -1,5 +1,5 @@
 {
-  "id": "04b95f8c-af64-4901-bf5c-f78d79989401",
+  "id": "05e208b7-a269-4daf-b771-112cf612df0a",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -96,6 +96,12 @@
         "artists": {
           "name": "artists",
           "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "year": {
+          "name": "year",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
         }

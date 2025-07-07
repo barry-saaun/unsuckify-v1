@@ -2,6 +2,7 @@ import {
   type SinglePlaylistResponse,
   type CurrentUsersProfileResponse,
   type ListOfCurrentUsersPlaylistsResponse,
+  type TrackSearchResponse,
 } from "spotify-api";
 import queryString from "query-string";
 import axios from "axios";
@@ -110,4 +111,6 @@ export const spotifyApi = {
       { playlist_id },
       { offset, limit },
     ),
+  searchForTrack: ({ q, type }: { q: string; type: string }) =>
+    spotifyFetch<TrackSearchResponse>("/search", undefined, { q, type }),
 };

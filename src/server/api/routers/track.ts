@@ -3,6 +3,7 @@ import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { generateObject } from "ai";
 import { google } from "@ai-sdk/google";
 import {
+  RecommendedTrackObjectSchema,
   RecommendedTracksSchema,
   type HandleRecommendationTracksReturn,
   type TRecommendedTracks,
@@ -21,6 +22,7 @@ import {
   deleteExpiredBatchAndTracks,
   getFirstTrackOfBatchId,
 } from "~/lib/utils/track";
+import { spotifyApi } from "~/lib/spotify";
 
 export const trackRouter = createTRPCRouter({
   getRecommendations: protectedProcedure
@@ -240,5 +242,34 @@ export const trackRouter = createTRPCRouter({
         items,
         nextCursor,
       };
+    }),
+  searchForTracks: protectedProcedure
+    .input(RecommendedTrackObjectSchema)
+    .query(async ({ input }) => {
+      const { track, album, artists, year } = input;
+
+      const queryParts = [];
+      if (album) queryParts.push(`album:"${album}"`);
+      if (artists) queryParts.push(`artist:"${artists}"`);
+      if (track) queryParts.push(`track:"${track}"`);
+      if (year) queryParts.push(`year:${year}`);
+
+      const query = queryParts.join(" ");
+
+      console.log(`[searchForTrack query]:`, query);
+
+      const type = "track" as const;
+
+      const result = await spotifyApi.searchForTrack({ q: query, type });
+
+      const firstTrack = result?.tracks?.items?.[0];
+      const albumImage = firstTrack?.album?.images?.[0]?.url;
+      const trackUri = firstTrack?.uri;
+
+      if (!result || !firstTrack || !albumImage) {
+        return null;
+      }
+
+      return { trackUri, albumImage };
     }),
 });

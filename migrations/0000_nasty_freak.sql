@@ -11,7 +11,8 @@ CREATE TABLE "rec_tracks" (
 	"batchId" integer,
 	"track" varchar(255) NOT NULL,
 	"album" varchar(255) NOT NULL,
-	"artists" varchar(255) NOT NULL
+	"artists" varchar(255) NOT NULL,
+	"year" integer NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "users" (
