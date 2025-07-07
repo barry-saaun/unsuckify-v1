@@ -17,8 +17,6 @@ export default function useRecommendationsWithThreshold({
     inputSize > SAFE_INPUT_SIZE && inputSize <= MAX_INPUT_SIZE;
   const isTooLargeInput = inputSize > MAX_INPUT_SIZE;
 
-  const shouldProcess = !!isLargeInputToQuery && !isTooLargeInput;
-
   const queryResult = api.track.getRecommendations.useQuery(
     playlistData ?? skipToken,
     {
@@ -47,7 +45,7 @@ export default function useRecommendationsWithThreshold({
 
   return {
     data: isTooLargeInput ? null : rec_tracks,
-    isLoading: shouldProcess && isLoadingRecommendations,
+    isLoading: isLoadingRecommendations,
     error: isTooLargeInput
       ? {
           code: "PAYLOAD_TOO_LARGE" as const,
