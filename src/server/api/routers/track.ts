@@ -82,6 +82,7 @@ export const trackRouter = createTRPCRouter({
         track: rec.track,
         album: rec.album,
         artists: rec.artists,
+        year: rec.year,
         batchId: batch?.id,
       }));
 
@@ -171,6 +172,7 @@ export const trackRouter = createTRPCRouter({
               track: track.track,
               album: track.album,
               artists: track.artists,
+              year: track.year,
             })),
             timeLeft,
             batchId,

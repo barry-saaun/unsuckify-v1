@@ -32,6 +32,7 @@ export const recommendationTracks = pgTable("rec_tracks", {
   track: varchar("track", { length: 255 }).notNull(),
   album: varchar("album", { length: 255 }).notNull(),
   artists: varchar("artists", { length: 255 }).notNull(),
+  year: integer("year").notNull(),
 });
 
 export type RecBatchesSelectType = InferSelectModel<
