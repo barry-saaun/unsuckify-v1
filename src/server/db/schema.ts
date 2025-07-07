@@ -26,7 +26,9 @@ export const recommendationBatches = pgTable(
 
 export const recommendationTracks = pgTable("rec_tracks", {
   id: serial("id").primaryKey(),
-  batchId: integer("batchId").references(() => recommendationBatches.id),
+  batchId: integer("batchId").references(() => recommendationBatches.id, {
+    onDelete: "cascade",
+  }),
   track: varchar("track", { length: 255 }).notNull(),
   album: varchar("album", { length: 255 }).notNull(),
   artists: varchar("artists", { length: 255 }).notNull(),
