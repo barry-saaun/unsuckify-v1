@@ -22,8 +22,7 @@ import { Spinner } from "./Icons";
 interface DynamicRecommendedTrackCardProps
   extends HTMLAttributes<HTMLDivElement> {
   isOwned: boolean;
-  isImageLoaded: boolean;
-  image_src?: string | React.ReactNode;
+  image_src?: string;
   track: string;
   artists: string;
   tooltipContent: string;
@@ -37,7 +36,6 @@ const DynamicRecommendedTrackCard: React.FC<
   DynamicRecommendedTrackCardProps
 > = ({
   isOwned,
-  isImageLoaded,
   image_src,
   track,
   tooltipContent,
@@ -50,6 +48,7 @@ const DynamicRecommendedTrackCard: React.FC<
 }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isAdded, setIsAdded] = useState<boolean>(false);
+  const [imageLoaded, setImageLoaded] = useState<boolean>(false);
 
   const handleAddTrackToOwnedPlaylist = async () => {
     try {
@@ -59,12 +58,13 @@ const DynamicRecommendedTrackCard: React.FC<
       // });
 
       setIsAdded(true);
-
-      setIsLoading(false);
     } catch (error) {
       console.error(error);
+    } finally {
+      setIsLoading(false);
     }
   };
+
   return (
     <TooltipProvider>
       <Tooltip>
@@ -77,21 +77,22 @@ const DynamicRecommendedTrackCard: React.FC<
             {...props}
           >
             <CardContent className="group relative aspect-square overflow-hidden">
-              {isImageLoaded ? (
-                typeof image_src === "string" ? (
-                  <Image
-                    fill
-                    src={image_src}
-                    alt={track}
-                    priority
-                    className="rounded-t-xl object-cover shadow group-hover:shadow-lg group-hover:brightness-50"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  />
-                ) : (
-                  image_src
-                )
-              ) : (
-                <div className="absolute inset-0 animate-pulse rounded-t-xl bg-gray-100 dark:bg-gray-900" />
+              {!imageLoaded && (
+                <div className="absolute inset-0 animate-pulse rounded-t-xl bg-gray-200 dark:bg-gray-200" />
+              )}
+              {image_src && (
+                <Image
+                  fill
+                  src={image_src}
+                  alt={track}
+                  className={cn(
+                    "rounded-t-xl object-cover shadow transition-all duration-300 group-hover:shadow-lg group-hover:brightness-50",
+                    !imageLoaded && "opacity-0",
+                  )}
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  onLoad={() => setImageLoaded(true)}
+                  loading="lazy" // Enable lazy loading
+                />
               )}
               {isSelected && (
                 <div className="absolute top-2 right-2 rounded-full bg-black p-1 transition-all">

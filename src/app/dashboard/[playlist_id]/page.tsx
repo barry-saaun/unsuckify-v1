@@ -1,6 +1,5 @@
 "use client";
 import { useParams, useSearchParams } from "next/navigation";
-import { api } from "~/trpc/react";
 import ErrorScreen from "~/components/error-screen";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";

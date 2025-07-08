@@ -1,9 +1,10 @@
 import type React from "react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { cn } from "~/lib/utils";
 import { api } from "~/trpc/react";
 import type { TRecommendedTrackObject } from "~/types";
 import DynamicRecommendedTrackCard from "./dynamic-recommended-track-card";
+import CardSkeleton from "./card-skeleton";
 
 type RecommendedTrackCardProps = {
   trackObj: TRecommendedTrackObject;
@@ -18,23 +19,21 @@ const RecommendedTrackCard: React.FC<RecommendedTrackCardProps> = ({
   isOwned,
   handleNotIsOwnedCardClick,
 }) => {
-  const { track, album, artists, year } = trackObj;
+  const { track, album, artists } = trackObj;
 
-  const { data, isLoading } = api.track.searchForTracks.useQuery(trackObj);
+  const { data, isLoading, error } =
+    api.track.searchForTracks.useQuery(trackObj);
 
-  const [isImageLoaded, setIsImageLoaded] = useState(false);
   const [isHovered, setIsHoverd] = useState(false);
   const [isSelected, setIsSelected] = useState(false);
 
+  if (isLoading) {
+    return <CardSkeleton />;
+  }
+
   // just ignore the errored query result completely
-
-  useEffect(() => {
-    if (data?.albumImage) {
-      setIsImageLoaded(true);
-    }
-  }, [data?.albumImage]);
-
-  if (data === null || !data?.trackUri || !data?.albumImage) return null;
+  if (error || data === null || !data?.trackUri || !data?.albumImage)
+    return null;
 
   const handleOnClick = () => {
     handleNotIsOwnedCardClick(data?.trackUri ?? "");
@@ -52,7 +51,6 @@ const RecommendedTrackCard: React.FC<RecommendedTrackCardProps> = ({
     track,
     artists,
     image_src: data?.albumImage,
-    isImageLoaded,
     tooltipContent,
     onMouseEnter: () => setIsHoverd(true),
     onMouseLeave: () => setIsHoverd(false),

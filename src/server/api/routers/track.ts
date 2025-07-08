@@ -29,7 +29,7 @@ export const trackRouter = createTRPCRouter({
     .input(z.array(z.string()))
     .query(async ({ input }) => {
       const { object } = await generateObject({
-        model: google("gemini-2.0-flash-exp"),
+        model: google("gemini-2.5-flash-preview-04-17"),
         prompt: SuperJSON.stringify(input),
         schema: RecommendedTracksSchema,
         system: systemPrompt,
