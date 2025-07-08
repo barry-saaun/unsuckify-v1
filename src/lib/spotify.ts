@@ -119,4 +119,20 @@ export const spotifyApi = {
     ),
   searchForTrack: ({ q, type }: { q: string; type: string }) =>
     spotifyFetch<TrackSearchResponse>("GET", "/search", undefined, { q, type }),
+  addTracksToPlaylist: ({
+    playlist_id,
+    requestBody,
+  }: {
+    playlist_id: string;
+    requestBody: {
+      uris: string[];
+    };
+  }) =>
+    spotifyFetch(
+      "POST",
+      "/playlists/{playlist_id}/tracks",
+      { playlist_id },
+      undefined,
+      requestBody,
+    ),
 };

@@ -19,6 +19,7 @@ import { cn } from "~/lib/utils";
 import React, { useState, type HTMLAttributes } from "react";
 import { Spinner } from "./Icons";
 import { api } from "~/trpc/react";
+import { toast } from "sonner";
 
 interface DynamicRecommendedTrackCardProps
   extends HTMLAttributes<HTMLDivElement> {
@@ -51,19 +52,24 @@ const DynamicRecommendedTrackCard: React.FC<
   const [isAdded, setIsAdded] = useState<boolean>(false);
   const [imageLoaded, setImageLoaded] = useState<boolean>(false);
 
-  const mutation = api.playlist.addItemsToPlaylist.useMutation();
+  const mutation = api.playlist.addItemsToPlaylist.useMutation({
+    onError: (error) => {
+      toast.error(error?.message, {
+        id: "error-add-track-to-playlist",
+      });
+      setIsAdded(false);
+    },
+    onSuccess: () => setIsAdded(true),
+  });
 
-  const handleAddTrackToOwnedPlaylist = async () => {
-    try {
-      setIsLoading(true);
-      mutation.mutate({ playlist_id, track_uris: [track_uri] });
-
-      setIsAdded(true);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
+  const handleAddTrackToOwnedPlaylist = () => {
+    setIsLoading(true);
+    mutation.mutate(
+      { playlist_id, track_uris: [track_uri] },
+      {
+        onSettled: () => setIsLoading(false),
+      },
+    );
   };
 
   return (

@@ -110,11 +110,21 @@ export const playlistRouter = createTRPCRouter({
     .mutation(async ({ input }) => {
       const { playlist_id, track_uris } = input;
 
-      await spotifyApi.addTracksToPlaylist({
-        playlist_id,
-        requestBody: {
-          uris: track_uris,
-        },
-      });
+      const { error } = await tryCatch(
+        spotifyApi.addTracksToPlaylist({
+          playlist_id,
+          requestBody: {
+            uris: track_uris,
+          },
+        }),
+      );
+
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            "Sorry! We could not add this track to your playlist at the moment.",
+        });
+      }
     }),
 });
