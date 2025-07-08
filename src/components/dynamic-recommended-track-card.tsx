@@ -43,7 +43,7 @@ const DynamicRecommendedTrackCard: React.FC<
   tooltipContent,
   isSelected,
   playlist_id,
-  // track_uri,
+  track_uri,
   artists,
   cardClassName,
   ...props
@@ -52,28 +52,32 @@ const DynamicRecommendedTrackCard: React.FC<
   const [isAdded, setIsAdded] = useState<boolean>(false);
   const [imageLoaded, setImageLoaded] = useState<boolean>(false);
 
+  const [addedTrackSnapshotId, setAddedTrackSnapshotId] = useState<
+    string | null
+  >(null);
+
   const { toastError } = useAppToast();
 
-  const mutation = api.playlist.addItemsToPlaylist.useMutation({
+  const addMutation = api.playlist.addItemsToPlaylist.useMutation({
+    onMutate: () => {
+      setIsLoading(true);
+    },
     onError: (error) => {
       toastError(error?.message, {
         id: `error-add-${track}-to-playlist`,
       });
       setIsAdded(false);
+      setIsLoading(false);
     },
-    onSuccess: () => setIsAdded(true),
+    onSuccess: (data) => {
+      setIsAdded(true);
+      setAddedTrackSnapshotId(data!.snapshot_id);
+      setIsLoading(false);
+    },
   });
 
-  const track_uri = "....";
-
   const handleAddTrackToOwnedPlaylist = () => {
-    setIsLoading(true);
-    mutation.mutate(
-      { playlist_id, track_uris: [track_uri] },
-      {
-        onSettled: () => setIsLoading(false),
-      },
-    );
+    addMutation.mutate({ playlist_id, track_uris: [track_uri] });
   };
 
   return (
