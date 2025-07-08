@@ -5,7 +5,12 @@ import ErrorScreen from "~/components/error-screen";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import LoadingMessages from "~/components/loading-messages";
-import useRecommendationsWithThreshold from "~/hooks/useRecommendationsWithThreshold";
+import { Button } from "~/components/ui/button";
+import Spinner from "~/components/spinner";
+import InfoBanner from "~/components/info-banner";
+import CreateNewPlaylistCard from "~/components/create-new-playlist-card";
+import { useRecommendedInfTracks } from "~/hooks/useRecommendedInfTracks";
+import RecommendedTrackCard from "~/components/recommended-track-card";
 
 function useUserId() {
   const [userId, setUserId] = useState<string>("");
@@ -51,10 +56,19 @@ export default function PlaylistContent() {
     isFetchingNextPage,
     playlistData,
     rec_tracks,
+    hasNextPage,
   } = useRecommendedInfTracks({ playlist_id, userId });
+
+  const [selectedTracksUri, setSelectedTracksUri] = useState(
+    new Set<string>(new Set()),
+  );
 
   const handleFetchNextPage = async () => {
     await fetchNextPage();
+  };
+
+  const handleNotIsOwnedCardClick = () => {
+    return null;
   };
 
   // Handle loading states for either query
@@ -81,18 +95,56 @@ export default function PlaylistContent() {
     return <ErrorScreen message="No recommendation data found." />;
   }
 
+  // return (
+  //   <div className="flex min-h-screen w-full flex-col">
+  //     <div className="flex flex-col">
+  //       {data?.pages.map((page, i) => (
+  //         <div key={`${i} + ${JSON.stringify(page)}`}>
+  //           {page.items.map((item) => (
+  //             <div key={item.id}>{item.track}</div>
+  //           ))}
+  //         </div>
+  //       ))}
+  //     </div>
+  //     <button onClick={handleFetchNextPage}>Load More</button>
+  //   </div>
+  // );
+
   return (
-    <div className="flex min-h-screen w-full flex-col">
-      <div className="flex flex-col">
-        {data?.pages.map((page, i) => (
-          <div key={`${i} + ${JSON.stringify(page)}`}>
-            {page.items.map((item) => (
-              <div key={item.id}>{item.track}</div>
-            ))}
-          </div>
-        ))}
+    <div className="mx-auto flex min-h-screen flex-col items-center justify-center gap-2 border-none">
+      {!isOwned && (
+        <CreateNewPlaylistCard
+          selectedTracksUri={Array.from(selectedTracksUri)}
+          newPlaylistId=""
+        />
+      )}
+      <InfoBanner isOwned={isOwned} />
+      <div className="mt-5 grid w-full grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {data?.pages.flatMap((page) =>
+          page.items.map((item, i) => (
+            <RecommendedTrackCard
+              key={`${i}-${item.id}`}
+              playlist_id={playlist_id}
+              handleNotIsOwnedCardClick={handleNotIsOwnedCardClick}
+              trackObj={item}
+              isOwned={isOwned}
+            />
+          )),
+        )}
       </div>
-      <button onClick={handleFetchNextPage}>Load More</button>
+      {hasNextPage ? (
+        <Button
+          disabled={isFetchingNextPage}
+          onClick={() => fetchNextPage()}
+          className="mt-5 flex w-32 items-center justify-center"
+        >
+          {isFetchingNextPage ? (
+            <Spinner />
+          ) : (
+            <h1 className="text-sm font-semibold tracking-normal">Load More</h1>
+          )}
+        </Button>
+      ) : null}
     </div>
   );
 }
