@@ -1,14 +1,15 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { useAuthError } from "~/components/auth-error-provider";
 import { api } from "~/trpc/react";
+import { useAppToast } from "./useAppToast";
 
 export const useAuth = () => {
   const router = useRouter();
   const utils = api.useUtils();
 
   const { setSessionExpired } = useAuthError();
+  const { toastError } = useAppToast();
 
   const logout = api.auth.logout.useMutation({
     onMutate: () => {
@@ -24,7 +25,9 @@ export const useAuth = () => {
     },
     onError: (error) => {
       console.error("Logged out failed: ", error);
-      toast.error("Failed to log out. Please try again.");
+      toastError("Failed to log out. Please try again.", {
+        id: "error-logging-out",
+      });
     },
   });
 

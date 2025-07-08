@@ -2,7 +2,6 @@
 import { useParams, useSearchParams } from "next/navigation";
 import ErrorScreen from "~/components/error-screen";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 import LoadingMessages from "~/components/loading-messages";
 import { Button } from "~/components/ui/button";
 import Spinner from "~/components/spinner";
@@ -11,24 +10,26 @@ import CreateNewPlaylistCard from "~/components/create-new-playlist-card";
 import { useRecommendedInfTracks } from "~/hooks/useRecommendedInfTracks";
 import RecommendedTrackCard from "~/components/recommended-track-card";
 import RecommendedTrackCardSkeleton from "~/components/rec-track-card-skeleton";
+import { useAppToast } from "~/hooks/useAppToast";
 
 const TRACK_PER_INF_PAGE = 2;
 
 function useUserId() {
   const [userId, setUserId] = useState<string>("");
+  const { toastError } = useAppToast();
 
   useEffect(() => {
     const id = localStorage.getItem("userId");
 
     if (!id) {
-      toast.error("Failed to get your Spotify ID.", {
+      toastError("Failed to get your Spotify ID.", {
         id: "failed-retrieving-userId",
       });
       return;
     }
 
     setUserId(id);
-  }, []);
+  }, [toastError]);
   return userId;
 }
 

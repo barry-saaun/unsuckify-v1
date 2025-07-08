@@ -14,7 +14,7 @@ import { Input } from "./ui/input";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { useAppToast } from "~/hooks/useAppToast";
 
 const FormSchema = z.object({
   url: z
@@ -28,6 +28,7 @@ const FormSchema = z.object({
 
 function PublicPlaylistTabContent() {
   const router = useRouter();
+  const { toastError } = useAppToast();
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -57,7 +58,7 @@ function PublicPlaylistTabContent() {
   const errorOnSubmit = (errors: FieldErrors<z.infer<typeof FormSchema>>) => {
     const errorMessage = errors?.url;
     if (errorMessage) {
-      toast.error(` 😩 ${errorMessage.message}`);
+      toastError(` 😩 ${errorMessage.message}`);
     }
   };
 

@@ -19,7 +19,7 @@ import { cn } from "~/lib/utils";
 import React, { useState, type HTMLAttributes } from "react";
 import { Spinner } from "./Icons";
 import { api } from "~/trpc/react";
-import { toast } from "sonner";
+import { useAppToast } from "~/hooks/useAppToast";
 
 interface DynamicRecommendedTrackCardProps
   extends HTMLAttributes<HTMLDivElement> {
@@ -43,7 +43,7 @@ const DynamicRecommendedTrackCard: React.FC<
   tooltipContent,
   isSelected,
   playlist_id,
-  track_uri,
+  // track_uri,
   artists,
   cardClassName,
   ...props
@@ -52,15 +52,19 @@ const DynamicRecommendedTrackCard: React.FC<
   const [isAdded, setIsAdded] = useState<boolean>(false);
   const [imageLoaded, setImageLoaded] = useState<boolean>(false);
 
+  const { toastError } = useAppToast();
+
   const mutation = api.playlist.addItemsToPlaylist.useMutation({
     onError: (error) => {
-      toast.error(error?.message, {
-        id: "error-add-track-to-playlist",
+      toastError(error?.message, {
+        id: `error-add-${track}-to-playlist`,
       });
       setIsAdded(false);
     },
     onSuccess: () => setIsAdded(true),
   });
+
+  const track_uri = "....";
 
   const handleAddTrackToOwnedPlaylist = () => {
     setIsLoading(true);
