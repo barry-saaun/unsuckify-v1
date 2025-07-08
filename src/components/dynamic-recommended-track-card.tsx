@@ -71,7 +71,7 @@ const DynamicRecommendedTrackCard: React.FC<
         <TooltipTrigger asChild>
           <Card
             className={cn(
-              "bg-card/50 backdrop-blur-sm transition-all duration-300",
+              "bg-card/50 pt-0 backdrop-blur-sm transition-all duration-300",
               cardClassName,
             )}
             {...props}
@@ -105,9 +105,9 @@ const DynamicRecommendedTrackCard: React.FC<
               <CardDescription>{artists}</CardDescription>
             </CardHeader>
             {isOwned ? (
-              <CardFooter>
+              <CardFooter className="dark:bg-puruple-50 flex items-center justify-center">
                 <Button
-                  className="mx-5 flex w-full items-center justify-center gap-4 font-semibold"
+                  className="mx-5 flex w-full items-center justify-center gap-4 bg-purple-700 font-semibold filter transition-all hover:bg-purple-600 hover:brightness-125 dark:bg-purple-300 hover:dark:bg-purple-200"
                   onClick={handleAddTrackToOwnedPlaylist}
                 >
                   {isLoading ? (

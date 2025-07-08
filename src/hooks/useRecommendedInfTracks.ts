@@ -4,11 +4,13 @@ import useRecommendationsWithThreshold from "./useRecommendationsWithThreshold";
 type useRecommendedInfTracksParams = {
   playlist_id: string;
   userId: string;
+  limit: number;
 };
 
 export const useRecommendedInfTracks = ({
   playlist_id,
   userId,
+  limit,
 }: useRecommendedInfTracksParams) => {
   const {
     data: playlistData,
@@ -46,7 +48,7 @@ export const useRecommendedInfTracks = ({
 
   const infiniteQueryResult = api.track.infiniteTracks.useInfiniteQuery(
     {
-      limit: 2,
+      limit,
       batchId: batchId!,
     },
     { enabled: !!batchId, getNextPageParam: (lastPage) => lastPage.nextCursor },

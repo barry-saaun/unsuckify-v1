@@ -10,6 +10,9 @@ import InfoBanner from "~/components/info-banner";
 import CreateNewPlaylistCard from "~/components/create-new-playlist-card";
 import { useRecommendedInfTracks } from "~/hooks/useRecommendedInfTracks";
 import RecommendedTrackCard from "~/components/recommended-track-card";
+import RecommendedTrackCardSkeleton from "~/components/rec-track-card-skeleton";
+
+const TRACK_PER_INF_PAGE = 2;
 
 function useUserId() {
   const [userId, setUserId] = useState<string>("");
@@ -56,14 +59,25 @@ export default function PlaylistContent() {
     playlistData,
     rec_tracks,
     hasNextPage,
-  } = useRecommendedInfTracks({ playlist_id, userId });
+  } = useRecommendedInfTracks({
+    playlist_id,
+    userId,
+    limit: TRACK_PER_INF_PAGE,
+  });
 
   const [selectedTracksUri, setSelectedTracksUri] = useState(
     new Set<string>(new Set()),
   );
 
+  const [skeletonPages, setSkeletonPages] = useState(0);
+
   const handleFetchNextPage = async () => {
-    await fetchNextPage();
+    setSkeletonPages((prev) => prev + 1);
+    try {
+      await fetchNextPage();
+    } finally {
+      setSkeletonPages((prev) => Math.max(0, prev - 1));
+    }
   };
 
   const handleNotIsOwnedCardClick = () => {
@@ -94,23 +108,8 @@ export default function PlaylistContent() {
     return <ErrorScreen message="No recommendation data found." />;
   }
 
-  // return (
-  //   <div className="flex min-h-screen w-full flex-col">
-  //     <div className="flex flex-col">
-  //       {data?.pages.map((page, i) => (
-  //         <div key={`${i} + ${JSON.stringify(page)}`}>
-  //           {page.items.map((item) => (
-  //             <div key={item.id}>{item.track}</div>
-  //           ))}
-  //         </div>
-  //       ))}
-  //     </div>
-  //     <button onClick={handleFetchNextPage}>Load More</button>
-  //   </div>
-  // );
-
   return (
-    <div className="mx-auto flex min-h-screen flex-col items-center justify-center gap-2 border-none">
+    <div className="mx-6 mb-10 flex min-h-screen flex-col items-center justify-center gap-2 border-none md:mx-8 lg:mx-10">
       {!isOwned && (
         <CreateNewPlaylistCard
           selectedTracksUri={Array.from(selectedTracksUri)}
@@ -130,11 +129,20 @@ export default function PlaylistContent() {
             />
           )),
         )}
+
+        {Array.from({ length: skeletonPages }, (_, pageIndex) =>
+          Array.from({ length: TRACK_PER_INF_PAGE }, (_, itemIndex) => (
+            <RecommendedTrackCardSkeleton
+              isOwned
+              key={`skeleton-${pageIndex}-${itemIndex}`}
+            />
+          )),
+        )}
       </div>
       {hasNextPage ? (
         <Button
           disabled={isFetchingNextPage}
-          onClick={() => fetchNextPage()}
+          onClick={handleFetchNextPage}
           className="mt-5 flex w-32 items-center justify-center"
         >
           {isFetchingNextPage ? (

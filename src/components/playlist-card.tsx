@@ -30,8 +30,8 @@ const PlaylistCard = ({
 }: PlaylistCardProps) => {
   const router = useRouter();
   return (
-    <Card className="overflow-hidden">
-      <div className="relative aspect-square">
+    <Card className="overflow-hidden rounded-md pt-0">
+      <div className="relative aspect-square overflow-hidden rounded-t-md">
         {typeof playlistImg === "string" ? (
           <Image
             fill

@@ -4,7 +4,7 @@ import { cn } from "~/lib/utils";
 import { api } from "~/trpc/react";
 import type { TRecommendedTrackObject } from "~/types";
 import DynamicRecommendedTrackCard from "./dynamic-recommended-track-card";
-import CardSkeleton from "./card-skeleton";
+import RecommendedTrackCardSkeleton from "./rec-track-card-skeleton";
 
 type RecommendedTrackCardProps = {
   trackObj: TRecommendedTrackObject;
@@ -19,7 +19,7 @@ const RecommendedTrackCard: React.FC<RecommendedTrackCardProps> = ({
   isOwned,
   handleNotIsOwnedCardClick,
 }) => {
-  const { track, album, artists } = trackObj;
+  const { track, artists } = trackObj;
 
   const { data, isLoading, error } =
     api.track.searchForTracks.useQuery(trackObj);
@@ -28,7 +28,7 @@ const RecommendedTrackCard: React.FC<RecommendedTrackCardProps> = ({
   const [isSelected, setIsSelected] = useState(false);
 
   if (isLoading) {
-    return <CardSkeleton />;
+    return <RecommendedTrackCardSkeleton isOwned />;
   }
 
   // just ignore the errored query result completely
@@ -41,7 +41,7 @@ const RecommendedTrackCard: React.FC<RecommendedTrackCardProps> = ({
   };
 
   const tooltipContent: string = isOwned
-    ? "Add this to your Playlist"
+    ? "Save this track"
     : isSelected
       ? "Click to Deselect"
       : "Click to Select";
