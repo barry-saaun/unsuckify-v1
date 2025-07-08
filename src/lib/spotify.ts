@@ -3,6 +3,7 @@ import {
   type CurrentUsersProfileResponse,
   type ListOfCurrentUsersPlaylistsResponse,
   type TrackSearchResponse,
+  type AddTracksToPlaylistResponse,
 } from "spotify-api";
 import queryString from "query-string";
 import axios from "axios";
@@ -13,7 +14,7 @@ import { type PlaylistTrackResponse } from "spotify-api";
 
 type PostRequestBody = Record<string, string | string[] | boolean | number>;
 async function spotifyFetch<T>(
-  method: "GET" | "POST",
+  method: "GET" | "POST" | "DELETE",
   endpoint: string,
   params?: Record<string, string>,
   queryParams?: Record<string, number | string>,
@@ -50,7 +51,9 @@ async function spotifyFetch<T>(
       Authorization: `Bearer ${access_token}`,
       "Content-Type": "application/json",
     },
-    ...(method === "POST" ? { data: requestBody } : {}),
+    ...(method === "POST" || (method === "DELETE" && requestBody)
+      ? { data: requestBody }
+      : {}),
   };
 
   const { data: res, error } = await tryCatch(axios.request<T>(axiosConfig));
@@ -128,8 +131,24 @@ export const spotifyApi = {
       uris: string[];
     };
   }) =>
-    spotifyFetch(
+    spotifyFetch<AddTracksToPlaylistResponse>(
       "POST",
+      "/playlists/{playlist_id}/tracks",
+      { playlist_id },
+      undefined,
+      requestBody,
+    ),
+  removePlaylistItems: ({
+    playlist_id,
+    requestBody,
+  }: {
+    playlist_id: string;
+    requestBody: {
+      uris: string[];
+    };
+  }) =>
+    spotifyFetch(
+      "DELETE",
       "/playlists/{playlist_id}/tracks",
       { playlist_id },
       undefined,
