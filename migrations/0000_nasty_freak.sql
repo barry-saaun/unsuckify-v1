@@ -11,7 +11,8 @@ CREATE TABLE "rec_tracks" (
 	"batchId" integer,
 	"track" varchar(255) NOT NULL,
 	"album" varchar(255) NOT NULL,
-	"artists" varchar(255) NOT NULL
+	"artists" varchar(255) NOT NULL,
+	"year" integer NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "users" (
@@ -20,4 +21,4 @@ CREATE TABLE "users" (
 );
 --> statement-breakpoint
 ALTER TABLE "rec_batches" ADD CONSTRAINT "rec_batches_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "rec_tracks" ADD CONSTRAINT "rec_tracks_batchId_rec_batches_id_fk" FOREIGN KEY ("batchId") REFERENCES "public"."rec_batches"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "rec_tracks" ADD CONSTRAINT "rec_tracks_batchId_rec_batches_id_fk" FOREIGN KEY ("batchId") REFERENCES "public"."rec_batches"("id") ON DELETE cascade ON UPDATE no action;

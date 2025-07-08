@@ -1,108 +1,158 @@
 "use client";
-import { useParams } from "next/navigation";
-import { api } from "~/trpc/react";
-import { skipToken } from "@tanstack/react-query";
+import { useParams, useSearchParams } from "next/navigation";
 import ErrorScreen from "~/components/error-screen";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 import LoadingMessages from "~/components/loading-messages";
+import { Button } from "~/components/ui/button";
+import Spinner from "~/components/spinner";
+import InfoBanner from "~/components/info-banner";
+import CreateNewPlaylistCard from "~/components/create-new-playlist-card";
+import { useRecommendedInfTracks } from "~/hooks/useRecommendedInfTracks";
+import RecommendedTrackCard from "~/components/recommended-track-card";
+import RecommendedTrackCardSkeleton from "~/components/rec-track-card-skeleton";
+import { useAppToast } from "~/hooks/useAppToast";
+
+const TRACK_PER_INF_PAGE = 2;
 
 function useUserId() {
   const [userId, setUserId] = useState<string>("");
+  const { toastError } = useAppToast();
 
   useEffect(() => {
     const id = localStorage.getItem("userId");
 
     if (!id) {
-      toast.error("Failed to get your Spotify ID.", {
+      toastError("Failed to get your Spotify ID.", {
         id: "failed-retrieving-userId",
       });
       return;
     }
 
     setUserId(id);
-  }, []);
+  }, [toastError]);
   return userId;
 }
 
 export default function PlaylistContent() {
+  const userId = useUserId();
   const params = useParams<{ playlist_id: string }>();
+
+  const searchParams = useSearchParams();
+
+  const ownerId = searchParams.get("ownerId");
+
+  let isOwned: boolean;
+
+  if (ownerId && ownerId === userId) {
+    isOwned = true;
+  } else {
+    isOwned = false;
+  }
 
   const playlist_id = params.playlist_id;
 
   const {
-    data: playlistData,
-    isLoading: isLoadingPlaylist,
-    error: playlistError,
-  } = api.playlist.getPlaylistItemsAll.useQuery(
-    {
-      playlist_id,
-    },
-    { staleTime: 86400 * 1000 },
-  );
-
-  const {
-    data: rec_tracks,
-    isLoading: isLoadingRecommendations,
-    error: recommendationsError,
-  } = api.track.getRecommendations.useQuery(playlistData ?? skipToken, {
-    enabled: !!playlistData,
-    staleTime: 86400 * 1000,
+    data,
+    isLoadingAny,
+    errorAny,
+    fetchNextPage,
+    isFetchingNextPage,
+    playlistData,
+    rec_tracks,
+    hasNextPage,
+  } = useRecommendedInfTracks({
+    playlist_id,
+    userId,
+    limit: TRACK_PER_INF_PAGE,
   });
 
-  const userId = useUserId();
-
-  console.log("[playlist_id] userId: ", userId);
-
-  const {
-    data: resolvedTracks,
-    error: resolvingRecsError,
-    isLoading: isLoadingResolvedTracks,
-  } = api.track.getOrCreateRecommendations.useQuery(
-    {
-      userId,
-      playlist_id,
-      newTracks: rec_tracks!,
-    },
-    { enabled: !!rec_tracks && !!userId },
+  const [selectedTracksUri, setSelectedTracksUri] = useState(
+    new Set<string>(new Set()),
   );
 
-  // Handle errors for either query
-  if (playlistError) {
-    return <ErrorScreen message={playlistError.message} />;
-  }
+  const [skeletonPages, setSkeletonPages] = useState(0);
 
-  if (recommendationsError) {
-    return <ErrorScreen message={recommendationsError.message} />;
-  }
+  const handleFetchNextPage = async () => {
+    setSkeletonPages((prev) => prev + 1);
+    try {
+      await fetchNextPage();
+    } finally {
+      setSkeletonPages((prev) => Math.max(0, prev - 1));
+    }
+  };
 
-  if (resolvingRecsError) {
-    return <ErrorScreen message={resolvingRecsError.message} />;
-  }
+  const handleNotIsOwnedCardClick = () => {
+    return null;
+  };
 
   // Handle loading states for either query
-  if (
-    isLoadingPlaylist ||
-    isLoadingRecommendations ||
-    isLoadingResolvedTracks
-  ) {
+  if (isLoadingAny) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4">
         <div className="hungry-loader" />
-        <LoadingMessages interval={1000} />
+        <LoadingMessages interval={2500} />
       </div>
     );
   }
 
-  if (!playlistData) {
+  if (errorAny) {
+    return <ErrorScreen message={errorAny.message} />;
+  }
+
+  if (playlistData === null) {
     console.error("No playlist data found.");
     return <ErrorScreen message="No playlist data found." />;
   }
 
-  if (!rec_tracks) {
+  if (rec_tracks === null) {
     console.error("No recommendation data found.");
     return <ErrorScreen message="No recommendation data found." />;
   }
 
-  return <div>{JSON.stringify(resolvedTracks)}</div>;
+  return (
+    <div className="mx-6 mb-10 flex min-h-screen flex-col items-center justify-center gap-2 border-none md:mx-8 lg:mx-10">
+      {!isOwned && (
+        <CreateNewPlaylistCard
+          selectedTracksUri={Array.from(selectedTracksUri)}
+          newPlaylistId=""
+        />
+      )}
+      <InfoBanner isOwned={isOwned} />
+      <div className="mt-5 grid w-full grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {data?.pages.flatMap((page) =>
+          page.items.map((item, i) => (
+            <RecommendedTrackCard
+              key={`${i}-${item.id}`}
+              playlist_id={playlist_id}
+              handleNotIsOwnedCardClick={handleNotIsOwnedCardClick}
+              trackObj={item}
+              isOwned={isOwned}
+            />
+          )),
+        )}
+
+        {Array.from({ length: skeletonPages }, (_, pageIndex) =>
+          Array.from({ length: TRACK_PER_INF_PAGE }, (_, itemIndex) => (
+            <RecommendedTrackCardSkeleton
+              isOwned
+              key={`skeleton-${pageIndex}-${itemIndex}`}
+            />
+          )),
+        )}
+      </div>
+      {hasNextPage ? (
+        <Button
+          disabled={isFetchingNextPage}
+          onClick={handleFetchNextPage}
+          className="mt-5 flex w-32 items-center justify-center"
+        >
+          {isFetchingNextPage ? (
+            <Spinner />
+          ) : (
+            <h1 className="text-sm font-semibold tracking-normal">Load More</h1>
+          )}
+        </Button>
+      ) : null}
+    </div>
+  );
 }

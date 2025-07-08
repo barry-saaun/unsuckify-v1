@@ -2,6 +2,8 @@ import {
   type SinglePlaylistResponse,
   type CurrentUsersProfileResponse,
   type ListOfCurrentUsersPlaylistsResponse,
+  type TrackSearchResponse,
+  type AddTracksToPlaylistResponse,
 } from "spotify-api";
 import queryString from "query-string";
 import axios from "axios";
@@ -10,10 +12,13 @@ import { cookies } from "next/headers";
 import { TRPCError } from "@trpc/server";
 import { type PlaylistTrackResponse } from "spotify-api";
 
+type PostRequestBody = Record<string, string | string[] | boolean | number>;
 async function spotifyFetch<T>(
+  method: "GET" | "POST" | "DELETE",
   endpoint: string,
   params?: Record<string, string>,
   queryParams?: Record<string, number | string>,
+  requestBody?: PostRequestBody,
 ) {
   const access_token = (await cookies()).get("access_token")?.value;
 
@@ -39,15 +44,25 @@ async function spotifyFetch<T>(
 
   const url = `${baseUrl}${resolvedEndpoint}${queryParamsString}`;
 
-  const { data: res, error } = await tryCatch(
-    axios.get(url, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${access_token}`,
-        "Content-Type": "application/json",
-      },
-    }),
-  );
+  const axiosConfig = {
+    method,
+    url,
+    headers: {
+      Authorization: `Bearer ${access_token}`,
+      "Content-Type": "application/json",
+    },
+    ...(method === "POST" || (method === "DELETE" && requestBody)
+      ? { data: requestBody }
+      : {}),
+  };
+
+  const { data: res, error } = await tryCatch(axios.request<T>(axiosConfig));
+
+  // if the AI hallucinate and return an incorrect object, just return null
+  // and skip that error track
+  if (error && endpoint === "/search") {
+    return null;
+  }
 
   if (error) {
     if (axios.isAxiosError(error)) {
@@ -78,16 +93,16 @@ async function spotifyFetch<T>(
     });
   }
 
-  return res?.data as T;
+  return res.data;
 }
 
 export const spotifyApi = {
   getCurrentUsersProfile: () =>
-    spotifyFetch<CurrentUsersProfileResponse>("/me"),
+    spotifyFetch<CurrentUsersProfileResponse>("GET", "/me"),
   getListOfCurrentUsersPlaylists: () =>
-    spotifyFetch<ListOfCurrentUsersPlaylistsResponse>("/me/playlists"),
+    spotifyFetch<ListOfCurrentUsersPlaylistsResponse>("GET", "/me/playlists"),
   getSinglePlaylistResponse: (playlist_id: string) =>
-    spotifyFetch<SinglePlaylistResponse>("/playlists/{playlist_id}", {
+    spotifyFetch<SinglePlaylistResponse>("GET", "/playlists/{playlist_id}", {
       playlist_id,
     }),
   getPlaylistItems: ({
@@ -100,8 +115,43 @@ export const spotifyApi = {
     limit: number;
   }) =>
     spotifyFetch<PlaylistTrackResponse>(
+      "GET",
       "/playlists/{playlist_id}/tracks",
       { playlist_id },
       { offset, limit },
+    ),
+  searchForTrack: ({ q, type }: { q: string; type: string }) =>
+    spotifyFetch<TrackSearchResponse>("GET", "/search", undefined, { q, type }),
+  addTracksToPlaylist: ({
+    playlist_id,
+    requestBody,
+  }: {
+    playlist_id: string;
+    requestBody: {
+      uris: string[];
+    };
+  }) =>
+    spotifyFetch<AddTracksToPlaylistResponse>(
+      "POST",
+      "/playlists/{playlist_id}/tracks",
+      { playlist_id },
+      undefined,
+      requestBody,
+    ),
+  removePlaylistItems: ({
+    playlist_id,
+    requestBody,
+  }: {
+    playlist_id: string;
+    requestBody: {
+      uris: string[];
+    };
+  }) =>
+    spotifyFetch(
+      "DELETE",
+      "/playlists/{playlist_id}/tracks",
+      { playlist_id },
+      undefined,
+      requestBody,
     ),
 };

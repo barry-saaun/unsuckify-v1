@@ -12,17 +12,18 @@ export const UsersPlaylistMetadataSchema = z.object({
 
 export type UsersPlaylistMetadata = z.infer<typeof UsersPlaylistMetadataSchema>;
 
-export const RecommendedTracksSchema = z.array(
-  z.object({
-    track: z.string().describe("The title of the recommended track"),
-    album: z
-      .string()
-      .describe("The name of the album of the recommended tracks"),
-    artists: z
-      .string()
-      .describe("The name of artists of the recommended track"),
-  }),
-);
+export const RecommendedTrackObjectSchema = z.object({
+  track: z.string().describe("The title of the recommended track"),
+  album: z.string().describe("The name of the album of the recommended tracks"),
+  artists: z.string().describe("The name of artists of the recommended track"),
+  year: z.number().describe("The year that the track was released."),
+});
+
+export type TRecommendedTrackObject = z.infer<
+  typeof RecommendedTrackObjectSchema
+>;
+
+export const RecommendedTracksSchema = z.array(RecommendedTrackObjectSchema);
 
 export type TRecommendedTracks = z.infer<typeof RecommendedTracksSchema>;
 
@@ -36,15 +37,19 @@ export type TPushRecommendationsInput = z.infer<
   typeof PushRecommendationsInputSchema
 >;
 
-export type HandleReccomendationsTracksReturn = {
+export type HandleRecommendationTracksReturn = {
   resolvedTracks: TRecommendedTracks;
   timeLeft: number | null;
+  batchId: number | null;
+  success: boolean;
 };
 
-export type TrackDescriptorSummaryResType = Record<
-  "emotional_tones" | "genres" | "instrumentation" | "rhythm" | "themes",
-  string[]
->;
+export type PaginatedQueryKeyType = [string, { playlist_id: string }];
+
+export type PageParamType = {
+  cursor: number;
+  page: number;
+};
 
 export type PaginatedRecommendationsType = {
   data: string[];
@@ -58,8 +63,4 @@ export type GetTracksReturnType = {
   hasMore: boolean;
   hasMoreInCurrentBatch: boolean;
   nextBatch: number | null;
-};
-
-export type ServerComponentProps = {
-  searchParams: { [key: string]: string | string[] | undefined };
 };

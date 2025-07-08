@@ -1,5 +1,4 @@
 "use client";
-import { toast } from "sonner";
 import { api } from "~/trpc/react";
 import CardSkeleton from "./card-skeleton";
 import PlaylistCard from "./playlist-card";
@@ -7,6 +6,7 @@ import ImagePlaceholder from "./image-placeholder";
 import useIsAuthenticated from "~/hooks/useIsAuthenticated";
 import Spinner from "./spinner";
 import ErrorScreen from "./error-screen";
+import { useAppToast } from "~/hooks/useAppToast";
 
 export default function MyPlaylistsTabContent() {
   const { isAuthenticated } = useIsAuthenticated();
@@ -19,8 +19,10 @@ export default function MyPlaylistsTabContent() {
     staleTime: 5 * 60 * 1000,
   });
 
+  const { toastError } = useAppToast();
+
   if (error && !isLoading) {
-    toast.error("Cannot query your playlists at the moment!", {
+    toastError("Cannot query your playlists at the moment!", {
       id: "playlist-error",
     });
   }

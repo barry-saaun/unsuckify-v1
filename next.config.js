@@ -6,6 +6,7 @@ import "./src/env.js";
 
 /** @type {import("next").NextConfig} */
 const config = {
+  reactMaxHeadersLength: 100000,
   images: {
     remotePatterns: [
       {

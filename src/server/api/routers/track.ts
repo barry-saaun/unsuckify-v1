@@ -3,8 +3,10 @@ import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { generateObject } from "ai";
 import { google } from "@ai-sdk/google";
 import {
+  RecommendedTrackObjectSchema,
   RecommendedTracksSchema,
-  type HandleReccomendationsTracksReturn,
+  type HandleRecommendationTracksReturn,
+  type TRecommendedTracks,
 } from "~/types";
 import { systemPrompt } from "~/constants/system-prompt";
 import SuperJSON from "superjson";
@@ -12,18 +14,22 @@ import {
   recommendationBatches,
   recommendationTracks,
 } from "~/server/db/schema";
-import { and, eq } from "drizzle-orm";
+import { and, eq, gte } from "drizzle-orm";
 import { ensureUserExistence } from "~/lib/utils/user";
 import { TRPCError } from "@trpc/server";
 import { tryCatch } from "~/lib/try-catch";
-import { deleteExpiredBatchAndTracks } from "~/lib/utils/track";
+import {
+  deleteExpiredBatchAndTracks,
+  getFirstTrackOfBatchId,
+} from "~/lib/utils/track";
+import { spotifyApi } from "~/lib/spotify";
 
 export const trackRouter = createTRPCRouter({
   getRecommendations: protectedProcedure
     .input(z.array(z.string()))
     .query(async ({ input }) => {
       const { object } = await generateObject({
-        model: google("gemini-2.0-flash-exp"),
+        model: google("gemini-2.5-flash-preview-04-17"),
         prompt: SuperJSON.stringify(input),
         schema: RecommendedTracksSchema,
         system: systemPrompt,
@@ -39,6 +45,12 @@ export const trackRouter = createTRPCRouter({
       }
 
       return object;
+    }),
+  getRecommendationsMutate: protectedProcedure
+    .input(z.array(z.string()))
+    .mutation(async ({ input, ctx }): Promise<TRecommendedTracks> => {
+      const caller = trackRouter.createCaller(ctx);
+      return await caller.getRecommendations(input);
     }),
 
   pushRecommendations: protectedProcedure
@@ -72,6 +84,7 @@ export const trackRouter = createTRPCRouter({
         track: rec.track,
         album: rec.album,
         artists: rec.artists,
+        year: rec.year,
         batchId: batch?.id,
       }));
 
@@ -126,7 +139,7 @@ export const trackRouter = createTRPCRouter({
       }),
     )
     .query(
-      async ({ ctx, input }): Promise<HandleReccomendationsTracksReturn> => {
+      async ({ ctx, input }): Promise<HandleRecommendationTracksReturn> => {
         const caller = trackRouter.createCaller(ctx);
         const latestBatch = await caller.getLatestBatch(input);
 
@@ -150,7 +163,7 @@ export const trackRouter = createTRPCRouter({
         }
 
         if (within24hours && batchId) {
-          console.log(`Attempting to select tracks for batchId: ${batchId}`); // <-- Add this
+          console.log(`Attempting to select tracks for batchId: ${batchId}`);
           const resolvedTracks = await ctx.db
             .select()
             .from(recommendationTracks)
@@ -161,25 +174,102 @@ export const trackRouter = createTRPCRouter({
               track: track.track,
               album: track.album,
               artists: track.artists,
+              year: track.year,
             })),
             timeLeft,
+            batchId,
+            success: true,
           };
         } else {
-          const { success } = await caller.pushRecommendations({
+          const result = await caller.pushRecommendations({
             userId: input.userId,
             playlist_id: input.playlist_id,
             recommendations: input.newTracks,
           });
 
-          if (!success) {
+          if (!result.success) {
+            console.log("log from !success");
             return {
               resolvedTracks: input.newTracks,
               timeLeft: new Date().getTime(),
+              success: false,
+              batchId: null,
             };
           }
-
-          return { resolvedTracks: input.newTracks, timeLeft: null };
+          batchId = result.batchId;
+          timeLeft = 24 * 60 * 60 * 1000;
         }
+
+        return {
+          resolvedTracks: input.newTracks,
+          timeLeft,
+          success: true,
+          batchId,
+        };
       },
     ),
+  infiniteTracks: protectedProcedure
+    .input(
+      z.object({
+        limit: z.number().min(1).max(100),
+        cursor: z.number().nullish(),
+        batchId: z.number(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      const { limit, cursor, batchId } = input;
+
+      const startId =
+        cursor ?? (await getFirstTrackOfBatchId({ batchId, ctx }));
+
+      const tracks = await ctx.db
+        .select()
+        .from(recommendationTracks)
+        .where(
+          and(
+            eq(recommendationTracks.batchId, batchId),
+            gte(recommendationTracks.id, startId),
+          ),
+        )
+        .orderBy(recommendationTracks.id)
+        .limit(limit + 1);
+
+      const hasNextPage = tracks.length > limit;
+      const items = hasNextPage ? tracks.slice(0, -1) : tracks;
+      const nextCursor = hasNextPage ? items[items.length - 1]!.id + 1 : null;
+
+      return {
+        items,
+        nextCursor,
+      };
+    }),
+  searchForTracks: protectedProcedure
+    .input(RecommendedTrackObjectSchema)
+    .query(async ({ input }) => {
+      const { track, album, artists, year } = input;
+
+      const queryParts = [];
+      if (album) queryParts.push(`album:"${album}"`);
+      if (artists) queryParts.push(`artist:"${artists}"`);
+      if (track) queryParts.push(`track:"${track}"`);
+      if (year) queryParts.push(`year:${year}`);
+
+      const query = queryParts.join(" ");
+
+      console.log(`[searchForTrack query]:`, query);
+
+      const type = "track" as const;
+
+      const result = await spotifyApi.searchForTrack({ q: query, type });
+
+      const firstTrack = result?.tracks?.items?.[0];
+      const albumImage = firstTrack?.album?.images?.[0]?.url;
+      const trackUri = firstTrack?.uri;
+
+      if (!result || !firstTrack || !albumImage) {
+        return null;
+      }
+
+      return { trackUri, albumImage };
+    }),
 });

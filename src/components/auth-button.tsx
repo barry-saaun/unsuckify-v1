@@ -11,10 +11,10 @@ import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { cn, getInitials } from "~/lib/utils";
 import useIsAuthenticated from "~/hooks/useIsAuthenticated";
 import { api } from "~/trpc/react";
-import { toast } from "sonner";
 import Spinner from "./spinner";
 import { useEffect } from "react";
 import { useAuth } from "~/hooks/useAuth";
+import { useAppToast } from "~/hooks/useAppToast";
 
 const AuthButton = () => {
   const router = useRouter();
@@ -34,6 +34,7 @@ const AuthButton = () => {
   });
 
   const { logout, isLoggingOut } = useAuth();
+  const { toastError } = useAppToast();
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
@@ -50,7 +51,8 @@ const AuthButton = () => {
     userProfileError &&
     userProfileError.shape?.data.code === "UNAUTHORIZED"
   ) {
-    toast.error("Please log in to continue", { id: "auth-error" });
+    toastError("Please log in to continue", { id: "auth-error" });
+
     router.push("/login");
     return null;
   }

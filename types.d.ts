@@ -9,4 +9,6 @@ declare module "spotify-api" {
   export type TrackObjectFull = SpotifyApi.TrackObjectFull;
   export type TrackSearchResponse = SpotifyApi.TrackSearchResponse;
   export type CreatePlaylistResponse = SpotifyApi.CreatePlaylistResponse;
+  export type AddTracksToPlaylistResponse =
+    SpotifyApi.AddTracksToPlaylistResponse;
 }

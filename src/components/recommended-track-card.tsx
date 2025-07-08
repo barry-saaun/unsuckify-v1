@@ -1,0 +1,74 @@
+import type React from "react";
+import { useState } from "react";
+import { cn } from "~/lib/utils";
+import { api } from "~/trpc/react";
+import type { TRecommendedTrackObject } from "~/types";
+import DynamicRecommendedTrackCard from "./dynamic-recommended-track-card";
+import RecommendedTrackCardSkeleton from "./rec-track-card-skeleton";
+
+type RecommendedTrackCardProps = {
+  trackObj: TRecommendedTrackObject;
+  playlist_id: string;
+  isOwned: boolean;
+  handleNotIsOwnedCardClick: (track_uri: string) => void;
+};
+
+const RecommendedTrackCard: React.FC<RecommendedTrackCardProps> = ({
+  trackObj,
+  playlist_id,
+  isOwned,
+  handleNotIsOwnedCardClick,
+}) => {
+  const { track, artists } = trackObj;
+
+  const { data, isLoading, error } =
+    api.track.searchForTracks.useQuery(trackObj);
+
+  const [isHovered, setIsHoverd] = useState(false);
+  const [isSelected, setIsSelected] = useState(false);
+
+  if (isLoading) {
+    return <RecommendedTrackCardSkeleton isOwned />;
+  }
+
+  // just ignore the errored query result completely
+  if (error || data === null || !data?.trackUri || !data?.albumImage)
+    return null;
+
+  const handleOnClick = () => {
+    handleNotIsOwnedCardClick(data?.trackUri ?? "");
+    setIsSelected(!isSelected);
+  };
+
+  const tooltipContent: string = isOwned
+    ? "Save this track"
+    : isSelected
+      ? "Click to Deselect"
+      : "Click to Select";
+
+  const sharedProps = {
+    isOwned,
+    track,
+    artists,
+    image_src: data?.albumImage,
+    tooltipContent,
+    onMouseEnter: () => setIsHoverd(true),
+    onMouseLeave: () => setIsHoverd(false),
+    isSelected,
+    cardClassName: cn(
+      isHovered && "transform-gpu scale-[1.03] shadow-lg",
+      !isOwned && isSelected && "ring-2 ring-primary",
+    ),
+  };
+
+  return (
+    <DynamicRecommendedTrackCard
+      {...sharedProps}
+      onClick={!isOwned ? handleOnClick : undefined}
+      track_uri={data.trackUri}
+      playlist_id={playlist_id}
+    />
+  );
+};
+
+export default RecommendedTrackCard;

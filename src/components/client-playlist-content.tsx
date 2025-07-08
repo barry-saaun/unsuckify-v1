@@ -1,15 +1,17 @@
 "use client";
 import { useParams } from "next/navigation";
 import { useEffect } from "react";
-import { toast } from "sonner";
 import { api } from "~/trpc/react";
 import { useRouter } from "next/navigation";
+import { useAppToast } from "~/hooks/useAppToast";
 
 export default function ClientPlaylistContent() {
   const params = useParams<{ playlist_id: string }>();
   const router = useRouter();
 
   const playlistId = params.playlist_id;
+
+  const { toastError } = useAppToast();
 
   const { data, error, isLoading } = api.playlist.getPlaylist.useQuery(
     {
@@ -20,10 +22,10 @@ export default function ClientPlaylistContent() {
 
   useEffect(() => {
     if (error) {
-      toast.error(error.message);
+      toastError(error.message, { id: "failed-get-playlist" });
       console.error("cannot fetch playlist", error);
     }
-  }, [error]);
+  }, [error, toastError]);
 
   if (isLoading) {
     return <div>... is loading.</div>;

@@ -103,4 +103,36 @@ export const playlistRouter = createTRPCRouter({
 
       return allTracks;
     }),
+  addItemsToPlaylist: protectedProcedure
+    .input(
+      z.object({ playlist_id: z.string(), track_uris: z.array(z.string()) }),
+    )
+    .mutation(async ({ input }) => {
+      const { playlist_id, track_uris } = input;
+
+      const { data, error } = await tryCatch(
+        spotifyApi.addTracksToPlaylist({
+          playlist_id,
+          requestBody: {
+            uris: track_uris,
+          },
+        }),
+      );
+
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            "Sorry! We could not add this track to your playlist at the moment.",
+        });
+      }
+      return data;
+    }),
+  removePlaylistItems: protectedProcedure
+    .input(
+      z.object({ playlist_id: z.string(), track_uris: z.array(z.string()) }),
+    )
+    .mutation(async ({ input }) => {
+      const { playlist_id, track_uris } = input;
+    }),
 });
