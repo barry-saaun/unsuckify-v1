@@ -110,7 +110,7 @@ export const playlistRouter = createTRPCRouter({
     .mutation(async ({ input }) => {
       const { playlist_id, track_uris } = input;
 
-      const { error } = await tryCatch(
+      const { data, error } = await tryCatch(
         spotifyApi.addTracksToPlaylist({
           playlist_id,
           requestBody: {
@@ -126,5 +126,13 @@ export const playlistRouter = createTRPCRouter({
             "Sorry! We could not add this track to your playlist at the moment.",
         });
       }
+      return data;
+    }),
+  removePlaylistItems: protectedProcedure
+    .input(
+      z.object({ playlist_id: z.string(), track_uris: z.array(z.string()) }),
+    )
+    .mutation(async ({ input }) => {
+      const { playlist_id, track_uris } = input;
     }),
 });
