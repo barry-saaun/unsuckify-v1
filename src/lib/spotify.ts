@@ -11,10 +11,13 @@ import { cookies } from "next/headers";
 import { TRPCError } from "@trpc/server";
 import { type PlaylistTrackResponse } from "spotify-api";
 
+type PostRequestBody = Record<string, string | string[] | boolean | number>;
 async function spotifyFetch<T>(
+  method: "GET" | "POST",
   endpoint: string,
   params?: Record<string, string>,
   queryParams?: Record<string, number | string>,
+  requestBody?: PostRequestBody,
 ) {
   const access_token = (await cookies()).get("access_token")?.value;
 
@@ -40,15 +43,17 @@ async function spotifyFetch<T>(
 
   const url = `${baseUrl}${resolvedEndpoint}${queryParamsString}`;
 
-  const { data: res, error } = await tryCatch(
-    axios.get(url, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${access_token}`,
-        "Content-Type": "application/json",
-      },
-    }),
-  );
+  const axiosConfig = {
+    method,
+    url,
+    headers: {
+      Authorization: `Bearer ${access_token}`,
+      "Content-Type": "application/json",
+    },
+    ...(method === "POST" ? { data: requestBody } : {}),
+  };
+
+  const { data: res, error } = await tryCatch(axios.request<T>(axiosConfig));
 
   // if the AI hallucinate and return an incorrect object, just return null
   // and skip that error track
@@ -85,16 +90,16 @@ async function spotifyFetch<T>(
     });
   }
 
-  return res?.data as T;
+  return res.data;
 }
 
 export const spotifyApi = {
   getCurrentUsersProfile: () =>
-    spotifyFetch<CurrentUsersProfileResponse>("/me"),
+    spotifyFetch<CurrentUsersProfileResponse>("GET", "/me"),
   getListOfCurrentUsersPlaylists: () =>
-    spotifyFetch<ListOfCurrentUsersPlaylistsResponse>("/me/playlists"),
+    spotifyFetch<ListOfCurrentUsersPlaylistsResponse>("GET", "/me/playlists"),
   getSinglePlaylistResponse: (playlist_id: string) =>
-    spotifyFetch<SinglePlaylistResponse>("/playlists/{playlist_id}", {
+    spotifyFetch<SinglePlaylistResponse>("GET", "/playlists/{playlist_id}", {
       playlist_id,
     }),
   getPlaylistItems: ({
@@ -107,10 +112,11 @@ export const spotifyApi = {
     limit: number;
   }) =>
     spotifyFetch<PlaylistTrackResponse>(
+      "GET",
       "/playlists/{playlist_id}/tracks",
       { playlist_id },
       { offset, limit },
     ),
   searchForTrack: ({ q, type }: { q: string; type: string }) =>
-    spotifyFetch<TrackSearchResponse>("/search", undefined, { q, type }),
+    spotifyFetch<TrackSearchResponse>("GET", "/search", undefined, { q, type }),
 };
