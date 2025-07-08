@@ -18,6 +18,7 @@ import Image from "next/image";
 import { cn } from "~/lib/utils";
 import React, { useState, type HTMLAttributes } from "react";
 import { Spinner } from "./Icons";
+import { api } from "~/trpc/react";
 
 interface DynamicRecommendedTrackCardProps
   extends HTMLAttributes<HTMLDivElement> {
@@ -50,12 +51,12 @@ const DynamicRecommendedTrackCard: React.FC<
   const [isAdded, setIsAdded] = useState<boolean>(false);
   const [imageLoaded, setImageLoaded] = useState<boolean>(false);
 
+  const mutation = api.playlist.addItemsToPlaylist.useMutation();
+
   const handleAddTrackToOwnedPlaylist = async () => {
     try {
       setIsLoading(true);
-      // await spotifyApi.addItemsToPlaylist(playlist_id, {
-      //   uris: [track_uri],
-      // });
+      mutation.mutate({ playlist_id, track_uris: [track_uri] });
 
       setIsAdded(true);
     } catch (error) {
