@@ -11,4 +11,6 @@ declare module "spotify-api" {
   export type CreatePlaylistResponse = SpotifyApi.CreatePlaylistResponse;
   export type AddTracksToPlaylistResponse =
     SpotifyApi.AddTracksToPlaylistResponse;
+  export type RemoveTracksFromPlaylistResponse =
+    SpotifyApi.RemoveTracksFromPlaylistResponse;
 }

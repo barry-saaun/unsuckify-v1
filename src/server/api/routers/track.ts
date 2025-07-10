@@ -13,14 +13,18 @@ import SuperJSON from "superjson";
 import {
   recommendationBatches,
   recommendationTracks,
+  trackPlaylistStatus,
+  type TracksStatusInsertType,
 } from "~/server/db/schema";
 import { and, eq, gte } from "drizzle-orm";
 import { ensureUserExistence } from "~/lib/utils/user";
 import { TRPCError } from "@trpc/server";
 import { tryCatch } from "~/lib/try-catch";
 import {
-  deleteExpiredBatchAndTracks,
+  deleteExpiredTables,
   getFirstTrackOfBatchId,
+  insertRecommendedTracks,
+  insertTracksStatus,
 } from "~/lib/utils/track";
 import { spotifyApi } from "~/lib/spotify";
 
@@ -88,21 +92,16 @@ export const trackRouter = createTRPCRouter({
         batchId: batch?.id,
       }));
 
-      const { error } = await tryCatch(
-        ctx.db.insert(recommendationTracks).values(tracksToInsert),
+      const { tracks } = await insertRecommendedTracks({ ctx, tracksToInsert });
+
+      const tracksStatusToInsert: TracksStatusInsertType[] = tracks.map(
+        (track) => ({
+          batchId: track.batchId,
+          trackId: track.id,
+        }),
       );
 
-      if (error) {
-        console.error(
-          "Database error during recommendationTracks insertion:",
-          error,
-        ); // <-- LOG THE ERROR
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to insert recommendation tracks.",
-          cause: error, // Useful for server-side
-        });
-      }
+      await insertTracksStatus({ ctx, tracksStatusToInsert });
 
       // await ctx.db.insert(recommendationTracks).values(tracksToInsert);
       return { success: true, batchId: batch.id };
@@ -158,7 +157,7 @@ export const trackRouter = createTRPCRouter({
           if (within24hours) {
             timeLeft = ms24h - msSince;
           } else {
-            await deleteExpiredBatchAndTracks({ ctx, batchId });
+            await deleteExpiredTables({ ctx, batchId });
           }
         }
 

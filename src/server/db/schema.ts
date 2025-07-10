@@ -1,4 +1,4 @@
-import type { InferSelectModel } from "drizzle-orm";
+import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 import {
   pgTable,
   serial,
@@ -48,6 +48,9 @@ export const trackPlaylistStatus = pgTable("track_playlist_status", {
   trackId: integer("trackId").references(() => recommendationTracks.id, {
     onDelete: "cascade",
   }),
+  batchId: integer("batchId").references(() => recommendationTracks.batchId, {
+    onDelete: "cascade",
+  }),
   status: trackStatusEnum("track_status").default("pending"),
   snapshotId: varchar("snapshot_id", { length: 255 }),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -57,3 +60,8 @@ export type RecBatchesSelectType = InferSelectModel<
   typeof recommendationBatches
 >;
 export type RecTracksSelectType = InferSelectModel<typeof recommendationTracks>;
+export type RecTracksInsertType = InferInsertModel<typeof recommendationTracks>;
+
+export type TracksStatusInsertType = InferInsertModel<
+  typeof trackPlaylistStatus
+>;

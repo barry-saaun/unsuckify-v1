@@ -4,6 +4,7 @@ import {
   type ListOfCurrentUsersPlaylistsResponse,
   type TrackSearchResponse,
   type AddTracksToPlaylistResponse,
+  type RemoveTracksFromPlaylistResponse,
 } from "spotify-api";
 import queryString from "query-string";
 import axios from "axios";
@@ -145,9 +146,10 @@ export const spotifyApi = {
     playlist_id: string;
     requestBody: {
       uris: string[];
+      snapshot_id: string;
     };
   }) =>
-    spotifyFetch(
+    spotifyFetch<RemoveTracksFromPlaylistResponse>(
       "DELETE",
       "/playlists/{playlist_id}/tracks",
       { playlist_id },
