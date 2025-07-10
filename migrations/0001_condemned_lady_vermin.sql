@@ -1,0 +1,2 @@
+ALTER TABLE "track_playlist_status" ADD COLUMN "batchId" integer;--> statement-breakpoint
+ALTER TABLE "track_playlist_status" ADD CONSTRAINT "track_playlist_status_batchId_rec_tracks_batchId_fk" FOREIGN KEY ("batchId") REFERENCES "public"."rec_tracks"("batchId") ON DELETE cascade ON UPDATE no action;
