@@ -1,5 +1,5 @@
 {
-  "id": "05e208b7-a269-4daf-b771-112cf612df0a",
+  "id": "37e37843-87ae-4780-8f2e-bcded3d493f3",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -128,6 +128,66 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.track_playlist_status": {
+      "name": "track_playlist_status",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "trackId": {
+          "name": "trackId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "track_status": {
+          "name": "track_status",
+          "type": "track_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'pending'"
+        },
+        "snapshot_id": {
+          "name": "snapshot_id",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "track_playlist_status_trackId_rec_tracks_id_fk": {
+          "name": "track_playlist_status_trackId_rec_tracks_id_fk",
+          "tableFrom": "track_playlist_status",
+          "tableTo": "rec_tracks",
+          "columnsFrom": [
+            "trackId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.users": {
       "name": "users",
       "schema": "",
@@ -155,7 +215,18 @@
       "isRLSEnabled": false
     }
   },
-  "enums": {},
+  "enums": {
+    "public.track_status": {
+      "name": "track_status",
+      "schema": "public",
+      "values": [
+        "pending",
+        "added",
+        "removed",
+        "failed"
+      ]
+    }
+  },
   "schemas": {},
   "sequences": {},
   "roles": {},

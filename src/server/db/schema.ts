@@ -6,6 +6,7 @@ import {
   timestamp,
   integer,
   unique,
+  pgEnum,
 } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
@@ -33,6 +34,23 @@ export const recommendationTracks = pgTable("rec_tracks", {
   album: varchar("album", { length: 255 }).notNull(),
   artists: varchar("artists", { length: 255 }).notNull(),
   year: integer("year").notNull(),
+});
+
+export const trackStatusEnum = pgEnum("track_status", [
+  "pending",
+  "added",
+  "removed",
+  "failed",
+]);
+
+export const trackPlaylistStatus = pgTable("track_playlist_status", {
+  id: serial("id").primaryKey(),
+  trackId: integer("trackId").references(() => recommendationTracks.id, {
+    onDelete: "cascade",
+  }),
+  status: trackStatusEnum("track_status").default("pending"),
+  snapshotId: varchar("snapshot_id", { length: 255 }),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export type RecBatchesSelectType = InferSelectModel<
