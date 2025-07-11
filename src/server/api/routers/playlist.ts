@@ -4,6 +4,7 @@ import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { tryCatch } from "~/lib/try-catch";
 import { TRPCError } from "@trpc/server";
 import { appRouter } from "../root";
+import { trackPlaylistStatus } from "~/server/db/schema";
 
 const LIMIT = 20;
 
@@ -57,12 +58,7 @@ export const playlistRouter = createTRPCRouter({
   getPlaylistItemsAll: protectedProcedure
     .input(z.object({ playlist_id: z.string() }))
     .query(async ({ input, ctx }) => {
-      const caller = appRouter.createCaller({
-        headers: ctx.headers,
-        authenticated: ctx.authenticated,
-        accessToken: ctx.accessToken,
-        db: ctx.db,
-      });
+      const caller = appRouter.createCaller(ctx);
 
       let offset = 0;
 
@@ -76,6 +72,14 @@ export const playlistRouter = createTRPCRouter({
           offset,
           limit: LIMIT,
         });
+
+        if (!data) {
+          console.warn(
+            `No data received for playlist_id: ${input.playlist_id} at offset: ${offset}`,
+          );
+          hasNextBatch = false; // Stop fetching if data is null
+          break;
+        }
 
         const trackStr = data.items
           .filter((item) => !item.is_local && item.track)
@@ -107,7 +111,7 @@ export const playlistRouter = createTRPCRouter({
     .input(
       z.object({ playlist_id: z.string(), track_uris: z.array(z.string()) }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const { playlist_id, track_uris } = input;
 
       const { data, error } = await tryCatch(
