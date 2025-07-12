@@ -19,7 +19,6 @@ import {
 import { and, eq, gte } from "drizzle-orm";
 import { ensureUserExistence } from "~/lib/utils/user";
 import { TRPCError } from "@trpc/server";
-import { tryCatch } from "~/lib/try-catch";
 import {
   deleteExpiredTables,
   getFirstTrackOfBatchId,
@@ -270,5 +269,27 @@ export const trackRouter = createTRPCRouter({
       }
 
       return { trackUri, albumImage };
+    }),
+  getTrackStatus: protectedProcedure
+    .input(
+      z.object({
+        batchId: z.number(),
+        trackId: z.number(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      const { batchId, trackId } = input;
+
+      const trackLocationInTable = and(
+        eq(trackPlaylistStatus.batchId, batchId),
+        eq(trackPlaylistStatus.trackId, trackId),
+      );
+
+      const trackRow = await ctx.db
+        .select()
+        .from(trackPlaylistStatus)
+        .where(trackLocationInTable);
+
+      return trackRow[0]?.status;
     }),
 });

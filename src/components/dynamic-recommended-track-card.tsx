@@ -15,7 +15,7 @@ import {
 } from "./ui/tooltip";
 import Image from "next/image";
 import { cn } from "~/lib/utils";
-import React, { useState, type HTMLAttributes } from "react";
+import React, { useEffect, useState, type HTMLAttributes } from "react";
 import { api } from "~/trpc/react";
 import { useAppToast } from "~/hooks/useAppToast";
 import TrackActionButton from "./track-action-button";
@@ -62,6 +62,17 @@ const DynamicRecommendedTrackCard: React.FC<
   >(null);
 
   const { toastError, toastSuccess } = useAppToast();
+
+  const { data: queryTrackStatus } = api.track.getTrackStatus.useQuery({
+    batchId: batch_id,
+    trackId: track_id,
+  });
+
+  useEffect(() => {
+    if (queryTrackStatus && queryTrackStatus !== "pending") {
+      setTrackStatus(queryTrackStatus);
+    }
+  }, [queryTrackStatus]);
 
   const addMutation = api.playlist.addItemsToPlaylist.useMutation({
     onMutate: () => {
