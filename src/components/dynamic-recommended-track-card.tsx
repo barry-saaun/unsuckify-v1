@@ -61,7 +61,7 @@ const DynamicRecommendedTrackCard: React.FC<
     string | null
   >(null);
 
-  const { toastError } = useAppToast();
+  const { toastError, toastSuccess } = useAppToast();
 
   const addMutation = api.playlist.addItemsToPlaylist.useMutation({
     onMutate: () => {
@@ -93,9 +93,12 @@ const DynamicRecommendedTrackCard: React.FC<
       setTrackStatus("added");
       setIsLoading(false);
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       setTrackStatus("removed");
       setIsLoading(false);
+      toastSuccess(data.success_msg, {
+        id: `success-remove-${track}-from-playlist`,
+      });
     },
   });
 

@@ -174,7 +174,7 @@ export const playlistRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const { playlist_id, track_uris, snapshot_id, batchId, trackId } = input;
 
-      const { data, error } = await tryCatch(
+      const { error } = await tryCatch(
         spotifyApi.removePlaylistItems({
           playlist_id,
           requestBody: { tracks: [{ uri: track_uris, snapshot_id }] },
@@ -208,6 +208,6 @@ export const playlistRouter = createTRPCRouter({
           .where(and(trackLocationInTable)),
       ]);
 
-      return data;
+      return { success_msg: "Poof! The song is out of your playlist" };
     }),
 });
