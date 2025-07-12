@@ -1,5 +1,4 @@
-import { Check, CheckCircle2Icon, Plus } from "lucide-react";
-import { Button } from "./ui/button";
+import { Check } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -17,9 +16,11 @@ import {
 import Image from "next/image";
 import { cn } from "~/lib/utils";
 import React, { useState, type HTMLAttributes } from "react";
-import { Spinner } from "./Icons";
 import { api } from "~/trpc/react";
 import { useAppToast } from "~/hooks/useAppToast";
+import TrackActionButton from "./track-action-button";
+import type { TrackStatusType } from "~/types";
+import { toast } from "sonner";
 
 interface DynamicRecommendedTrackCardProps
   extends HTMLAttributes<HTMLDivElement> {
@@ -32,6 +33,8 @@ interface DynamicRecommendedTrackCardProps
   isSelected?: boolean;
   playlist_id: string;
   track_uri: string;
+  batch_id: number;
+  track_id: number;
 }
 
 const DynamicRecommendedTrackCard: React.FC<
@@ -46,11 +49,13 @@ const DynamicRecommendedTrackCard: React.FC<
   track_uri,
   artists,
   cardClassName,
+  batch_id,
+  track_id,
   ...props
 }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isAdded, setIsAdded] = useState<boolean>(false);
   const [imageLoaded, setImageLoaded] = useState<boolean>(false);
+  const [trackStatus, setTrackStatus] = useState<TrackStatusType>("pending");
 
   const [addedTrackSnapshotId, setAddedTrackSnapshotId] = useState<
     string | null
@@ -66,18 +71,32 @@ const DynamicRecommendedTrackCard: React.FC<
       toastError(error?.message, {
         id: `error-add-${track}-to-playlist`,
       });
-      setIsAdded(false);
+      // setIsAdded(false);
+      setTrackStatus("failed");
       setIsLoading(false);
     },
     onSuccess: (data) => {
-      setIsAdded(true);
-      setAddedTrackSnapshotId(data!.snapshot_id);
+      // setIsAdded(true);
+      toast("Click the button", { id: "added-track" });
+      setTrackStatus("added");
+      setAddedTrackSnapshotId(data.snapshot_id!);
+
       setIsLoading(false);
     },
   });
 
+  const handleRemoveTrackFromPlaylist = () => {
+    console.log("removed");
+    setTrackStatus("removed");
+  };
+
   const handleAddTrackToOwnedPlaylist = () => {
-    addMutation.mutate({ playlist_id, track_uris: [track_uri] });
+    addMutation.mutate({
+      playlist_id,
+      track_uris: [track_uri],
+      batchId: batch_id,
+      trackId: track_id,
+    });
   };
 
   return (
@@ -119,25 +138,16 @@ const DynamicRecommendedTrackCard: React.FC<
               <CardTitle className="line-clamp-1">{track}</CardTitle>
               <CardDescription>{artists}</CardDescription>
             </CardHeader>
-            {isOwned ? (
+            {isOwned && (
               <CardFooter className="dark:bg-puruple-50 flex items-center justify-center">
-                <Button
-                  className="mx-5 flex w-full items-center justify-center gap-4 bg-purple-700 font-semibold filter transition-all hover:bg-purple-600 hover:brightness-125 dark:bg-purple-300 hover:dark:bg-purple-200"
-                  onClick={handleAddTrackToOwnedPlaylist}
-                >
-                  {isLoading ? (
-                    <Spinner />
-                  ) : isAdded ? (
-                    <CheckCircle2Icon className="animate-jump-in animate-ease-out transition-all" />
-                  ) : (
-                    <>
-                      <Plus />
-                      {"Add to Playlist"}
-                    </>
-                  )}
-                </Button>
+                <TrackActionButton
+                  status={trackStatus}
+                  addHandler={handleAddTrackToOwnedPlaylist}
+                  removeHandler={handleRemoveTrackFromPlaylist}
+                  isLoading={isLoading}
+                />
               </CardFooter>
-            ) : null}
+            )}
           </Card>
         </TooltipTrigger>
         <TooltipContent

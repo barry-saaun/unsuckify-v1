@@ -10,6 +10,8 @@ type RecommendedTrackCardProps = {
   trackObj: TRecommendedTrackObject;
   playlist_id: string;
   isOwned: boolean;
+  batch_id: number;
+  track_id: number;
   handleNotIsOwnedCardClick: (track_uri: string) => void;
 };
 
@@ -17,6 +19,8 @@ const RecommendedTrackCard: React.FC<RecommendedTrackCardProps> = ({
   trackObj,
   playlist_id,
   isOwned,
+  batch_id,
+  track_id,
   handleNotIsOwnedCardClick,
 }) => {
   const { track, artists } = trackObj;
@@ -52,6 +56,8 @@ const RecommendedTrackCard: React.FC<RecommendedTrackCardProps> = ({
     artists,
     image_src: data?.albumImage,
     tooltipContent,
+    batch_id,
+    track_id,
     onMouseEnter: () => setIsHoverd(true),
     onMouseLeave: () => setIsHoverd(false),
     isSelected,

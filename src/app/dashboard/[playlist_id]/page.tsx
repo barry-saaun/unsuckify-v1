@@ -127,6 +127,8 @@ export default function PlaylistContent() {
               handleNotIsOwnedCardClick={handleNotIsOwnedCardClick}
               trackObj={item}
               isOwned={isOwned}
+              track_id={item.id}
+              batch_id={item.batchId!}
             />
           )),
         )}

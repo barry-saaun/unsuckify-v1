@@ -5,6 +5,7 @@ import { tryCatch } from "~/lib/try-catch";
 import { TRPCError } from "@trpc/server";
 import { appRouter } from "../root";
 import { trackPlaylistStatus } from "~/server/db/schema";
+import { and, eq } from "drizzle-orm";
 
 const LIMIT = 20;
 
@@ -109,10 +110,15 @@ export const playlistRouter = createTRPCRouter({
     }),
   addItemsToPlaylist: protectedProcedure
     .input(
-      z.object({ playlist_id: z.string(), track_uris: z.array(z.string()) }),
+      z.object({
+        playlist_id: z.string(),
+        track_uris: z.array(z.string()),
+        batchId: z.number(),
+        trackId: z.number(),
+      }),
     )
     .mutation(async ({ input, ctx }) => {
-      const { playlist_id, track_uris } = input;
+      const { playlist_id, track_uris, batchId, trackId } = input;
 
       const { data, error } = await tryCatch(
         spotifyApi.addTracksToPlaylist({
@@ -130,7 +136,26 @@ export const playlistRouter = createTRPCRouter({
             "Sorry! We could not add this track to your playlist at the moment.",
         });
       }
-      return data;
+
+      const addedStatus = "added";
+      const trackLocationInTable = and(
+        eq(trackPlaylistStatus.batchId, batchId),
+        eq(trackPlaylistStatus.trackId, trackId),
+      );
+
+      // insert the snapshot id to the status table
+      await Promise.all([
+        ctx.db
+          .update(trackPlaylistStatus)
+          .set({ snapshotId: data?.snapshot_id })
+          .where(trackLocationInTable),
+        ctx.db
+          .update(trackPlaylistStatus)
+          .set({ status: addedStatus })
+          .where(and(trackLocationInTable)),
+      ]);
+
+      return { snapshot_id: data?.snapshot_id, status: addedStatus };
     }),
   removePlaylistItems: protectedProcedure
     .input(
