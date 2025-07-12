@@ -13,13 +13,22 @@ import { cookies } from "next/headers";
 import { TRPCError } from "@trpc/server";
 import { type PlaylistTrackResponse } from "spotify-api";
 
-type PostRequestBody = Record<string, string | string[] | boolean | number>;
+type JsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | JsonValue[]
+  | { [key: string]: JsonValue };
+
+type RequestBodyType = Record<string, JsonValue>;
+
 async function spotifyFetch<T>(
   method: "GET" | "POST" | "DELETE",
   endpoint: string,
   params?: Record<string, string>,
   queryParams?: Record<string, number | string>,
-  requestBody?: PostRequestBody,
+  requestBody?: RequestBodyType,
 ) {
   const access_token = (await cookies()).get("access_token")?.value;
 
@@ -145,8 +154,10 @@ export const spotifyApi = {
   }: {
     playlist_id: string;
     requestBody: {
-      uris: string[];
-      snapshot_id: string;
+      tracks: {
+        uri: string;
+        snapshot_id: string;
+      }[];
     };
   }) =>
     spotifyFetch<RemoveTracksFromPlaylistResponse>(

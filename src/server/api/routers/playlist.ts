@@ -138,6 +138,10 @@ export const playlistRouter = createTRPCRouter({
       }
 
       const addedStatus = "added";
+      console.log("snapshot_id:", data?.snapshot_id);
+      console.log("batchId:", batchId);
+      console.log("track_id:", trackId);
+
       const trackLocationInTable = and(
         eq(trackPlaylistStatus.batchId, batchId),
         eq(trackPlaylistStatus.trackId, trackId),
@@ -159,9 +163,51 @@ export const playlistRouter = createTRPCRouter({
     }),
   removePlaylistItems: protectedProcedure
     .input(
-      z.object({ playlist_id: z.string(), track_uris: z.array(z.string()) }),
+      z.object({
+        playlist_id: z.string(),
+        track_uris: z.string(),
+        snapshot_id: z.string(),
+        batchId: z.number(),
+        trackId: z.number(),
+      }),
     )
-    .mutation(async ({ input }) => {
-      const { playlist_id, track_uris } = input;
+    .mutation(async ({ input, ctx }) => {
+      const { playlist_id, track_uris, snapshot_id, batchId, trackId } = input;
+
+      const { data, error } = await tryCatch(
+        spotifyApi.removePlaylistItems({
+          playlist_id,
+          requestBody: { tracks: [{ uri: track_uris, snapshot_id }] },
+        }),
+      );
+
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            "Sorry! We could not remove this track from the playlist at the moment.",
+        });
+      }
+
+      const trackLocationInTable = and(
+        eq(trackPlaylistStatus.batchId, batchId),
+        eq(trackPlaylistStatus.trackId, trackId),
+      );
+
+      const removedStatus = "removed";
+
+      // insert the snapshot id to the status table
+      await Promise.all([
+        ctx.db
+          .update(trackPlaylistStatus)
+          .set({ snapshotId: null })
+          .where(trackLocationInTable),
+        ctx.db
+          .update(trackPlaylistStatus)
+          .set({ status: removedStatus })
+          .where(and(trackLocationInTable)),
+      ]);
+
+      return data;
     }),
 });

@@ -71,7 +71,6 @@ const DynamicRecommendedTrackCard: React.FC<
       toastError(error?.message, {
         id: `error-add-${track}-to-playlist`,
       });
-      // setIsAdded(false);
       setTrackStatus("failed");
       setIsLoading(false);
     },
@@ -85,9 +84,31 @@ const DynamicRecommendedTrackCard: React.FC<
     },
   });
 
+  const removeMutation = api.playlist.removePlaylistItems.useMutation({
+    onMutate: () => {
+      setIsLoading(true);
+    },
+    onError: (error) => {
+      toastError(error?.message, { id: `error-remove-${track}-from-playlist` });
+      setTrackStatus("added");
+      setIsLoading(false);
+    },
+    onSuccess: () => {
+      setTrackStatus("removed");
+      setIsLoading(false);
+    },
+  });
+
   const handleRemoveTrackFromPlaylist = () => {
-    console.log("removed");
-    setTrackStatus("removed");
+    if (trackStatus === "added") {
+      removeMutation.mutate({
+        playlist_id,
+        track_uris: track_uri,
+        snapshot_id: addedTrackSnapshotId!,
+        batchId: batch_id,
+        trackId: track_id,
+      });
+    }
   };
 
   const handleAddTrackToOwnedPlaylist = () => {
