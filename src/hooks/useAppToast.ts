@@ -19,6 +19,19 @@ export function useAppToast() {
     } as const,
   };
 
+  const successStyle = {
+    dark: {
+      backgroundColor: "#f0fdf4", // light green background
+      borderColor: "#bbf7d0", // green border
+      color: "#166534", // dark green text
+    } as const,
+    light: {
+      backgroundColor: "#052e16", // dark green background
+      borderColor: "#166534", // dark green border
+      color: "#bbf7d0", // light green text
+    } as const,
+  };
+
   function toastError(message: string, options: ExternalToast = {}) {
     toast.error(message, {
       style: {
@@ -39,5 +52,25 @@ export function useAppToast() {
     });
   }
 
-  return { toastError };
+  function toastSuccess(message: string, options: ExternalToast = {}) {
+    toast.error(message, {
+      style: {
+        backgroundColor:
+          oppositeTheme === "dark"
+            ? successStyle.dark.backgroundColor
+            : successStyle.light.backgroundColor,
+        borderColor:
+          oppositeTheme === "dark"
+            ? successStyle.dark.borderColor
+            : successStyle.light.borderColor,
+        color:
+          oppositeTheme === "dark"
+            ? successStyle.dark.color
+            : successStyle.light.color,
+      },
+      ...options,
+    });
+  }
+
+  return { toastError, toastSuccess };
 }
