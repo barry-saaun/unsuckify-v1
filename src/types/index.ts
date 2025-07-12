@@ -44,23 +44,4 @@ export type HandleRecommendationTracksReturn = {
   success: boolean;
 };
 
-export type PaginatedQueryKeyType = [string, { playlist_id: string }];
-
-export type PageParamType = {
-  cursor: number;
-  page: number;
-};
-
-export type PaginatedRecommendationsType = {
-  data: string[];
-  currentPage: number;
-  nextPage: number | null;
-  total: number;
-};
-
-export type GetTracksReturnType = {
-  tracks: string[];
-  hasMore: boolean;
-  hasMoreInCurrentBatch: boolean;
-  nextBatch: number | null;
-};
+export type TrackStatusType = "pending" | "added" | "removed" | "failed";
