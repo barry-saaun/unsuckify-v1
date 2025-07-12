@@ -40,6 +40,7 @@ export default function PlaylistContent() {
   const searchParams = useSearchParams();
 
   const ownerId = searchParams.get("ownerId");
+  const playlistName = searchParams.get("playlistName");
 
   let isOwned: boolean;
 
@@ -111,6 +112,12 @@ export default function PlaylistContent() {
 
   return (
     <div className="mx-6 mb-10 flex min-h-screen flex-col items-center justify-center gap-2 border-none md:mx-8 lg:mx-10">
+      {playlistName && (
+        <h1 className="mb-4 text-center text-2xl font-semibold text-gray-800 md:text-3xl lg:text-4xl dark:text-gray-200">
+          {playlistName}
+          <span className="mx-auto mt-2 block h-1 w-[50%] rounded bg-purple-400 opacity-60" />
+        </h1>
+      )}
       {!isOwned && (
         <CreateNewPlaylistCard
           selectedTracksUri={Array.from(selectedTracksUri)}

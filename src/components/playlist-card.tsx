@@ -61,7 +61,9 @@ const PlaylistCard = ({
         <Button
           className="mx-2 h-full w-full hover:cursor-pointer"
           onClick={() =>
-            router.push(`dashboard/${playlistId}?ownerId=${ownerId}`)
+            router.push(
+              `dashboard/${playlistId}?ownerId=${ownerId}&playlistName=${playlistName}`,
+            )
           }
         >
           <span className="font-semibold">Unsuckify</span>
