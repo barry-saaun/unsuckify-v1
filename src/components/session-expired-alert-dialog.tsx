@@ -26,8 +26,12 @@ export default function SessionExpiredAlertDialog() {
       // Clear session state
       setSessionExpired(false);
 
-      // Clear localStorage
+      // Clear localStorage but keep playlist_metadata
+      const playlistMetadata = localStorage.getItem("playlist_metadata");
       localStorage.clear();
+      if (playlistMetadata) {
+        localStorage.setItem("playlist_metadata", playlistMetadata);
+      }
 
       // Navigate
       router.push("/");

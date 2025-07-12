@@ -111,7 +111,6 @@ export const trackRouter = createTRPCRouter({
       z.object({
         userId: z.string(),
         playlist_id: z.string(),
-        newTracks: RecommendedTracksSchema,
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -133,13 +132,20 @@ export const trackRouter = createTRPCRouter({
       z.object({
         userId: z.string(),
         playlist_id: z.string(),
-        newTracks: RecommendedTracksSchema,
+        newTracks: RecommendedTracksSchema.optional(),
+        playlistLSExpired: z.boolean(),
       }),
     )
     .query(
       async ({ ctx, input }): Promise<HandleRecommendationTracksReturn> => {
+        const { userId, playlistLSExpired, playlist_id } = input;
+
         const caller = trackRouter.createCaller(ctx);
-        const latestBatch = await caller.getLatestBatch(input);
+
+        const latestBatch = await caller.getLatestBatch({
+          playlist_id,
+          userId,
+        });
 
         const now = new Date();
         let within24hours = false;
@@ -160,7 +166,8 @@ export const trackRouter = createTRPCRouter({
           }
         }
 
-        if (within24hours && batchId) {
+        // Case 1: Data exists and is fresh (not expired)
+        if (!playlistLSExpired && within24hours && batchId) {
           console.log(`Attempting to select tracks for batchId: ${batchId}`);
           const resolvedTracks = await ctx.db
             .select()
@@ -178,25 +185,35 @@ export const trackRouter = createTRPCRouter({
             batchId,
             success: true,
           };
-        } else {
-          const result = await caller.pushRecommendations({
-            userId: input.userId,
-            playlist_id: input.playlist_id,
-            recommendations: input.newTracks,
-          });
-
-          if (!result.success) {
-            console.log("log from !success");
-            return {
-              resolvedTracks: input.newTracks,
-              timeLeft: new Date().getTime(),
-              success: false,
-              batchId: null,
-            };
-          }
-          batchId = result.batchId;
-          timeLeft = 24 * 60 * 60 * 1000;
         }
+
+        // gracefully handle the case where it's undefined
+        if (!input.newTracks) {
+          return {
+            resolvedTracks: [],
+            timeLeft: null,
+            success: false,
+            batchId: null,
+          };
+        }
+
+        const result = await caller.pushRecommendations({
+          userId: input.userId,
+          playlist_id: input.playlist_id,
+          recommendations: input.newTracks,
+        });
+
+        if (!result.success) {
+          console.log("log from !success");
+          return {
+            resolvedTracks: [],
+            timeLeft: new Date().getTime(),
+            success: false,
+            batchId: null,
+          };
+        }
+        batchId = result.batchId;
+        timeLeft = 24 * 60 * 60 * 1000;
 
         return {
           resolvedTracks: input.newTracks,

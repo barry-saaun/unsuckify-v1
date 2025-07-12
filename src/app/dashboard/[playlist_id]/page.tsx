@@ -11,6 +11,10 @@ import { useRecommendedInfTracks } from "~/hooks/useRecommendedInfTracks";
 import RecommendedTrackCard from "~/components/recommended-track-card";
 import RecommendedTrackCardSkeleton from "~/components/rec-track-card-skeleton";
 import { useAppToast } from "~/hooks/useAppToast";
+import {
+  lsCheckPlaylistExpiration,
+  lsSetPlaylistMetadata,
+} from "~/lib/utils/playlist";
 
 const TRACK_PER_INF_PAGE = 2;
 
@@ -52,6 +56,16 @@ export default function PlaylistContent() {
 
   const playlist_id = params.playlist_id;
 
+  const [playlistLSExpired, setPlaylistLSExpired] = useState(true);
+
+  useEffect(() => {
+    if (!playlist_id) return;
+    const expired = lsCheckPlaylistExpiration(playlist_id);
+    setPlaylistLSExpired(expired);
+  }, [playlist_id]);
+
+  console.log("Is playlist Expired", playlistLSExpired);
+
   const {
     data,
     isLoadingAny,
@@ -65,6 +79,7 @@ export default function PlaylistContent() {
     playlist_id,
     userId,
     limit: TRACK_PER_INF_PAGE,
+    playlistLSExpired,
   });
 
   const [selectedTracksUri, setSelectedTracksUri] = useState(
@@ -113,7 +128,7 @@ export default function PlaylistContent() {
   return (
     <div className="mx-6 mb-10 flex min-h-screen flex-col items-center justify-center gap-2 border-none md:mx-8 lg:mx-10">
       {playlistName && (
-        <h1 className="mb-4 text-center text-2xl font-semibold text-gray-800 md:text-3xl lg:text-4xl dark:text-gray-200">
+        <h1 className="mt-10 mb-4 text-center text-2xl font-semibold text-gray-800 md:text-3xl lg:text-4xl dark:text-gray-200">
           {playlistName}
           <span className="mx-auto mt-2 block h-1 w-[50%] rounded bg-purple-400 opacity-60" />
         </h1>

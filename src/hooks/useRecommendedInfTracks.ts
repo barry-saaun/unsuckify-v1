@@ -1,16 +1,20 @@
 import { api } from "~/trpc/react";
 import useRecommendationsWithThreshold from "./useRecommendationsWithThreshold";
+import { lsSetPlaylistMetadata } from "~/lib/utils/playlist";
+import { useEffect } from "react";
 
 type useRecommendedInfTracksParams = {
   playlist_id: string;
   userId: string;
   limit: number;
+  playlistLSExpired?: boolean;
 };
 
 export const useRecommendedInfTracks = ({
   playlist_id,
   userId,
   limit,
+  playlistLSExpired,
 }: useRecommendedInfTracksParams) => {
   const {
     data: playlistData,
@@ -20,7 +24,7 @@ export const useRecommendedInfTracks = ({
     {
       playlist_id,
     },
-    { staleTime: 86400 * 1000 },
+    { staleTime: 86400 * 1000, enabled: playlistLSExpired },
   );
 
   const {
@@ -29,6 +33,7 @@ export const useRecommendedInfTracks = ({
     error: recommendationsError,
   } = useRecommendationsWithThreshold({
     playlistData: playlistData,
+    playlistLSExpired,
   });
 
   const {
@@ -39,10 +44,17 @@ export const useRecommendedInfTracks = ({
     {
       userId,
       playlist_id,
-      newTracks: rec_tracks!,
+      newTracks: !!rec_tracks ? rec_tracks : undefined,
+      playlistLSExpired: playlistLSExpired ?? true,
     },
-    { enabled: !!rec_tracks && !!userId },
+    { enabled: !!userId },
   );
+
+  useEffect(() => {
+    if (resolvedTracks && playlistLSExpired) {
+      lsSetPlaylistMetadata(playlist_id);
+    }
+  }, [resolvedTracks, playlistLSExpired, playlist_id]);
 
   const batchId = resolvedTracks?.batchId;
 
