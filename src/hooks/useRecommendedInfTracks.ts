@@ -1,5 +1,6 @@
 import { api } from "~/trpc/react";
 import useRecommendationsWithThreshold from "./useRecommendationsWithThreshold";
+import { useEffect } from "react";
 
 type useRecommendedInfTracksParams = {
   playlist_id: string;
@@ -58,19 +59,55 @@ export const useRecommendedInfTracks = ({
     enabledWhen: shouldFetch,
   });
 
+  console.log("rec_tracks:", rec_tracks);
+
+  const getOrCreateMutation =
+    api.track.getOrCreateRecommendationsMutate.useMutation();
   const {
+    mutate,
     data: resolvedTracks,
+    isPending: isPendingResolvedTracks,
     error: resolvingRecsError,
-    isLoading: isLoadingResolvedTracks,
-  } = api.track.getOrCreateRecommendations.useQuery(
-    {
-      userId,
-      playlist_id,
-      newTracks: rec_tracks ?? undefined,
-      latestBatchInput: latestBatch,
-    },
-    { enabled: !!userId },
-  );
+  } = getOrCreateMutation;
+
+  useEffect(() => {
+    const hasRequiredData = !shouldFetch || (playlistData && rec_tracks);
+    if (
+      getOrCreateMutation &&
+      userId &&
+      getOrCreateMutation.status === "idle" &&
+      !isLoadingRecommendations &&
+      !isLoadingLatestBatch &&
+      !isLoadingPlaylist &&
+      hasRequiredData
+    ) {
+      console.log("About to mutate with:", {
+        playlist_id,
+        userId,
+        newTracks: rec_tracks ?? undefined,
+        latestBatchInput: latestBatch,
+      });
+      mutate({
+        playlist_id,
+        userId,
+        newTracks: rec_tracks ?? undefined,
+        latestBatchInput: latestBatch,
+      });
+    }
+  }, [
+    latestBatch,
+    getOrCreateMutation,
+
+    playlist_id,
+    userId,
+    rec_tracks,
+    mutate,
+    isLoadingRecommendations,
+    isLoadingLatestBatch,
+    isLoadingPlaylist,
+    shouldFetch,
+    playlistData,
+  ]);
 
   const batchId = resolvedTracks?.batchId;
 
@@ -86,7 +123,7 @@ export const useRecommendedInfTracks = ({
     isLoadingLatestBatch ||
     isLoadingPlaylist ||
     isLoadingRecommendations ||
-    isLoadingResolvedTracks ||
+    isPendingResolvedTracks ||
     infiniteQueryResult.isLoading;
   const error =
     latestBatchError ??

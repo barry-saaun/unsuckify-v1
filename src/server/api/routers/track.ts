@@ -3,6 +3,7 @@ import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { generateObject } from "ai";
 import { google } from "@ai-sdk/google";
 import {
+  GetOrCreateRecommendationsSchema,
   RecommendedTrackObjectSchema,
   RecommendedTracksSchema,
   type HandleRecommendationTracksReturn,
@@ -128,25 +129,10 @@ export const trackRouter = createTRPCRouter({
       return latestBatch;
     }),
   getOrCreateRecommendations: protectedProcedure
-    .input(
-      z.object({
-        userId: z.string(),
-        playlist_id: z.string(),
-        latestBatchInput: z
-          .object({
-            id: z.number(),
-            userId: z.string().nullable(),
-            playlistId: z.string().nullable(),
-            generatedAt: z.date(),
-          })
-          .nullable()
-          .optional(),
-        newTracks: RecommendedTracksSchema.optional(),
-      }),
-    )
+    .input(GetOrCreateRecommendationsSchema)
     .query(
       async ({ ctx, input }): Promise<HandleRecommendationTracksReturn> => {
-        const { userId, playlist_id, latestBatchInput, newTracks } = input;
+        const { latestBatchInput } = input;
         console.log("latestbatchinput:", latestBatchInput);
 
         const caller = trackRouter.createCaller(ctx);
@@ -172,6 +158,8 @@ export const trackRouter = createTRPCRouter({
           }
         }
 
+        console.log("[track]: batchId", batchId);
+
         // Case 1: Data exists and is fresh (not expired)
         if (within24hours && batchId) {
           console.log(`Attempting to select tracks for batchId: ${batchId}`);
@@ -193,6 +181,8 @@ export const trackRouter = createTRPCRouter({
           };
         }
 
+        console.log("[track]: input new track", input.newTracks);
+
         // gracefully handle the case where it's undefined
         if (!input.newTracks) {
           return {
@@ -208,6 +198,8 @@ export const trackRouter = createTRPCRouter({
           playlist_id: input.playlist_id,
           recommendations: input.newTracks,
         });
+
+        console.log("[pushRec]: is called");
 
         if (!result.success) {
           console.log("log from !success");
@@ -227,6 +219,15 @@ export const trackRouter = createTRPCRouter({
           success: true,
           batchId,
         };
+      },
+    ),
+
+  getOrCreateRecommendationsMutate: protectedProcedure
+    .input(GetOrCreateRecommendationsSchema)
+    .mutation(
+      async ({ ctx, input }): Promise<HandleRecommendationTracksReturn> => {
+        const caller = trackRouter.createCaller(ctx);
+        return await caller.getOrCreateRecommendations(input);
       },
     ),
   infiniteTracks: protectedProcedure

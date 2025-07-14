@@ -12,7 +12,7 @@ import RecommendedTrackCard from "~/components/recommended-track-card";
 import RecommendedTrackCardSkeleton from "~/components/rec-track-card-skeleton";
 import { useAppToast } from "~/hooks/useAppToast";
 
-const TRACK_PER_INF_PAGE = 2;
+const TRACK_PER_INF_PAGE = 6;
 
 function useUserId() {
   const [userId, setUserId] = useState<string>("");

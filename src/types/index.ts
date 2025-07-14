@@ -45,3 +45,22 @@ export type HandleRecommendationTracksReturn = {
 };
 
 export type TrackStatusType = "pending" | "added" | "removed" | "failed";
+
+export const GetOrCreateRecommendationsSchema = z.object({
+  userId: z.string(),
+  playlist_id: z.string(),
+  latestBatchInput: z
+    .object({
+      id: z.number(),
+      userId: z.string().nullable(),
+      playlistId: z.string().nullable(),
+      generatedAt: z.date(),
+    })
+    .nullable()
+    .optional(),
+  newTracks: RecommendedTracksSchema.optional(),
+});
+
+export type TGetOrCreateRecommendations = z.infer<
+  typeof GetOrCreateRecommendationsSchema
+>;
