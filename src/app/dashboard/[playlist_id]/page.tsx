@@ -11,10 +11,6 @@ import { useRecommendedInfTracks } from "~/hooks/useRecommendedInfTracks";
 import RecommendedTrackCard from "~/components/recommended-track-card";
 import RecommendedTrackCardSkeleton from "~/components/rec-track-card-skeleton";
 import { useAppToast } from "~/hooks/useAppToast";
-import {
-  lsCheckPlaylistExpiration,
-  lsSetPlaylistMetadata,
-} from "~/lib/utils/playlist";
 
 const TRACK_PER_INF_PAGE = 2;
 
@@ -56,16 +52,6 @@ export default function PlaylistContent() {
 
   const playlist_id = params.playlist_id;
 
-  const [playlistLSExpired, setPlaylistLSExpired] = useState(true);
-
-  useEffect(() => {
-    if (!playlist_id) return;
-    const expired = lsCheckPlaylistExpiration(playlist_id);
-    setPlaylistLSExpired(expired);
-  }, [playlist_id]);
-
-  console.log("Is playlist Expired", playlistLSExpired);
-
   const {
     data,
     isLoadingAny,
@@ -79,7 +65,6 @@ export default function PlaylistContent() {
     playlist_id,
     userId,
     limit: TRACK_PER_INF_PAGE,
-    playlistLSExpired,
   });
 
   const [selectedTracksUri, setSelectedTracksUri] = useState(

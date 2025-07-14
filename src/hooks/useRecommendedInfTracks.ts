@@ -1,7 +1,5 @@
 import { api } from "~/trpc/react";
 import useRecommendationsWithThreshold from "./useRecommendationsWithThreshold";
-import { lsSetPlaylistMetadata } from "~/lib/utils/playlist";
-import { useEffect } from "react";
 
 type useRecommendedInfTracksParams = {
   playlist_id: string;
@@ -14,7 +12,6 @@ export const useRecommendedInfTracks = ({
   playlist_id,
   userId,
   limit,
-  playlistLSExpired,
 }: useRecommendedInfTracksParams) => {
   const {
     data: latestBatch,
@@ -74,12 +71,6 @@ export const useRecommendedInfTracks = ({
     },
     { enabled: !!userId },
   );
-
-  useEffect(() => {
-    if (resolvedTracks && playlistLSExpired) {
-      lsSetPlaylistMetadata(playlist_id);
-    }
-  }, [resolvedTracks, playlistLSExpired, playlist_id]);
 
   const batchId = resolvedTracks?.batchId;
 
