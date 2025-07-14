@@ -7,8 +7,10 @@ const SAFE_INPUT_SIZE = 120;
 
 export default function useRecommendationsWithThreshold({
   playlistData,
+  enabledWhen,
 }: {
   playlistData: string[] | undefined;
+  enabledWhen: boolean;
 }) {
   const inputSize = playlistData ? playlistData.length : 0;
 
@@ -20,7 +22,7 @@ export default function useRecommendationsWithThreshold({
   const queryResult = api.track.getRecommendations.useQuery(
     playlistData ?? skipToken,
     {
-      enabled: isSmallInput && !!playlistData,
+      enabled: isSmallInput && !!playlistData && enabledWhen,
       staleTime: 86400 * 1000,
       retry: false,
     },
@@ -32,12 +34,13 @@ export default function useRecommendationsWithThreshold({
     if (
       isLargeInputToQuery &&
       playlistData &&
+      enabledWhen &&
       !mutation.data &&
       !mutation.isPending
     ) {
       mutation.mutate(playlistData);
     }
-  }, [isLargeInputToQuery, playlistData, mutation]);
+  }, [isLargeInputToQuery, playlistData, mutation, enabledWhen]);
 
   const rec_tracks = queryResult.data ?? mutation.data;
   const isLoadingRecommendations = queryResult.isLoading ?? mutation.isPending;
