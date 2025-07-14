@@ -36,13 +36,7 @@ export default function TrackActionButton({
     case "removed":
     case "failed":
       return (
-        <Button
-          className={cn(
-            buttonCn,
-            "bg-purple-700 hover:bg-purple-600 dark:bg-purple-400 hover:dark:bg-purple-300",
-          )}
-          onClick={addHandler}
-        >
+        <Button className={cn(buttonCn)} onClick={addHandler}>
           <Plus />
           {"Add to Playlist"}
         </Button>
@@ -52,7 +46,6 @@ export default function TrackActionButton({
         <Button
           className={cn(
             buttonCn,
-            "bg-purple-700 dark:bg-purple-400",
             isHovered && "!bg-red-500/90 dark:bg-red-400/60",
           )}
           onClick={removeHandler}
