@@ -99,7 +99,7 @@ function PublicPlaylistTabContent() {
               />
               <Button
                 type="submit"
-                className="cursor-pointer font-bold disabled:cursor-not-allowed"
+                className="font-bold disabled:cursor-not-allowed"
                 disabled={isFormEmpty}
               >
                 UNSUCKify

@@ -153,7 +153,8 @@ export default function PlaylistContent() {
         <Button
           disabled={isFetchingNextPage}
           onClick={handleFetchNextPage}
-          className="mt-5 flex w-32 items-center justify-center"
+          className="hover:bg-accent/90 mt-5 flex w-32 items-center justify-center border-2"
+          variant={"outline"}
         >
           {isFetchingNextPage ? (
             <Spinner />
