@@ -6,7 +6,7 @@ import { cn } from "~/lib/utils";
 import { useState } from "react";
 
 type TrackActionButtonProps = {
-  isLoading: boolean;
+  actionIsPending: boolean;
   status: TrackStatusType;
   addHandler: () => void;
   removeHandler: () => void;
@@ -19,11 +19,11 @@ export default function TrackActionButton({
   status,
   addHandler,
   removeHandler,
-  isLoading,
+  actionIsPending,
 }: TrackActionButtonProps) {
   const [isHovered, setIsHovered] = useState(false);
 
-  if (isLoading) {
+  if (actionIsPending) {
     return (
       <Button className={buttonCn} disabled>
         <Spinner />

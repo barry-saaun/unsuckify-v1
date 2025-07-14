@@ -32,7 +32,7 @@ const LoginPage = () => {
           </p>
         </div>
         <Button
-          className="flex flex-row gap-2 rounded-md bg-[#1DB954] px-4 py-2 font-semibold text-white shadow-md hover:bg-[#1aa34a] dark:shadow-none"
+          className="flex flex-row gap-2 rounded-md bg-[#1DB954] px-4 py-2 font-semibold text-white shadow-md hover:bg-[#1aa34a] dark:bg-[#1DB954] dark:shadow-none"
           onClick={handleLogin}
           disabled={isLoading}
         >

@@ -15,12 +15,9 @@ import {
 } from "./ui/tooltip";
 import Image from "next/image";
 import { cn } from "~/lib/utils";
-import React, { useEffect, useState, type HTMLAttributes } from "react";
-import { api } from "~/trpc/react";
-import { useAppToast } from "~/hooks/useAppToast";
+import React, { useState, type HTMLAttributes } from "react";
 import TrackActionButton from "./track-action-button";
-import type { TrackStatusType } from "~/types";
-import { toast } from "sonner";
+import useTrackAction from "~/hooks/useTrackAction";
 
 interface DynamicRecommendedTrackCardProps
   extends HTMLAttributes<HTMLDivElement> {
@@ -28,7 +25,6 @@ interface DynamicRecommendedTrackCardProps
   image_src?: string;
   track: string;
   artists: string;
-  tooltipContent: string;
   cardClassName?: string;
   isSelected?: boolean;
   playlist_id: string;
@@ -43,7 +39,6 @@ const DynamicRecommendedTrackCard: React.FC<
   isOwned,
   image_src,
   track,
-  tooltipContent,
   isSelected,
   playlist_id,
   track_uri,
@@ -53,86 +48,28 @@ const DynamicRecommendedTrackCard: React.FC<
   track_id,
   ...props
 }) => {
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [imageLoaded, setImageLoaded] = useState<boolean>(false);
-  const [trackStatus, setTrackStatus] = useState<TrackStatusType>("pending");
+  const [imageLoaded, setImageLoaded] = useState(false);
 
-  const [addedTrackSnapshotId, setAddedTrackSnapshotId] = useState<
-    string | null
-  >(null);
-
-  const { toastError, toastSuccess } = useAppToast();
-
-  const { data: queryTrackStatus } = api.track.getTrackStatus.useQuery({
-    batchId: batch_id,
-    trackId: track_id,
+  const {
+    trackStatus,
+    actionIsPending,
+    handleAddTrackToOwnedPlaylist,
+    handleRemoveTrackFromPlaylist,
+  } = useTrackAction({
+    batch_id,
+    playlist_id,
+    track,
+    track_uri,
+    track_id,
   });
 
-  useEffect(() => {
-    if (queryTrackStatus && queryTrackStatus !== "pending") {
-      setTrackStatus(queryTrackStatus);
-    }
-  }, [queryTrackStatus]);
-
-  const addMutation = api.playlist.addItemsToPlaylist.useMutation({
-    onMutate: () => {
-      setIsLoading(true);
-    },
-    onError: (error) => {
-      toastError(error?.message, {
-        id: `error-add-${track}-to-playlist`,
-      });
-      setTrackStatus("failed");
-      setIsLoading(false);
-    },
-    onSuccess: (data) => {
-      // setIsAdded(true);
-      toast("Click the button", { id: "added-track" });
-      setTrackStatus("added");
-      setAddedTrackSnapshotId(data.snapshot_id!);
-
-      setIsLoading(false);
-    },
-  });
-
-  const removeMutation = api.playlist.removePlaylistItems.useMutation({
-    onMutate: () => {
-      setIsLoading(true);
-    },
-    onError: (error) => {
-      toastError(error?.message, { id: `error-remove-${track}-from-playlist` });
-      setTrackStatus("added");
-      setIsLoading(false);
-    },
-    onSuccess: (data) => {
-      setTrackStatus("removed");
-      setIsLoading(false);
-      toastSuccess(data.success_msg, {
-        id: `success-remove-${track}-from-playlist`,
-      });
-    },
-  });
-
-  const handleRemoveTrackFromPlaylist = () => {
-    if (trackStatus === "added") {
-      removeMutation.mutate({
-        playlist_id,
-        track_uris: track_uri,
-        snapshot_id: addedTrackSnapshotId!,
-        batchId: batch_id,
-        trackId: track_id,
-      });
-    }
-  };
-
-  const handleAddTrackToOwnedPlaylist = () => {
-    addMutation.mutate({
-      playlist_id,
-      track_uris: [track_uri],
-      batchId: batch_id,
-      trackId: track_id,
-    });
-  };
+  const tooltipContent: string = isOwned
+    ? trackStatus === "added"
+      ? "Remove this track"
+      : "Save this track"
+    : isSelected
+      ? "Click to Deselect"
+      : "Click to Select";
 
   return (
     <TooltipProvider>
@@ -179,7 +116,7 @@ const DynamicRecommendedTrackCard: React.FC<
                   status={trackStatus}
                   addHandler={handleAddTrackToOwnedPlaylist}
                   removeHandler={handleRemoveTrackFromPlaylist}
-                  isLoading={isLoading}
+                  actionIsPending={actionIsPending}
                 />
               </CardFooter>
             )}

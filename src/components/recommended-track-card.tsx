@@ -25,37 +25,38 @@ const RecommendedTrackCard: React.FC<RecommendedTrackCardProps> = ({
 }) => {
   const { track, artists } = trackObj;
 
-  const { data, isLoading, error } =
-    api.track.searchForTracks.useQuery(trackObj);
+  const {
+    data: trackQueryResult,
+    isLoading: isLoadingTrackQuery,
+    error: trackQueryError,
+  } = api.track.searchForTracks.useQuery(trackObj);
 
   const [isHovered, setIsHoverd] = useState(false);
   const [isSelected, setIsSelected] = useState(false);
 
-  if (isLoading) {
-    return <RecommendedTrackCardSkeleton isOwned />;
+  if (isLoadingTrackQuery) {
+    return <RecommendedTrackCardSkeleton isOwned={isOwned} />;
   }
 
   // just ignore the errored query result completely
-  if (error || data === null || !data?.trackUri || !data?.albumImage)
+  if (
+    trackQueryError ||
+    trackQueryResult === null ||
+    !trackQueryResult?.trackUri ||
+    !trackQueryResult?.albumImage
+  )
     return null;
 
   const handleOnClick = () => {
-    handleNotIsOwnedCardClick(data?.trackUri ?? "");
+    handleNotIsOwnedCardClick(trackQueryResult?.trackUri ?? "");
     setIsSelected(!isSelected);
   };
-
-  const tooltipContent: string = isOwned
-    ? "Save this track"
-    : isSelected
-      ? "Click to Deselect"
-      : "Click to Select";
 
   const sharedProps = {
     isOwned,
     track,
     artists,
-    image_src: data?.albumImage,
-    tooltipContent,
+    image_src: trackQueryResult?.albumImage,
     batch_id,
     track_id,
     onMouseEnter: () => setIsHoverd(true),
@@ -71,7 +72,7 @@ const RecommendedTrackCard: React.FC<RecommendedTrackCardProps> = ({
     <DynamicRecommendedTrackCard
       {...sharedProps}
       onClick={!isOwned ? handleOnClick : undefined}
-      track_uri={data.trackUri}
+      track_uri={trackQueryResult.trackUri}
       playlist_id={playlist_id}
     />
   );
