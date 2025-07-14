@@ -114,7 +114,7 @@ export const trackRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const latestBatch = await ctx.db
+      const rows = await ctx.db
         .select()
         .from(recommendationBatches)
         .where(
@@ -122,8 +122,8 @@ export const trackRouter = createTRPCRouter({
             eq(recommendationBatches.userId, input.userId),
             eq(recommendationBatches.playlistId, input.playlist_id),
           ),
-        )
-        .then((rows) => rows[0]);
+        );
+      const latestBatch = rows[0] ?? null;
 
       return latestBatch;
     }),
@@ -132,20 +132,26 @@ export const trackRouter = createTRPCRouter({
       z.object({
         userId: z.string(),
         playlist_id: z.string(),
+        latestBatchInput: z
+          .object({
+            id: z.number(),
+            userId: z.string().nullable(),
+            playlistId: z.string().nullable(),
+            generatedAt: z.date(),
+          })
+          .nullable()
+          .optional(),
         newTracks: RecommendedTracksSchema.optional(),
-        playlistLSExpired: z.boolean(),
       }),
     )
     .query(
       async ({ ctx, input }): Promise<HandleRecommendationTracksReturn> => {
-        const { userId, playlistLSExpired, playlist_id } = input;
+        const { userId, playlist_id, latestBatchInput, newTracks } = input;
+        console.log("latestbatchinput:", latestBatchInput);
 
         const caller = trackRouter.createCaller(ctx);
-
-        const latestBatch = await caller.getLatestBatch({
-          playlist_id,
-          userId,
-        });
+        const latestBatch =
+          latestBatchInput ?? (await caller.getLatestBatch(input));
 
         const now = new Date();
         let within24hours = false;
@@ -167,7 +173,7 @@ export const trackRouter = createTRPCRouter({
         }
 
         // Case 1: Data exists and is fresh (not expired)
-        if (!playlistLSExpired && within24hours && batchId) {
+        if (within24hours && batchId) {
           console.log(`Attempting to select tracks for batchId: ${batchId}`);
           const resolvedTracks = await ctx.db
             .select()

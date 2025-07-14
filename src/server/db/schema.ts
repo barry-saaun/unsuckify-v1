@@ -8,6 +8,7 @@ import {
   unique,
   pgEnum,
 } from "drizzle-orm/pg-core";
+import { createSelectSchema } from "drizzle-zod";
 
 export const users = pgTable("users", {
   id: varchar("id", { length: 64 }).primaryKey(),
@@ -59,6 +60,9 @@ export const trackPlaylistStatus = pgTable("track_playlist_status", {
 export type RecBatchesSelectType = InferSelectModel<
   typeof recommendationBatches
 >;
+
+export const selectRecBatchesSchema = createSelectSchema(recommendationBatches);
+
 export type RecTracksSelectType = InferSelectModel<typeof recommendationTracks>;
 export type RecTracksInsertType = InferInsertModel<typeof recommendationTracks>;
 

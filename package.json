@@ -43,6 +43,7 @@
     "clsx": "^2.1.1",
     "dotenv": "^16.6.0",
     "drizzle-orm": "^0.44.2",
+    "drizzle-zod": "^0.8.2",
     "framer-motion": "^12.15.0",
     "lucide-react": "^0.511.0",
     "motion": "^12.15.0",
