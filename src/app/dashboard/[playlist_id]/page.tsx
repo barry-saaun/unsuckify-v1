@@ -125,7 +125,7 @@ export default function PlaylistContent() {
         />
       )}
       <InfoBanner isOwned={isOwned} />
-      <div className="mt-5 grid w-full grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="m-5 grid w-full grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
         {data?.pages.flatMap((page) =>
           page.items.map((item, i) => (
             <RecommendedTrackCard

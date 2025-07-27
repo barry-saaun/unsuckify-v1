@@ -15,9 +15,16 @@ import {
 } from "./ui/tooltip";
 import Image from "next/image";
 import { cn } from "~/lib/utils";
-import React, { useState, type HTMLAttributes } from "react";
+import React, { useState, useRef, type HTMLAttributes } from "react";
 import TrackActionButton from "./track-action-button";
 import useTrackAction from "~/hooks/useTrackAction";
+import { motion, useMotionValue, useSpring } from "framer-motion";
+
+const springValues = {
+  damping: 30,
+  stiffness: 100,
+  mass: 2,
+};
 
 interface DynamicRecommendedTrackCardProps
   extends HTMLAttributes<HTMLDivElement> {
@@ -49,6 +56,12 @@ const DynamicRecommendedTrackCard: React.FC<
   ...props
 }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  // Spring animation values
+  const rotateX = useSpring(useMotionValue(0), springValues);
+  const rotateY = useSpring(useMotionValue(0), springValues);
+  const scale = useSpring(1, springValues);
 
   const {
     trackStatus,
@@ -71,56 +84,94 @@ const DynamicRecommendedTrackCard: React.FC<
       ? "Click to Deselect"
       : "Click to Select";
 
+  function handleMouse(e: React.MouseEvent<HTMLDivElement>) {
+    if (!ref.current) return;
+
+    const rect = ref.current.getBoundingClientRect();
+    const offsetX = e.clientX - rect.left - rect.width / 2;
+    const offsetY = e.clientY - rect.top - rect.height / 2;
+
+    const rotationX = (offsetY / (rect.height / 2)) * -10;
+    const rotationY = (offsetX / (rect.width / 2)) * 10;
+
+    rotateX.set(rotationX);
+    rotateY.set(rotationY);
+  }
+
+  function handleMouseEnter() {
+    scale.set(1.05);
+  }
+
+  function handleMouseLeave() {
+    scale.set(1);
+    rotateX.set(0);
+    rotateY.set(0);
+  }
+
   return (
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Card
-            className={cn(
-              "bg-card/50 pt-0 backdrop-blur-sm transition-all duration-300",
-              cardClassName,
-            )}
-            {...props}
+          <motion.div
+            ref={ref}
+            className="[perspective:800px]"
+            onMouseMove={handleMouse}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            style={{
+              rotateX,
+              rotateY,
+              scale,
+              transformStyle: "preserve-3d",
+            }}
           >
-            <CardContent className="group relative aspect-square overflow-hidden">
-              {!imageLoaded && (
-                <div className="absolute inset-0 animate-pulse rounded-t-xl bg-gray-200 dark:bg-gray-200" />
+            <Card
+              className={cn(
+                "bg-card/50 pt-0 backdrop-blur-sm transition-all duration-300",
+                cardClassName,
               )}
-              {image_src && (
-                <Image
-                  fill
-                  src={image_src}
-                  alt={track}
-                  className={cn(
-                    "rounded-t-xl object-cover shadow transition-all duration-300 group-hover:shadow-lg group-hover:brightness-50",
-                    !imageLoaded && "opacity-0",
-                  )}
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  onLoad={() => setImageLoaded(true)}
-                  loading="lazy" // Enable lazy loading
-                />
+              {...props}
+            >
+              <CardContent className="group relative aspect-square overflow-hidden">
+                {!imageLoaded && (
+                  <div className="absolute inset-0 animate-pulse rounded-t-xl bg-gray-200 dark:bg-gray-200" />
+                )}
+                {image_src && (
+                  <Image
+                    fill
+                    src={image_src}
+                    alt={track}
+                    className={cn(
+                      "rounded-t-xl object-cover shadow transition-all duration-300 group-hover:shadow-lg group-hover:brightness-50",
+                      !imageLoaded && "opacity-0",
+                    )}
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    onLoad={() => setImageLoaded(true)}
+                    loading="lazy"
+                  />
+                )}
+                {isSelected && (
+                  <div className="absolute top-2 right-2 rounded-full bg-black p-1 transition-all">
+                    <Check className="animate-jump-in animate-once animate-duration-[400ms] animate-ease-linear h-4 w-4" />
+                  </div>
+                )}
+              </CardContent>
+              <CardHeader>
+                <CardTitle className="line-clamp-1">{track}</CardTitle>
+                <CardDescription>{artists}</CardDescription>
+              </CardHeader>
+              {isOwned && (
+                <CardFooter className="dark:bg-puruple-50 flex items-center justify-center">
+                  <TrackActionButton
+                    status={trackStatus}
+                    addHandler={handleAddTrackToOwnedPlaylist}
+                    removeHandler={handleRemoveTrackFromPlaylist}
+                    actionIsPending={actionIsPending}
+                  />
+                </CardFooter>
               )}
-              {isSelected && (
-                <div className="absolute top-2 right-2 rounded-full bg-black p-1 transition-all">
-                  <Check className="animate-jump-in animate-once animate-duration-[400ms] animate-ease-linear h-4 w-4" />
-                </div>
-              )}
-            </CardContent>
-            <CardHeader>
-              <CardTitle className="line-clamp-1">{track}</CardTitle>
-              <CardDescription>{artists}</CardDescription>
-            </CardHeader>
-            {isOwned && (
-              <CardFooter className="dark:bg-puruple-50 flex items-center justify-center">
-                <TrackActionButton
-                  status={trackStatus}
-                  addHandler={handleAddTrackToOwnedPlaylist}
-                  removeHandler={handleRemoveTrackFromPlaylist}
-                  actionIsPending={actionIsPending}
-                />
-              </CardFooter>
-            )}
-          </Card>
+            </Card>
+          </motion.div>
         </TooltipTrigger>
         <TooltipContent
           className="flex h-8 w-full items-center justify-center bg-gray-100 px-6 text-sm text-gray-800 dark:bg-slate-900 dark:text-white"
