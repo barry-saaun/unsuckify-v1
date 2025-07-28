@@ -35,8 +35,15 @@ export default function useTrackAction({
     });
 
   useEffect(() => {
-    if (queryTrackStatus && queryTrackStatus !== "pending") {
-      setTrackStatus(queryTrackStatus);
+    if (queryTrackStatus?.status) {
+      const { status, snapshotId } = queryTrackStatus;
+
+      if (status === "added") {
+        setAddedTrackSnapshotId(snapshotId);
+      }
+      if (status !== "pending") {
+        setTrackStatus(status);
+      }
     }
   }, [queryTrackStatus]);
 
