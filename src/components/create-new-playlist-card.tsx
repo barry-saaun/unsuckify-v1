@@ -85,12 +85,6 @@ const CreateNewPlaylistCard: React.FC<CreateNewPlaylistCardProp> = () => {
             isPublic={isPublic}
             onPrivacyChange={setIsPublic}
           />
-          {/* Added text for privacy context */}
-          {!isPublic && (
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Only you can see this playlist.
-            </p>
-          )}
           <Button
             className="flex w-full items-center justify-center font-semibold disabled:cursor-not-allowed"
             disabled={!newPlaylistName || isCreating}

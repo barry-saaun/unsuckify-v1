@@ -62,6 +62,7 @@ const RecommendedTrackCard: React.FC<RecommendedTrackCardProps> = ({
     onMouseEnter: () => setIsHoverd(true),
     onMouseLeave: () => setIsHoverd(false),
     isSelected,
+    track_uri: trackQueryResult.trackUri,
     cardClassName: cn(
       isHovered && "transform-gpu scale-[1.03] shadow-lg",
       !isOwned && isSelected && "ring-2 ring-primary",
@@ -72,7 +73,6 @@ const RecommendedTrackCard: React.FC<RecommendedTrackCardProps> = ({
     <DynamicRecommendedTrackCard
       {...sharedProps}
       onClick={!isOwned ? handleOnClick : undefined}
-      track_uri={trackQueryResult.trackUri}
       playlist_id={playlist_id}
     />
   );
