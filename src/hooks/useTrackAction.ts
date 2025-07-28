@@ -28,10 +28,11 @@ export default function useTrackAction({
     string | null
   >(null);
 
-  const { data: queryTrackStatus } = api.track.getTrackStatus.useQuery({
-    batchId: batch_id,
-    trackId: track_id,
-  });
+  const { data: queryTrackStatus, isLoading: isInitialStatusLoading } =
+    api.track.getTrackStatus.useQuery({
+      batchId: batch_id,
+      trackId: track_id,
+    });
 
   useEffect(() => {
     if (queryTrackStatus && queryTrackStatus !== "pending") {
@@ -62,6 +63,7 @@ export default function useTrackAction({
   const removeMutation = api.playlist.removePlaylistItems.useMutation({
     onMutate: () => {
       setActionIsPending(true);
+      setTrackStatus("pending");
     },
     onError: (error) => {
       toastError(error?.message, { id: `error-remove-${track}-from-playlist` });
@@ -105,5 +107,6 @@ export default function useTrackAction({
     actionIsPending,
     handleAddTrackToOwnedPlaylist,
     handleRemoveTrackFromPlaylist,
+    isInitialStatusLoading,
   };
 }

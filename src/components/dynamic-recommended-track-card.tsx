@@ -19,6 +19,8 @@ import React, { useState, useRef, type HTMLAttributes } from "react";
 import TrackActionButton from "./track-action-button";
 import useTrackAction from "~/hooks/useTrackAction";
 import { motion, useMotionValue, useSpring } from "framer-motion";
+import Spinner from "./spinner";
+import { Button } from "./ui/button";
 
 const springValues = {
   damping: 30,
@@ -68,6 +70,7 @@ const DynamicRecommendedTrackCard: React.FC<
     actionIsPending,
     handleAddTrackToOwnedPlaylist,
     handleRemoveTrackFromPlaylist,
+    isInitialStatusLoading,
   } = useTrackAction({
     batch_id,
     playlist_id,
@@ -162,12 +165,18 @@ const DynamicRecommendedTrackCard: React.FC<
               </CardHeader>
               {isOwned && (
                 <CardFooter className="dark:bg-puruple-50 flex items-center justify-center">
-                  <TrackActionButton
-                    status={trackStatus}
-                    addHandler={handleAddTrackToOwnedPlaylist}
-                    removeHandler={handleRemoveTrackFromPlaylist}
-                    actionIsPending={actionIsPending}
-                  />
+                  {isInitialStatusLoading ? (
+                    <Button className="flex w-full flex-row items-center justify-center gap-2 text-white">
+                      <Spinner />
+                    </Button>
+                  ) : (
+                    <TrackActionButton
+                      status={trackStatus}
+                      addHandler={handleAddTrackToOwnedPlaylist}
+                      removeHandler={handleRemoveTrackFromPlaylist}
+                      actionIsPending={actionIsPending}
+                    />
+                  )}
                 </CardFooter>
               )}
             </Card>
