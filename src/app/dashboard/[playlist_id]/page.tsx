@@ -82,9 +82,19 @@ export default function PlaylistContent() {
     }
   };
 
-  const handleNotIsOwnedCardClick = () => {
-    return null;
+  const handleNotIsOwnedCardClick = (track_uri: string) => {
+    setSelectedTracksUri((prevUris) => {
+      const newUris = new Set(prevUris);
+      if (newUris.has(track_uri)) {
+        newUris.delete(track_uri);
+      } else {
+        newUris.add(track_uri);
+      }
+      return newUris;
+    });
   };
+
+  console.log(selectedTracksUri);
 
   // Handle loading states for either query
   if (isLoadingAny) {
@@ -121,7 +131,7 @@ export default function PlaylistContent() {
       {!isOwned && (
         <CreateNewPlaylistCard
           selectedTracksUri={Array.from(selectedTracksUri)}
-          newPlaylistId=""
+          user_id={userId}
         />
       )}
       <InfoBanner isOwned={isOwned} />

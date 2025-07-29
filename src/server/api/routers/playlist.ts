@@ -138,9 +138,9 @@ export const playlistRouter = createTRPCRouter({
       }
 
       const addedStatus = "added";
-      console.log("snapshot_id:", data?.snapshot_id);
-      console.log("batchId:", batchId);
-      console.log("track_id:", trackId);
+      // console.log("snapshot_id:", data?.snapshot_id);
+      // console.log("batchId:", batchId);
+      // console.log("track_id:", trackId);
 
       const trackLocationInTable = and(
         eq(trackPlaylistStatus.batchId, batchId),
@@ -209,5 +209,83 @@ export const playlistRouter = createTRPCRouter({
       ]);
 
       return { success_msg: "Poof! The song is out of your playlist" };
+    }),
+  createPlaylist: protectedProcedure
+    .input(
+      z.object({
+        user_id: z.string(),
+        name: z.string(),
+        isPublic: z.boolean(),
+        description: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const { user_id, name, isPublic, description } = input;
+      const { data, error } = await tryCatch(
+        spotifyApi.createPlaylist({
+          user_id,
+          requestBody: {
+            name,
+            public: isPublic,
+            description,
+          },
+        }),
+      );
+
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Sorry! We could not creat a new playlist at the moment!",
+        });
+      }
+
+      return data;
+    }),
+  createPlaylistWithTracks: protectedProcedure
+    .input(
+      z.object({
+        user_id: z.string(),
+        name: z.string(),
+        isPublic: z.boolean(),
+        description: z.string().optional(),
+
+        track_uris: z.array(z.string()),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { user_id, name, isPublic, description, track_uris } = input;
+      const caller = playlistRouter.createCaller(ctx);
+
+      const createPlaylistRes = await caller.createPlaylist({
+        name,
+        user_id,
+        isPublic,
+        description,
+      });
+
+      if (!createPlaylistRes) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Error creating the playlist",
+        });
+      }
+
+      const { id: createdPlaylistId } = createPlaylistRes;
+
+      const { error } = await tryCatch(
+        spotifyApi.addTracksToPlaylist({
+          playlist_id: createdPlaylistId,
+          requestBody: {
+            uris: track_uris,
+          },
+        }),
+      );
+
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Sorry! We could not create this playlist at the moment.",
+        });
+      }
     }),
 });

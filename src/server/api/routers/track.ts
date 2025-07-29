@@ -314,6 +314,6 @@ export const trackRouter = createTRPCRouter({
         .from(trackPlaylistStatus)
         .where(trackLocationInTable);
 
-      return trackRow[0]?.status;
+      return trackRow[0];
     }),
 });

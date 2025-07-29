@@ -154,7 +154,7 @@ const DynamicRecommendedTrackCard: React.FC<
                   />
                 )}
                 {isSelected && (
-                  <div className="absolute top-2 right-2 rounded-full bg-black p-1 transition-all">
+                  <div className="absolute top-2 right-2 rounded-full bg-purple-700 p-1 transition-all dark:bg-purple-400">
                     <Check className="animate-jump-in animate-once animate-duration-[400ms] animate-ease-linear h-4 w-4" />
                   </div>
                 )}

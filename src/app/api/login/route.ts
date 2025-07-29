@@ -17,8 +17,16 @@ export async function GET() {
     maxAge: 600,
   });
 
-  const scope =
-    "playlist-read-private playlist-read-collaborative user-read-private user-read-email playlist-modify-public playlist-modify-private";
+  const scopes = [
+    "playlist-read-private",
+    "playlist-read-collaborative",
+    "user-read-private",
+    "user-read-email",
+    "playlist-modify-public",
+    "playlist-modify-private",
+  ] as const;
+
+  const scope = scopes.map((element) => element).join(" ");
 
   const baseUrl = "https://accounts.spotify.com/authorize";
   const params = {
