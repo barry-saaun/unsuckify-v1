@@ -34,10 +34,10 @@ export const useRecommendedInfTracks = ({
     within24hours = msSince < ms24h;
   }
 
-  console.log("is in 24 hours:", within24hours);
+  // console.log("is in 24 hours:", within24hours);
   const shouldFetch = latestBatch !== undefined && !within24hours;
 
-  console.log("should fetch new batch: ", shouldFetch);
+  // console.log("should fetch new batch: ", shouldFetch);
 
   const {
     data: playlistData,
@@ -59,7 +59,7 @@ export const useRecommendedInfTracks = ({
     enabledWhen: shouldFetch,
   });
 
-  console.log("rec_tracks:", rec_tracks);
+  // console.log("rec_tracks:", rec_tracks);
 
   const getOrCreateMutation =
     api.track.getOrCreateRecommendationsMutate.useMutation();
