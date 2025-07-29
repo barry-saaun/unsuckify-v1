@@ -39,7 +39,6 @@ export const env = createEnv({
       process.env.NEXT_PUBLIC_SPOTIFY_REDIRECT_URI,
 
     DATABASE_URL: process.env.DATABASE_URL,
-    // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

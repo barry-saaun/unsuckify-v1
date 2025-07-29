@@ -5,6 +5,7 @@ import { env } from "~/env";
 import { cookies } from "next/headers";
 import { tryCatch } from "~/lib/try-catch";
 import { assertError } from "~/lib/utils";
+import { getBaseUrl } from "~/lib/utils/api";
 
 const SPOTIFY_CLIENT_ID = env.SPOTIFY_CLIENT_ID;
 const SPOTIFY_CLIENT_SECRET = env.SPOTIFY_CLIENT_SECRET;
@@ -32,6 +33,8 @@ export async function GET(req: Request) {
     `${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`,
   ).toString("base64");
 
+  const spotifyRedirectUri = `${getBaseUrl()}/api/callback`;
+
   const { data: tokenData, error: tokenError } = await tryCatch(
     axios({
       url: tokenEndpoint,
@@ -42,7 +45,7 @@ export async function GET(req: Request) {
       },
       data: new URLSearchParams({
         code: code ?? "",
-        redirect_uri: env.NEXT_PUBLIC_SPOTIFY_REDIRECT_URI,
+        redirect_uri: spotifyRedirectUri,
         grant_type: "authorization_code",
       }).toString(),
     }),

@@ -12,6 +12,8 @@ import { createQueryClient } from "./query-client";
 import { useAuthError } from "~/components/auth-error-provider";
 import { observable } from "@trpc/server/observable";
 
+import { getBaseUrl } from "~/lib/utils/api";
+
 let clientQueryClientSingleton: QueryClient | undefined = undefined;
 const getQueryClient = () => {
   if (typeof window === "undefined") {
@@ -113,10 +115,4 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
       </api.Provider>
     </QueryClientProvider>
   );
-}
-
-function getBaseUrl() {
-  if (typeof window !== "undefined") return window.location.origin;
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-  return `http://localhost:${process.env.PORT ?? 3000}`;
 }

@@ -3,9 +3,9 @@ import { env } from "~/env";
 import queryString from "query-string";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
+import { getBaseUrl } from "~/lib/utils/api";
 
 const SPOTIFY_CLIENT_ID = env.SPOTIFY_CLIENT_ID;
-const NEXT_PUBLIC_SPOTIFY_REDIRECT_URI = env.NEXT_PUBLIC_SPOTIFY_REDIRECT_URI;
 
 export async function GET() {
   const state = generateRandomString(16);
@@ -28,17 +28,19 @@ export async function GET() {
 
   const scope = scopes.map((element) => element).join(" ");
 
-  const baseUrl = "https://accounts.spotify.com/authorize";
+  const spotifyRedirectUri = `${getBaseUrl()}/api/callback`;
+
+  const apiBaseUrl = "https://accounts.spotify.com/authorize";
   const params = {
     response_type: "code",
     client_id: SPOTIFY_CLIENT_ID,
     scope,
-    redirect_uri: NEXT_PUBLIC_SPOTIFY_REDIRECT_URI,
+    redirect_uri: spotifyRedirectUri,
     state,
   };
 
   const queryParamsString = queryString.stringify(params);
 
-  const url = `${baseUrl}?${queryParamsString}`;
+  const url = `${apiBaseUrl}?${queryParamsString}`;
   redirect(url);
 }
