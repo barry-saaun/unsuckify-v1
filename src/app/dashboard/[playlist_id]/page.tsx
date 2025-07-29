@@ -131,7 +131,7 @@ export default function PlaylistContent() {
       {!isOwned && (
         <CreateNewPlaylistCard
           selectedTracksUri={Array.from(selectedTracksUri)}
-          newPlaylistId=""
+          user_id={userId}
         />
       )}
       <InfoBanner isOwned={isOwned} />

@@ -5,6 +5,7 @@ import {
   type TrackSearchResponse,
   type AddTracksToPlaylistResponse,
   type RemoveTracksFromPlaylistResponse,
+  type CreatePlaylistResponse,
 } from "spotify-api";
 import queryString from "query-string";
 import axios from "axios";
@@ -164,6 +165,26 @@ export const spotifyApi = {
       "DELETE",
       "/playlists/{playlist_id}/tracks",
       { playlist_id },
+      undefined,
+      requestBody,
+    ),
+  createPlaylist: ({
+    user_id,
+    requestBody,
+  }: {
+    user_id: string;
+    requestBody: {
+      name: string;
+      public: boolean;
+      description?: string;
+    };
+  }) =>
+    spotifyFetch<CreatePlaylistResponse>(
+      "POST",
+      "/users/{user_id}/playlists",
+      {
+        user_id,
+      },
       undefined,
       requestBody,
     ),
