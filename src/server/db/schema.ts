@@ -75,3 +75,5 @@ export type RecTracksInsertType = InferInsertModel<typeof recommendationTracks>;
 export type TracksStatusInsertType = InferInsertModel<
   typeof trackPlaylistStatus
 >;
+
+export type AllowedUsersSelectType = InferSelectModel<typeof allowedUsers>;

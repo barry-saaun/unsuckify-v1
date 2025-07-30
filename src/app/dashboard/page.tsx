@@ -1,13 +1,23 @@
 "use client";
 import { useState } from "react";
+import ErrorScreen from "~/components/error-screen";
 import MyPlaylistsTabContent from "~/components/my-playlists-tab-content";
 import PublicPlaylistTabContent from "~/components/public-playlist-tab-content";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import useUserId from "~/hooks/useUserId";
 
 type TabStates = "my-playlists" | "public-playlist";
 
 function Dashboard() {
   const [tabValue, setTabValue] = useState<TabStates>("my-playlists");
+
+  const userId = useUserId();
+
+  if (!userId) {
+    return (
+      <ErrorScreen message="Sorry! We could not get your Spotify ID at the moment." />
+    );
+  }
 
   return (
     <div className="flex min-h-screen w-full flex-col">

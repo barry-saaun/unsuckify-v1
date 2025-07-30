@@ -14,14 +14,15 @@ export const useRecommendedInfTracks = ({
   userId,
   limit,
 }: useRecommendedInfTracksParams) => {
+  const missingParams = !userId || !playlist_id;
   const {
     data: latestBatch,
     isLoading: isLoadingLatestBatch,
     error: latestBatchError,
-  } = api.track.getLatestBatch.useQuery({
-    playlist_id,
-    userId,
-  });
+  } = api.track.getLatestBatch.useQuery(
+    { playlist_id, userId },
+    { enabled: !missingParams },
+  );
 
   let within24hours = false;
 
@@ -47,7 +48,7 @@ export const useRecommendedInfTracks = ({
     {
       playlist_id,
     },
-    { staleTime: 86400 * 1000, enabled: shouldFetch },
+    { staleTime: 86400 * 1000, enabled: shouldFetch && !missingParams },
   );
 
   const {
@@ -56,7 +57,7 @@ export const useRecommendedInfTracks = ({
     error: recommendationsError,
   } = useRecommendationsWithThreshold({
     playlistData: playlistData,
-    enabledWhen: shouldFetch,
+    enabledWhen: shouldFetch && !missingParams,
   });
 
   // console.log("rec_tracks:", rec_tracks);
@@ -71,7 +72,8 @@ export const useRecommendedInfTracks = ({
   } = getOrCreateMutation;
 
   useEffect(() => {
-    const hasRequiredData = !shouldFetch || (playlistData && rec_tracks);
+    const hasRequiredData =
+      (!shouldFetch || (playlistData && rec_tracks)) && !missingParams;
     if (
       getOrCreateMutation &&
       userId &&
@@ -97,7 +99,7 @@ export const useRecommendedInfTracks = ({
   }, [
     latestBatch,
     getOrCreateMutation,
-
+    missingParams,
     playlist_id,
     userId,
     rec_tracks,

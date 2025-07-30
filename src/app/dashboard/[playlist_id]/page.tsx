@@ -1,7 +1,7 @@
 "use client";
 import { useParams, useSearchParams } from "next/navigation";
 import ErrorScreen from "~/components/error-screen";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import LoadingMessages from "~/components/loading-messages";
 import { Button } from "~/components/ui/button";
 import Spinner from "~/components/spinner";
@@ -10,31 +10,13 @@ import CreateNewPlaylistCard from "~/components/create-new-playlist-card";
 import { useRecommendedInfTracks } from "~/hooks/useRecommendedInfTracks";
 import RecommendedTrackCard from "~/components/recommended-track-card";
 import RecommendedTrackCardSkeleton from "~/components/rec-track-card-skeleton";
-import { useAppToast } from "~/hooks/useAppToast";
+import useUserId from "~/hooks/useUserId";
 
 const TRACK_PER_INF_PAGE = 6;
 
-function useUserId() {
-  const [userId, setUserId] = useState<string>("");
-  const { toastError } = useAppToast();
-
-  useEffect(() => {
-    const id = localStorage.getItem("userId");
-
-    if (!id) {
-      toastError("Failed to get your Spotify ID.", {
-        id: "failed-retrieving-userId",
-      });
-      return;
-    }
-
-    setUserId(id);
-  }, [toastError]);
-  return userId;
-}
-
 export default function PlaylistContent() {
   const userId = useUserId();
+
   const params = useParams<{ playlist_id: string }>();
 
   const searchParams = useSearchParams();
@@ -62,8 +44,8 @@ export default function PlaylistContent() {
     rec_tracks,
     hasNextPage,
   } = useRecommendedInfTracks({
-    playlist_id,
-    userId,
+    playlist_id: playlist_id ?? "",
+    userId: userId ?? "",
     limit: TRACK_PER_INF_PAGE,
   });
 
@@ -118,6 +100,14 @@ export default function PlaylistContent() {
   if (rec_tracks === null) {
     console.error("No recommendation data found.");
     return <ErrorScreen message="No recommendation data found." />;
+  }
+
+  if (!userId) {
+    return <ErrorScreen message="Sorry! We could not get your Spotify ID." />;
+  }
+
+  if (!playlist_id) {
+    return <ErrorScreen message="Invalid Playlist ID." />;
   }
 
   return (
