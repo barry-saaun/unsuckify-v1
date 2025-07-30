@@ -13,6 +13,12 @@ import { createSelectSchema } from "drizzle-zod";
 export const users = pgTable("users", {
   id: varchar("id", { length: 64 }).primaryKey(),
   createdAt: timestamp("created_at").defaultNow(),
+  lastActive: timestamp("last_active").defaultNow(),
+});
+
+export const allowedUsers = pgTable("allowed-users", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  email: varchar("email", { length: 255 }).unique().notNull(),
 });
 
 export const recommendationBatches = pgTable(

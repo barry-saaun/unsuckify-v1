@@ -1,9 +1,42 @@
 {
-  "id": "37e37843-87ae-4780-8f2e-bcded3d493f3",
+  "id": "ede79fe3-4866-48f2-aaff-a3a6e5f96c1e",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
+    "public.allowed-users": {
+      "name": "allowed-users",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(64)",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "allowed-users_email_unique": {
+          "name": "allowed-users_email_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "email"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.rec_batches": {
       "name": "rec_batches",
       "schema": "",
@@ -144,6 +177,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "batchId": {
+          "name": "batchId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
         "track_status": {
           "name": "track_status",
           "type": "track_status",
@@ -180,6 +219,19 @@
           ],
           "onDelete": "cascade",
           "onUpdate": "no action"
+        },
+        "track_playlist_status_batchId_rec_tracks_batchId_fk": {
+          "name": "track_playlist_status_batchId_rec_tracks_batchId_fk",
+          "tableFrom": "track_playlist_status",
+          "tableTo": "rec_tracks",
+          "columnsFrom": [
+            "batchId"
+          ],
+          "columnsTo": [
+            "batchId"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -200,6 +252,13 @@
         },
         "created_at": {
           "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "last_active": {
+          "name": "last_active",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false,
