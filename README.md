@@ -1,29 +1,58 @@
-# Create T3 App
+# Unsuckify
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+Rediscover your Spotify playlists with AI-powered recommendations. This application analyzes your existing playlists and suggests new tracks to enhance your listening experience.
 
-## What's next? How do I make an app with this?
+## Core Features
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+- **Spotify Integration:** Securely connect to your Spotify account to access and manage your playlists.
+- **AI-Powered Recommendations:** Leverages Google's Gemini AI to analyze the tracks in a selected playlist and generate a list of new, relevant song recommendations.
+- **Dynamic Playlist Management:**
+  - Create new playlists, either empty or pre-filled with recommended tracks.
+  - Seamlessly add recommended tracks to your existing playlists.
+  - Remove tracks that don't fit the vibe.
+- **Intelligent Caching:** Recommendations for a playlist are cached for 24 hours, allowing you to revisit them without waiting for the AI to re-process.
+- **Browse and Discover:**
+  - View your existing Spotify playlists directly within the app.
+  - Explore AI-generated recommendations with an infinite-scrolling interface.
+  - Each recommendation card includes album art and track details.
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+## Tech Stack
 
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Drizzle](https://orm.drizzle.team)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+This project is built with a modern, full-stack TypeScript architecture.
 
-## Learn More
+- **Framework:** [Next.js](https://nextjs.org/) (App Router)
+- **UI:** [React](https://react.dev/), [Tailwind CSS](https://tailwindcss.com/), and [shadcn/ui](https://ui.shadcn.com/)
+- **API Layer:** [tRPC](https://trpc.io/) for end-to-end typesafe APIs
+- **Database:** [Neon](https://neon.tech/) (Serverless Postgres)
+- **ORM:** [Drizzle ORM](https://orm.drizzle.team/)
+- **AI:** [Google AI SDK](https://ai.google.dev/) (`gemini-2.0-flash`)
+- **Authentication:** Spotify OAuth 2.0
+- **Form Management:** [React Hook Form](https://react-hook-form.com/)
+- **Environment Variables:** [T3 Env](https://env.t3.gg/)
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+## Getting Started
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
+To get a local copy up and running, follow these simple steps.
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
+### Prerequisites
 
-## How do I deploy this?
+- [Bun](https://bun.sh/) (or npm/yarn)
+- A Spotify Developer App for API credentials.
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+### Installation
+
+1.  Clone the repo:
+    ```sh
+    git clone https://github.com/your_username/unsuckify-v1.git
+    ```
+2.  Install dependencies:
+    ```sh
+    bun install
+    ```
+3.  Set up your environment variables by copying `.env.example` to `.env` and filling in the required values (Spotify credentials, database URL, etc.).
+4.  Run the development server:
+    ```sh
+    bun dev
+    ```
+
+The application should now be running on [http://localhost:3000](http://localhost:3000).
