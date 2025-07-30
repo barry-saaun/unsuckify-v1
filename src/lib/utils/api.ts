@@ -1,4 +1,8 @@
 export function getBaseUrl() {
+  if (process.env.NODE_ENV === "development") {
+    return `http://localhost:${process.env.PORT ?? 3000}`;
+  }
+
   if (typeof window !== "undefined") return window.location.origin;
 
   // Use custom base URL if set
