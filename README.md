@@ -56,3 +56,17 @@ To get a local copy up and running, follow these simple steps.
     ```
 
 The application should now be running on [http://localhost:3000](http://localhost:3000).
+
+## Environment Variables
+
+To run this project, you will need to add the following environment variables to your `.env` file:
+
+-   `DATABASE_URL`: The connection string for your Neon serverless Postgres database. You can get this from your Neon project dashboard.
+
+-   `GOOGLE_GENERATIVE_AI_API_KEY`: Your API key for the Google AI SDK. You can generate one in the [Google AI Studio](https://aistudio.google.com/app/apikey).
+
+-   `SPOTIFY_CLIENT_ID`: The Client ID for your Spotify application.
+
+-   `SPOTIFY_CLIENT_SECRET`: The Client Secret for your Spotify application.
+
+You can find both the `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET` in your [Spotify Developer Dashboard](https://developer.spotify.com/dashboard). You will also need to configure the callback URL in your Spotify app settings to `http://localhost:3000/api/callback`.
