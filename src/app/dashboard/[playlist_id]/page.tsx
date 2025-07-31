@@ -10,16 +10,16 @@ import CreateNewPlaylistCard from "~/components/create-new-playlist-card";
 import { useRecommendedInfTracks } from "~/hooks/useRecommendedInfTracks";
 import RecommendedTrackCard from "~/components/recommended-track-card";
 import RecommendedTrackCardSkeleton from "~/components/rec-track-card-skeleton";
-import useUserId from "~/hooks/useUserId";
+import { useUserContext } from "~/components/user-context-provider";
 
 const TRACK_PER_INF_PAGE = 6;
 
 export default function PlaylistContent() {
-  const userId = useUserId();
-
   const params = useParams<{ playlist_id: string }>();
 
   const searchParams = useSearchParams();
+
+  const { userId } = useUserContext();
 
   const ownerId = searchParams.get("ownerId");
   const playlistName = searchParams.get("playlistName");
