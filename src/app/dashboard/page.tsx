@@ -1,17 +1,41 @@
 "use client";
+import { skipToken } from "@tanstack/react-query";
 import { useState } from "react";
 import ErrorScreen from "~/components/error-screen";
 import MyPlaylistsTabContent from "~/components/my-playlists-tab-content";
 import PublicPlaylistTabContent from "~/components/public-playlist-tab-content";
+import Spinner from "~/components/spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import UserNotAllowedAlertDialog from "~/components/user-not-allowed-alert-dialog";
 import useUserId from "~/hooks/useUserId";
+import { api } from "~/trpc/react";
 
 type TabStates = "my-playlists" | "public-playlist";
 
 function Dashboard() {
   const [tabValue, setTabValue] = useState<TabStates>("my-playlists");
 
-  const userId = useUserId();
+  const { userId, isLoading: isUserIdLoading } = useUserId();
+
+  const { data: isUserAllowed, isLoading: isUserAllowedLoading } =
+    api.user.isUserAllowed.useQuery(userId ? { userId } : skipToken, {
+      staleTime: 360 * 100 * 100,
+      enabled: !!userId,
+    });
+
+  console.log("userId:", userId);
+
+  if (isUserIdLoading || isUserAllowedLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <Spinner />
+      </div>
+    );
+  }
+
+  if (!isUserAllowed) {
+    return <UserNotAllowedAlertDialog />;
+  }
 
   if (!userId) {
     return (

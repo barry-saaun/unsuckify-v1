@@ -15,6 +15,7 @@ import Spinner from "./spinner";
 import { useEffect } from "react";
 import { useAuth } from "~/hooks/useAuth";
 import { useAppToast } from "~/hooks/useAppToast";
+import { getCookie, setCookie } from "cookies-next/client";
 
 const AuthButton = () => {
   const router = useRouter();
@@ -37,9 +38,16 @@ const AuthButton = () => {
   const { toastError } = useAppToast();
 
   useEffect(() => {
-    const userId = localStorage.getItem("userId");
+    // const userId = localStorage.getItem("userId");
+    const userId = getCookie("userId");
+
     if (!userId && userInfo) {
-      localStorage.setItem("userId", userInfo?.id);
+      console.log("[auth button] userId:", userInfo.id);
+      setCookie("userId", userInfo.id, {
+        secure: true,
+        path: "/",
+        maxAge: 3600,
+      });
     }
   }, [userInfo]);
 
