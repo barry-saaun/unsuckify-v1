@@ -24,8 +24,9 @@ export default function UserNotAllowedAlertDialog() {
         <AlertDialogHeader>
           <AlertDialogTitle>Access Denied</AlertDialogTitle>
           <AlertDialogDescription>
-            We&apos;re sorry, but you are not authorized to access this page.
-            Please contact support if you believe this is an error.
+            We&apos;re sorry, since the Spotify API limits the number of users,
+            you are not authorised. Please contact support to be added into the
+            list of test users.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
