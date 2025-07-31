@@ -43,15 +43,4 @@ export const userRouter = createTRPCRouter({
       message: "Failed to load your playlists. Please try again later.",
     });
   }),
-  isUserAllowed: protectedProcedure
-    .input(z.object({ userId: z.string() }))
-    .query(async ({ ctx, input }) => {
-      const user = await ctx.db
-        .select()
-        .from(allowedUsers)
-        .where(eq(allowedUsers.id, input.userId))
-        .limit(1);
-
-      return user.length > 0;
-    }),
 });

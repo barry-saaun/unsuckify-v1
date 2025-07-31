@@ -12,10 +12,8 @@ import {
 import { useAuth } from "~/hooks/useAuth";
 
 export default function UserNotAllowedAlertDialog() {
-  // This is the mocked boolean variable to simulate checking the user's ID.
-  // In a real application, this would be based on a proper check.
-  const isUserAllowed = false;
   const { logout } = useAuth();
+  const isUserAllowed = false;
 
   const handleDialogAction = () => {
     logout();

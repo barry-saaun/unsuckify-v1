@@ -1,7 +1,9 @@
-import { TRPCError } from "@trpc/server";
-import { createTRPCRouter, publicProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { cookies } from "next/headers";
 import { spotifyApi } from "~/lib/spotify";
+import { allowedUsers } from "~/server/db/schema";
+import { eq } from "drizzle-orm";
+import z from "zod";
 
 export const authRouter = createTRPCRouter({
   check: publicProcedure.query(async () => {
@@ -21,4 +23,15 @@ export const authRouter = createTRPCRouter({
     // Optionally, return a message
     return { success: true };
   }),
+  isUserAllowed: protectedProcedure
+    .input(z.object({ userId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const user = await ctx.db
+        .select()
+        .from(allowedUsers)
+        .where(eq(allowedUsers.id, input.userId))
+        .limit(1);
+
+      return user.length > 0;
+    }),
 });
