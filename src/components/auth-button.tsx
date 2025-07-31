@@ -15,12 +15,14 @@ import Spinner from "./spinner";
 import { useEffect } from "react";
 import { useAuth } from "~/hooks/useAuth";
 import { useAppToast } from "~/hooks/useAppToast";
-import { getCookie, setCookie } from "cookies-next/client";
+import { getCookie } from "cookies-next/client";
+import { useUserContext } from "./user-context-provider";
 
 const AuthButton = () => {
   const router = useRouter();
 
   const { isAuthenticated } = useIsAuthenticated();
+  const { setUserId } = useUserContext();
 
   const {
     data: userInfo,
@@ -43,13 +45,9 @@ const AuthButton = () => {
 
     if (!userId && userInfo) {
       console.log("[auth button] userId:", userInfo.id);
-      setCookie("userId", userInfo.id, {
-        secure: true,
-        path: "/",
-        maxAge: 3600,
-      });
+      setUserId(userInfo.id);
     }
-  }, [userInfo]);
+  }, [userInfo, setUserId]);
 
   const handleLogout = () => {
     logout();

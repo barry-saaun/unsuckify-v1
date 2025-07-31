@@ -13,14 +13,13 @@ import { useAuth } from "~/hooks/useAuth";
 
 export default function UserNotAllowedAlertDialog() {
   const { logout } = useAuth();
-  const isUserAllowed = false;
 
   const handleDialogAction = () => {
     logout();
   };
 
   return (
-    <AlertDialog open={!isUserAllowed}>
+    <AlertDialog open>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Access Denied</AlertDialogTitle>

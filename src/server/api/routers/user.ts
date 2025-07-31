@@ -2,9 +2,6 @@ import { spotifyApi } from "~/lib/spotify";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import type { UsersPlaylistMetadata } from "~/types";
 import { TRPCError } from "@trpc/server";
-import z from "zod";
-import { allowedUsers } from "~/server/db/schema";
-import { eq } from "drizzle-orm";
 
 export const userRouter = createTRPCRouter({
   getCurrentUserProfile: protectedProcedure.query(async () => {
