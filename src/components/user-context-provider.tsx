@@ -21,9 +21,14 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const id = getCookie("userId");
-    setUserIdState(id ?? null);
-    setIsLoading(false);
+    try {
+      const id = getCookie("userId");
+      setUserIdState(id ?? null);
+    } catch (error) {
+      console.error("Failed to get userId from cookie:", error);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
   const setUserId = (id: string) => {

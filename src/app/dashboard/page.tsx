@@ -1,7 +1,6 @@
 "use client";
 import { skipToken } from "@tanstack/react-query";
 import { useState } from "react";
-import ErrorScreen from "~/components/error-screen";
 import MyPlaylistsTabContent from "~/components/my-playlists-tab-content";
 import PublicPlaylistTabContent from "~/components/public-playlist-tab-content";
 import Spinner from "~/components/spinner";
@@ -25,7 +24,7 @@ function Dashboard() {
   console.log("userId:", userId);
   console.log("isUserAllowed: ", isUserAllowed);
 
-  if (isUserIdLoading) {
+  if (isUserIdLoading || !userId) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <Spinner />
@@ -40,15 +39,15 @@ function Dashboard() {
       </div>
     );
   }
-  if (!isUserAllowed) {
+  if (isUserAllowed === false) {
     return <UserNotAllowedAlertDialog />;
   }
 
-  if (!userId) {
-    return (
-      <ErrorScreen message="Sorry! We could not get your Spotify ID at the moment." />
-    );
-  }
+  // if (!userId) {
+  //   return (
+  //     <ErrorScreen message="Sorry! We could not get your Spotify ID at the moment." />
+  //   );
+  // }
 
   return (
     <div className="flex min-h-screen w-full flex-col">
