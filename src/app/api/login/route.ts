@@ -7,13 +7,13 @@ import { getBaseUrl } from "~/lib/utils/api";
 
 const SPOTIFY_CLIENT_ID = env.SPOTIFY_CLIENT_ID;
 
-export async function GET() {
+export async function GET(req: Request) {
   const state = generateRandomString(16);
 
   (await cookies()).set("spotify-auth-state", state, {
     httpOnly: true,
     path: "/",
-    secure: true,
+    secure: process.env.NODE_ENV === "production",
     maxAge: 600,
   });
 
@@ -28,7 +28,20 @@ export async function GET() {
 
   const scope = scopes.map((element) => element).join(" ");
 
-  const spotifyRedirectUri = `${getBaseUrl()}/api/callback`;
+  const reqUrl = new URL(req.url);
+  let baseUrl = `${reqUrl.protocol}//${reqUrl.host}`;
+
+  // Convert localhost to 127.0.0.1 for Spotify compatibility
+  if (baseUrl.includes("localhost")) {
+    baseUrl = baseUrl.replace("localhost", "127.0.0.1");
+  }
+
+  const spotifyRedirectUri = `${baseUrl}/api/callback`;
+  console.log(
+    "DEBUG: dynamically generated spotifyRedirectUri:",
+    spotifyRedirectUri,
+  );
+  console.log("DEBUG: SPOTIFY_CLIENT_ID:", SPOTIFY_CLIENT_ID);
 
   const apiBaseUrl = "https://accounts.spotify.com/authorize";
   const params = {
@@ -41,6 +54,6 @@ export async function GET() {
 
   const queryParamsString = queryString.stringify(params);
 
-  const url = `${apiBaseUrl}?${queryParamsString}`;
-  redirect(url);
+  const authUrl = `${apiBaseUrl}?${queryParamsString}`;
+  redirect(authUrl);
 }

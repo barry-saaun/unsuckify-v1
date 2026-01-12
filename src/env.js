@@ -12,7 +12,9 @@ export const env = createEnv({
     SPOTIFY_CLIENT_SECRET: z
       .string()
       .min(1, "SPOTIFY_CLIENT_SECRET is required"),
-    DATABASE_URL: z.string().url(),
+    DATABASE_URL: z.string(),
+    OPENROUTER: z.string(),
+    SPOTIFY_REDIRECT_URI: z.string(),
   },
 
   /**
@@ -35,10 +37,9 @@ export const env = createEnv({
     NODE_ENV: process.env.NODE_ENV,
     SPOTIFY_CLIENT_ID: process.env.SPOTIFY_CLIENT_ID,
     SPOTIFY_CLIENT_SECRET: process.env.SPOTIFY_CLIENT_SECRET,
-    // NEXT_PUBLIC_SPOTIFY_REDIRECT_URI:
-    //   process.env.NEXT_PUBLIC_SPOTIFY_REDIRECT_URI,
-
+    SPOTIFY_REDIRECT_URI: process.env.SPOTIFY_REDIRECT_URI,
     DATABASE_URL: process.env.DATABASE_URL,
+    OPENROUTER: process.env.OPENROUTER,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

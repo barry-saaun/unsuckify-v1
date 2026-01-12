@@ -1,7 +1,6 @@
 import z from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { generateObject } from "ai";
-import { google } from "@ai-sdk/google";
+import { generateText, Output } from "ai";
 import {
   GetOrCreateRecommendationsSchema,
   RecommendedTrackObjectSchema,
@@ -27,20 +26,23 @@ import {
   insertTracksStatus,
 } from "~/lib/utils/track";
 import { spotifyApi } from "~/lib/spotify";
+import { orModel } from "~/lib/ai";
 
 export const trackRouter = createTRPCRouter({
   getRecommendations: protectedProcedure
     .input(z.array(z.string()))
     .query(async ({ input }) => {
-      const { object } = await generateObject({
-        model: google("gemini-2.0-flash"),
-        prompt: SuperJSON.stringify(input),
-        schema: RecommendedTracksSchema,
+      const { output } = await generateText({
+        model: orModel("moonshotai/kimi-k2-0905"),
+        output: Output.object({
+          schema: RecommendedTracksSchema,
+          name: "Recommedations",
+        }),
         system: systemPrompt,
-        schemaName: "Recommendations",
+        prompt: SuperJSON.stringify(input),
       });
 
-      if (!object) {
+      if (!output) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message:
@@ -48,7 +50,7 @@ export const trackRouter = createTRPCRouter({
         });
       }
 
-      return object;
+      return output;
     }),
   getRecommendationsMutate: protectedProcedure
     .input(z.array(z.string()))
