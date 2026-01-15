@@ -1,6 +1,6 @@
 "use client";
 import { skipToken } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import MyPlaylistsTabContent from "~/components/my-playlists-tab-content";
 import PublicPlaylistTabContent from "~/components/public-playlist-tab-content";
 import Spinner from "~/components/spinner";
@@ -24,18 +24,27 @@ function Dashboard() {
   console.log("userId:", userId);
   console.log("isUserAllowed: ", isUserAllowed);
 
-  if (isUserIdLoading || !userId) {
+  // Unified loading state
+  if (isUserIdLoading || !userId || isUserAllowedLoading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <Spinner />
-      </div>
-    );
-  }
+      <div className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-zinc-50 to-zinc-100 dark:from-zinc-900 dark:to-zinc-800">
+        <div className="space-y-4 text-center">
+          <div className="relative flex items-center justify-center">
+            <div className="absolute inset-0 top-0 left-0 animate-pulse rounded-full bg-gradient-to-r from-green-400 to-blue-500 opacity-20 blur-xl"></div>
 
-  if (isUserAllowedLoading) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <Spinner />
+            <Spinner extraCN="h-12 w-12 top-0 left-0 text-zinc-600 dark:text-zinc-400" />
+          </div>
+          <div className="space-y-2">
+            <p className="text-lg font-medium text-zinc-700 dark:text-zinc-300">
+              Loading your music library
+            </p>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400">
+              {isUserIdLoading
+                ? "Connecting to Spotify..."
+                : "Preparing your playlists..."}
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -51,7 +60,7 @@ function Dashboard() {
 
   return (
     <div className="flex min-h-screen w-full flex-col">
-      <div className="mx-10 space-y-5 py-10">
+      <div className="mx-6 space-y-8 py-12 sm:mx-8 md:mx-12">
         {tabValue === "my-playlists" ? (
           <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
             Your Playlists
