@@ -65,7 +65,7 @@ const RecommendedTrackCard: React.FC<RecommendedTrackCardProps> = ({
     track_uri: trackQueryResult.trackUri,
     cardClassName: cn(
       isHovered && "transform-gpu scale-[1.03] shadow-lg",
-      !isOwned && isSelected && "ring-2 ring-primary",
+      !isOwned && isSelected && "shadow-purple-500/30 shadow-2xl",
     ),
   };
 

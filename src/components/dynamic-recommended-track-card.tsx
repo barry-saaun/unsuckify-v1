@@ -1,4 +1,4 @@
-import { Check } from "lucide-react";
+import { Check, Plus, Minus } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -28,8 +28,7 @@ const springValues = {
   mass: 2,
 };
 
-interface DynamicRecommendedTrackCardProps
-  extends HTMLAttributes<HTMLDivElement> {
+interface DynamicRecommendedTrackCardProps extends HTMLAttributes<HTMLDivElement> {
   isOwned: boolean;
   image_src?: string;
   track: string;
@@ -130,8 +129,11 @@ const DynamicRecommendedTrackCard: React.FC<
           >
             <Card
               className={cn(
-                "bg-card/50 pt-0 backdrop-blur-sm transition-all duration-300",
+                "bg-card/50 relative overflow-hidden pt-0 backdrop-blur-sm transition-all duration-300",
                 cardClassName,
+                !isOwned &&
+                  isSelected &&
+                  "shadow-xl ring-1 shadow-purple-500/20 ring-purple-500/50",
               )}
               {...props}
             >
@@ -154,8 +156,10 @@ const DynamicRecommendedTrackCard: React.FC<
                   />
                 )}
                 {isSelected && (
-                  <div className="absolute top-2 right-2 rounded-full bg-purple-700 p-1 transition-all dark:bg-purple-400">
-                    <Check className="animate-jump-in animate-once animate-duration-[400ms] animate-ease-linear h-4 w-4" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 via-pink-500/20 to-transparent transition-all duration-300">
+                    <div className="absolute top-3 right-3 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 p-1.5 shadow-lg">
+                      <Check className="animate-jump-in animate-once animate-duration-[400ms] animate-ease-linear h-3.5 w-3.5 text-white" />
+                    </div>
                   </div>
                 )}
               </CardContent>
