@@ -118,7 +118,7 @@ export default function PlaylistContent() {
           <h1 className="text-center text-3xl font-bold text-gray-900 md:text-4xl lg:text-5xl dark:text-gray-100">
             {playlistName}
           </h1>
-          <div className="mx-auto mt-4 h-1 w-24 rounded-full bg-gradient-to-r from-purple-500 to-pink-500" />
+          <div className="mx-auto mt-4 h-1 w-24 rounded-full bg-linear-to-r from-purple-500 to-pink-500" />
         </div>
       )}
 
@@ -163,7 +163,7 @@ export default function PlaylistContent() {
               disabled={isFetchingNextPage}
               onClick={handleFetchNextPage}
               className={cn(
-                "bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600",
+                "bg-linear-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600",
                 "px-8 py-6 text-base font-medium",
               )}
             >

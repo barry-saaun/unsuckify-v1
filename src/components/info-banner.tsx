@@ -1,6 +1,5 @@
 "use client";
 import { BadgeInfo, PlusCircle } from "lucide-react";
-import { useTheme } from "next-themes";
 import type React from "react";
 import { cn } from "~/lib/utils";
 
@@ -9,8 +8,6 @@ type InfoBannerProp = {
 };
 
 const InfoBanner: React.FC<InfoBannerProp> = ({ isOwned }) => {
-  const { theme } = useTheme();
-
   const bannerContent = isOwned
     ? {
         icon: <PlusCircle className="h-5 w-5" />,
@@ -27,7 +24,7 @@ const InfoBanner: React.FC<InfoBannerProp> = ({ isOwned }) => {
     <div
       className={cn(
         "w-full rounded-xl p-4",
-        "bg-gradient-to-r",
+        "bg-linear-to-r",
         bannerContent.gradient,
         "border border-white/20 dark:border-gray-800/50",
         "backdrop-blur-sm",

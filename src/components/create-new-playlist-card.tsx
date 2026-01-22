@@ -136,10 +136,10 @@ const CreateNewPlaylistCard: React.FC<CreateNewPlaylistCardProp> = ({
   const getSuggestionIcon = () => suggestionIcon?.icon || Lightbulb;
 
   return (
-    <Card className="mb-8 w-full border-0 bg-gradient-to-br from-purple-500/10 via-transparent to-pink-500/10 backdrop-blur-sm">
+    <Card className="mb-8 w-full border-0 bg-linear-to-br from-purple-500/10 via-transparent to-pink-500/10 backdrop-blur-sm">
       <CardContent className="p-6">
         <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-pink-500">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-linear-to-br from-purple-500 to-pink-500">
             <List className="h-6 w-6 text-white" />
           </div>
 
@@ -341,7 +341,7 @@ const CreateNewPlaylistCard: React.FC<CreateNewPlaylistCardProp> = ({
                 onClick={() => handleCreateNewPlaylist(selectedTracksUri)}
                 disabled={!newPlaylistName || !hasSelectedTracks || isCreating}
                 className={cn(
-                  "w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white",
+                  "w-full bg-linear-to-r from-purple-500 to-pink-500 text-white",
                   "hover:from-purple-600 hover:to-pink-600",
                   "disabled:from-gray-300 disabled:to-gray-300 dark:disabled:from-gray-700 dark:disabled:to-gray-700",
                 )}
