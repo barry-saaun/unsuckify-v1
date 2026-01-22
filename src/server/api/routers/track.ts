@@ -28,29 +28,46 @@ import {
 import { spotifyApi } from "~/lib/spotify";
 import { orModel } from "~/lib/ai";
 
+const track_model = orModel("openai/gpt-5-mini");
+
 export const trackRouter = createTRPCRouter({
   getRecommendations: protectedProcedure
     .input(z.array(z.string()))
     .query(async ({ input }) => {
-      const { output } = await generateText({
-        model: orModel("moonshotai/kimi-k2-0905"),
-        output: Output.object({
-          schema: RecommendedTracksSchema,
-          name: "Recommedations",
-        }),
-        system: systemPrompt,
-        prompt: SuperJSON.stringify(input),
-      });
+      try {
+        const { output } = await generateText({
+          model: track_model,
+          output: Output.object({
+            schema: z.object({
+              recommendations: RecommendedTracksSchema,
+            }),
+            name: "Recommendations",
+          }),
+          system: systemPrompt,
+          prompt: SuperJSON.stringify(input),
+        });
 
-      if (!output) {
+        console.log("[model] ", String(track_model));
+
+        if (!output || !output.recommendations) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message:
+              "Failed to generate recommendations.\nThe AI model did not return valid recommendations.",
+          });
+        }
+
+        return output.recommendations;
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message:
-            "Failed to generate recommendations.\nThe AI model did not return valid recommendations.",
+          message: `AI Provider error: ${errorMessage || "Failed to generate recommendations"}`,
+          cause: error,
         });
       }
-
-      return output;
     }),
   getRecommendationsMutate: protectedProcedure
     .input(z.array(z.string()))
