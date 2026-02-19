@@ -15,6 +15,8 @@ export const env = createEnv({
     DATABASE_URL: z.string(),
     OPENROUTER: z.string(),
     SPOTIFY_REDIRECT_URI: z.string(),
+    PINECONE: z.string(),
+    LAST_FM: z.string(),
   },
 
   /**
@@ -40,6 +42,8 @@ export const env = createEnv({
     SPOTIFY_REDIRECT_URI: process.env.SPOTIFY_REDIRECT_URI,
     DATABASE_URL: process.env.DATABASE_URL,
     OPENROUTER: process.env.OPENROUTER,
+    PINECONE: process.env.PINECONE,
+    LAST_FM: process.env.LAST_FM,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

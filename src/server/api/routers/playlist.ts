@@ -1,4 +1,4 @@
-import { spotifyApi } from "~/lib/spotify";
+import { spotifyApi } from "~/lib/music/spotify";
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { tryCatch } from "~/lib/try-catch";
@@ -55,6 +55,70 @@ export const playlistRouter = createTRPCRouter({
 
       return res.data;
     }),
+
+  // TODO: testing purposes
+
+  test_getPlaylistItemsAll: protectedProcedure
+    .input(z.object({ playlist_id: z.string() }))
+    .query(async ({ input, ctx }) => {
+      const caller = appRouter.createCaller(ctx);
+
+      let offset = 0;
+      let hasNextBatch = true;
+
+      type RawTrack = {
+        trackName: string;
+        artistName: string;
+        albumName: string;
+      };
+
+      let allTracks: RawTrack[] = [];
+
+      // let allTracks: string[] = [];
+
+      while (hasNextBatch) {
+        const data = await caller.playlist.getPlaylistItems({
+          playlist_id: input.playlist_id,
+          offset,
+          limit: LIMIT,
+        });
+
+        if (!data) {
+          console.warn(
+            `No data received for playlist_id: ${input.playlist_id} at offset: ${offset}`,
+          );
+          hasNextBatch = false; // Stop fetching if data is null
+          break;
+        }
+
+        const tracks = data.items
+          .filter((item) => !item.is_local && item.track)
+          .map((item) => {
+            const track = item.track!;
+
+            return {
+              trackName: track.name,
+              albumName: track.album.name,
+              artistName: track.artists
+                .map((artist) => artist.name)
+                .join(" & "),
+            };
+          });
+
+        allTracks.push(...tracks);
+
+        if (!data.next) {
+          hasNextBatch = false;
+          break;
+        }
+
+        offset += LIMIT;
+      }
+
+      return allTracks;
+    }),
+
+  /* end testing */
 
   getPlaylistItemsAll: protectedProcedure
     .input(z.object({ playlist_id: z.string() }))

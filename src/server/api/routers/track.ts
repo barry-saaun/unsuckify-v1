@@ -25,12 +25,27 @@ import {
   insertRecommendedTracks,
   insertTracksStatus,
 } from "~/lib/utils/track";
-import { spotifyApi } from "~/lib/spotify";
+import { spotifyApi } from "~/lib/music/spotify";
 import { orModel } from "~/lib/ai";
+import { lastFmApi } from "~/lib/music/lastfm";
 
 const track_model = orModel("openai/gpt-5-mini");
 
 export const trackRouter = createTRPCRouter({
+  getTrackInfo: protectedProcedure
+    .input(z.object({ artist: z.string(), track: z.string() }))
+    .query(async ({ input }) => {
+      const trackInfo = await lastFmApi.getTrackInfo({
+        artist: input.artist,
+        track: input.track,
+      });
+
+      if (trackInfo && typeof trackInfo === "object") {
+        return trackInfo;
+      }
+
+      return "Error";
+    }),
   getRecommendations: protectedProcedure
     .input(z.array(z.string()))
     .query(async ({ input }) => {
