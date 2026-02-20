@@ -27,3 +27,11 @@ export function getInitials(name: string) {
 export function assertError(error: string, status_code: number) {
   return Response.json({ error }, { status: status_code });
 }
+
+export function normaliseTag(tag: string): string {
+  return tag
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
