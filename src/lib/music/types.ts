@@ -1,71 +1,49 @@
-// 1.
-export interface TrackGetInfoResponse {
-  track: Track;
-}
-
-// 2.
-export interface TopTagsResponse {
-  toptags: TopTags;
-}
-
-export interface TopTags {
-  tag: Tag[];
-}
-
-export interface Tag {
-  name: string;
-  url: string;
-}
-
-export interface Track {
-  id: string;
-  name: string;
-  mbid: string | null;
-  url: string;
-  duration: string; // milliseconds as string (e.g. "240000")
-  listeners: string;
-  playcount: string;
-  artist: Artist;
-  album?: Album;
-  toptags?: TopTags;
-  wiki?: Wiki;
-}
-
-export interface Artist {
-  name: string;
-  mbid: string;
-  url: string;
-}
-
-export interface Album {
-  $: {
-    position: string;
-  };
-  artist: string;
-  title: string;
-  mbid: string;
-  url: string;
-  image: Image[];
-}
-
-export interface Image {
-  _: string; // image URL
-  $: {
-    size: "small" | "medium" | "large" | string;
+export interface LastFmGetTrackInfoResponse {
+  track: {
+    name: string;
+    duration?: string;
+    listeners?: string;
+    playcount?: string;
+    artist: {
+      name: string;
+      mbid?: string;
+      url?: string;
+    };
+    album?: {
+      artist?: string;
+      title: string;
+      mbid?: string;
+      url?: string;
+    };
+    toptags?: {
+      tag: Array<{
+        name: string;
+        url?: string;
+      }>;
+    };
+    wiki?: {
+      published?: string;
+      summary?: string;
+      content?: string;
+    };
   };
 }
 
-export interface TopTags {
-  tag: Tag[];
+export interface LastFmArtistTopTagsResponse {
+  toptags: {
+    tag: Array<{
+      name: string;
+      url?: string;
+    }>;
+  };
 }
 
-export interface Tag {
-  name: string;
-  url: string;
-}
-
-export interface Wiki {
-  published: string;
-  summary: string;
-  content: string;
+export interface LastFmArtistSimilarResponse {
+  similarartists: {
+    artist: Array<{
+      name: string;
+      match?: string;
+      url?: string;
+    }>;
+  };
 }

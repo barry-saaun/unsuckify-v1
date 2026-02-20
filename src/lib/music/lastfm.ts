@@ -1,14 +1,17 @@
 import axios from "axios";
-import queryString from "query-string";
 import { env } from "~/env";
 import { TRPCError } from "@trpc/server";
 import { tryCatch } from "../try-catch";
-import type { TopTagsResponse, TrackGetInfoResponse } from "./types";
+import type {
+  LastFmArtistSimilarResponse,
+  LastFmArtistTopTagsResponse,
+  LastFmGetTrackInfoResponse,
+} from "./types";
 
 const lastFmApiEndpoints = [
   "track.getinfo",
-  "artists.gettoptags",
-  "artists.getSimilar",
+  "artist.gettoptags",
+  "artist.getsimilar",
 ] as const;
 type TLastFmApiEndpoints = (typeof lastFmApiEndpoints)[number];
 
@@ -67,8 +70,11 @@ async function lastFmFetch<T>(
 
 export const lastFmApi = {
   getTrackInfo: ({ artist, track }: { artist: string; track: string }) =>
-    lastFmFetch<TrackGetInfoResponse>("track.getinfo", { artist, track }),
+    lastFmFetch<LastFmGetTrackInfoResponse>("track.getinfo", { artist, track }),
 
   getArtistTopTag: ({ artist }: { artist: string }) =>
-    lastFmFetch<TopTagsResponse>("artists.gettoptags", { artist }),
+    lastFmFetch<LastFmArtistTopTagsResponse>("artist.gettoptags", { artist }),
+
+  getArtistSimilar: ({ artist }: { artist: string }) =>
+    lastFmFetch<LastFmArtistSimilarResponse>("artist.getsimilar", { artist }),
 };
