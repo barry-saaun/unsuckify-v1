@@ -26,10 +26,8 @@ import {
   insertTracksStatus,
 } from "~/lib/utils/track";
 import { spotifyApi } from "~/lib/music/spotify";
-import { orModel } from "~/lib/ai";
+import { openRouterApi } from "~/lib/ai";
 import { lastFmApi } from "~/lib/music/lastfm";
-
-const track_model = orModel("openai/gpt-5-mini");
 
 export const trackRouter = createTRPCRouter({
   getTrackInfo: protectedProcedure
@@ -51,7 +49,7 @@ export const trackRouter = createTRPCRouter({
     .query(async ({ input }) => {
       try {
         const { output } = await generateText({
-          model: track_model,
+          model: openRouterApi.getModel("openai/gpt-5-mini"),
           output: Output.object({
             schema: z.object({
               recommendations: RecommendedTracksSchema,
@@ -62,7 +60,10 @@ export const trackRouter = createTRPCRouter({
           prompt: SuperJSON.stringify(input),
         });
 
-        console.log("[model] ", String(track_model));
+        console.log(
+          "[model] ",
+          String(openRouterApi.getModel("openai/gpt-5-mini")),
+        );
 
         if (!output || !output.recommendations) {
           throw new TRPCError({

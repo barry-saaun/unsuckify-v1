@@ -6,13 +6,23 @@ import {
   type AddTracksToPlaylistResponse,
   type RemoveTracksFromPlaylistResponse,
   type CreatePlaylistResponse,
+  type PlaylistTrackResponse,
 } from "spotify-api";
 import queryString from "query-string";
 import axios from "axios";
 import { tryCatch } from "../try-catch";
 import { cookies } from "next/headers";
 import { TRPCError } from "@trpc/server";
-import { type PlaylistTrackResponse } from "spotify-api";
+
+const spotifyApiEndpoints = [
+  "/me",
+  "/me/playlists",
+  "/playlists/{playlist_id}",
+  "/playlists/{playlist_id}/tracks",
+  "/search",
+  "/users/{user_id}/playlists",
+] as const;
+type TSpotifyApiEndpoints = (typeof spotifyApiEndpoints)[number];
 
 type JsonValue =
   | string
@@ -24,9 +34,13 @@ type JsonValue =
 
 type RequestBodyType = Record<string, JsonValue>;
 
+const spotifyClient = axios.create({
+  baseURL: "https://api.spotify.com/v1",
+});
+
 async function spotifyFetch<T>(
   method: "GET" | "POST" | "DELETE",
-  endpoint: string,
+  endpoint: TSpotifyApiEndpoints,
   params?: Record<string, string>,
   queryParams?: Record<string, number | string>,
   requestBody?: RequestBodyType,
@@ -40,8 +54,7 @@ async function spotifyFetch<T>(
     });
   }
 
-  const baseUrl = "https://api.spotify.com/v1";
-  let resolvedEndpoint = endpoint || "";
+  let resolvedEndpoint: string = endpoint || "";
 
   if (params && endpoint) {
     resolvedEndpoint = Object.keys(params).reduce((url, key) => {
@@ -53,21 +66,21 @@ async function spotifyFetch<T>(
     ? `?${queryString.stringify(queryParams)}`
     : "";
 
-  const url = `${baseUrl}${resolvedEndpoint}${queryParamsString}`;
+  const url = `${resolvedEndpoint}${queryParamsString}`;
 
-  const axiosConfig = {
-    method,
-    url,
-    headers: {
-      Authorization: `Bearer ${access_token}`,
-      "Content-Type": "application/json",
-    },
-    ...(method === "POST" || (method === "DELETE" && requestBody)
-      ? { data: requestBody }
-      : {}),
-  };
-
-  const { data: res, error } = await tryCatch(axios.request<T>(axiosConfig));
+  const { data: response, error } = await tryCatch(
+    spotifyClient.request<T>({
+      method,
+      url,
+      headers: {
+        Authorization: `Bearer ${access_token}`,
+        "Content-Type": "application/json",
+      },
+      ...(method === "POST" || (method === "DELETE" && requestBody)
+        ? { data: requestBody }
+        : {}),
+    }),
+  );
 
   // if the AI hallucinate and return an incorrect object, just return null
   // and skip that error track
@@ -104,7 +117,7 @@ async function spotifyFetch<T>(
     });
   }
 
-  return res.data;
+  return response!.data;
 }
 
 export const spotifyApi = {
