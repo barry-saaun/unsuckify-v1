@@ -1,0 +1,29 @@
+export function normaliseTags(
+  tags: Array<{ name: string; count?: number }>,
+): string[] {
+  const seen = new Set<string>();
+  const normalized: string[] = [];
+
+  for (const tag of tags) {
+    const clean = tag.name
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    if (clean && !seen.has(clean)) {
+      seen.add(clean);
+      normalized.push(clean);
+    }
+  }
+
+  return normalized;
+}
+
+export function normaliseArtistName(name: string): string {
+  return name.trim();
+}
+
+export function buildSongKey(artist: string, track: string): string {
+  return `${artist}::${track}`.toLowerCase().replace(/\s+/g, "-");
+}
