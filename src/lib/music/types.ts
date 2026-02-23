@@ -33,6 +33,7 @@ export interface LastFmArtistTopTagsResponse {
   toptags: {
     tag: Array<{
       name: string;
+      count: number;
       url?: string;
     }>;
   };

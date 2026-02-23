@@ -10,7 +10,7 @@ import {
 } from "spotify-api";
 import queryString from "query-string";
 import axios from "axios";
-import { tryCatch } from "../try-catch";
+import { tryCatch } from "../utils/try-catch";
 import { cookies } from "next/headers";
 import { TRPCError } from "@trpc/server";
 

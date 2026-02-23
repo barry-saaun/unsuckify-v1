@@ -3,7 +3,7 @@ import axios from "axios";
 import { env } from "~/env";
 
 import { cookies } from "next/headers";
-import { tryCatch } from "~/lib/try-catch";
+import { tryCatch } from "~/lib/utils/try-catch";
 import { assertError } from "~/lib/utils";
 
 const SPOTIFY_CLIENT_ID = env.SPOTIFY_CLIENT_ID;

@@ -1,7 +1,7 @@
 import { spotifyApi } from "~/lib/music/spotify";
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { tryCatch } from "~/lib/try-catch";
+import { tryCatch } from "~/lib/utils/try-catch";
 import { TRPCError } from "@trpc/server";
 import { appRouter } from "../root";
 import { trackPlaylistStatus } from "~/server/db/schema";

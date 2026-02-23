@@ -1,6 +1,6 @@
 import z from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { tryCatch } from "~/lib/try-catch";
+import { tryCatch } from "~/lib/utils/try-catch";
 import { lastFmApi } from "~/lib/music/lastfm";
 
 export const artistRouter = createTRPCRouter({

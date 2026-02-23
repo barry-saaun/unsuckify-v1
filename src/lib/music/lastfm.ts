@@ -1,7 +1,7 @@
 import axios from "axios";
 import { env } from "~/env";
 import { TRPCError } from "@trpc/server";
-import { tryCatch } from "../try-catch";
+import { tryCatch } from "../utils/try-catch";
 import type {
   LastFmArtistSimilarResponse,
   LastFmArtistTopTagsResponse,

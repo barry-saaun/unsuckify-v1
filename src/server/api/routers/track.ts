@@ -1,6 +1,6 @@
 import z from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { generateText, Output } from "ai";
+import { generateText, Output, embedMany } from "ai";
 import {
   GetOrCreateRecommendationsSchema,
   RecommendedTrackObjectSchema,
@@ -26,7 +26,7 @@ import {
   insertTracksStatus,
 } from "~/lib/utils/track";
 import { spotifyApi } from "~/lib/music/spotify";
-import { openRouterApi } from "~/lib/ai";
+import { openRouterApi } from "~/lib/openrouter";
 import { lastFmApi } from "~/lib/music/lastfm";
 
 export const trackRouter = createTRPCRouter({
@@ -49,7 +49,7 @@ export const trackRouter = createTRPCRouter({
     .query(async ({ input }) => {
       try {
         const { output } = await generateText({
-          model: openRouterApi.getModel("openai/gpt-5-mini"),
+          model: openRouterApi.getChatModel("openai/gpt-5-mini"),
           output: Output.object({
             schema: z.object({
               recommendations: RecommendedTracksSchema,
@@ -62,7 +62,7 @@ export const trackRouter = createTRPCRouter({
 
         console.log(
           "[model] ",
-          String(openRouterApi.getModel("openai/gpt-5-mini")),
+          String(openRouterApi.getChatModel("openai/gpt-5-mini")),
         );
 
         if (!output || !output.recommendations) {
