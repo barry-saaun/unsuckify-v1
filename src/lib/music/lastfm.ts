@@ -72,9 +72,19 @@ export const lastFmApi = {
   getTrackInfo: ({ artist, track }: { artist: string; track: string }) =>
     lastFmFetch<LastFmGetTrackInfoResponse>("track.getinfo", { artist, track }),
 
-  getArtistTopTag: ({ artist }: { artist: string }) =>
+  getArtistTopTags: ({ artist }: { artist: string }) =>
     lastFmFetch<LastFmArtistTopTagsResponse>("artist.gettoptags", { artist }),
 
   getArtistSimilar: ({ artist }: { artist: string }) =>
     lastFmFetch<LastFmArtistSimilarResponse>("artist.getsimilar", { artist }),
 };
+
+export async function fetchLastFmData(artist: string, track: string) {
+  const [trackInfo, artistTopTags, artistSimilar] = await Promise.all([
+    lastFmApi.getTrackInfo({ artist, track }),
+    lastFmApi.getArtistTopTags({ artist }),
+    lastFmApi.getArtistSimilar({ artist }),
+  ]);
+
+  return { trackInfo, artistTopTags, artistSimilar };
+}

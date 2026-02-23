@@ -8,7 +8,7 @@ export const artistRouter = createTRPCRouter({
     .input(z.object({ artist: z.string() }))
     .query(async ({ input }) => {
       const { data } = await tryCatch(
-        lastFmApi.getArtistTopTag({ artist: input.artist }),
+        lastFmApi.getArtistTopTags({ artist: input.artist }),
       );
 
       if (data?.toptags && typeof data.toptags === "object") {
