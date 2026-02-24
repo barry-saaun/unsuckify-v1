@@ -7,6 +7,7 @@ import "./src/env.js";
 /** @type {import("next").NextConfig} */
 const config = {
   reactMaxHeadersLength: 100000,
+  // allowedDevOrigins: ['local-origin.dev', '*.local-origin.dev'],
   images: {
     remotePatterns: [
       {

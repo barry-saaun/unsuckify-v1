@@ -20,6 +20,7 @@ export default function MyPlaylistsTabContent() {
   });
 
   const { toastError } = useAppToast();
+  const numberOfSkeleton = 8;
 
   if (error && !isLoading) {
     toastError("Cannot query your playlists at the moment!", {
@@ -31,10 +32,13 @@ export default function MyPlaylistsTabContent() {
     return null;
   }
 
+  // Show skeleton loading instead of full-screen spinner
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Spinner extraCN="h-10 w-10" />
+      <div className="grid grid-cols-1 gap-8 px-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        {Array.from({ length: numberOfSkeleton }).map((_, idx) => (
+          <CardSkeleton key={idx} />
+        ))}
       </div>
     );
   }
@@ -43,27 +47,19 @@ export default function MyPlaylistsTabContent() {
     return <ErrorScreen message={error.message} />;
   }
 
-  const numberOfSkeleton = 6;
-
   return (
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-      {isLoading
-        ? Array.from({ length: numberOfSkeleton }).map((_, idx) => (
-            <CardSkeleton key={idx} />
-          ))
-        : fresh?.map((item) => {
-            return (
-              <PlaylistCard
-                ownerId={item.ownerId}
-                key={item.id}
-                playlistImg={item.url ? item.url : <ImagePlaceholder />}
-                owner={item.owner}
-                playlistName={item.name}
-                numberOfTracks={item.total}
-                playlistId={item.id}
-              />
-            );
-          })}
+    <div className="grid grid-cols-1 gap-8 px-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+      {fresh?.map((item) => (
+        <PlaylistCard
+          ownerId={item.ownerId}
+          key={item.id}
+          playlistImg={item.url ? item.url : <ImagePlaceholder />}
+          owner={item.owner}
+          playlistName={item.name}
+          numberOfTracks={item.total}
+          playlistId={item.id}
+        />
+      ))}
     </div>
   );
 }

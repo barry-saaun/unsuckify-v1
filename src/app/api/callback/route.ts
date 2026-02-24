@@ -3,16 +3,16 @@ import axios from "axios";
 import { env } from "~/env";
 
 import { cookies } from "next/headers";
-import { tryCatch } from "~/lib/try-catch";
+import { tryCatch } from "~/lib/utils/try-catch";
 import { assertError } from "~/lib/utils";
-import { getBaseUrl } from "~/lib/utils/api";
 
 const SPOTIFY_CLIENT_ID = env.SPOTIFY_CLIENT_ID;
 const SPOTIFY_CLIENT_SECRET = env.SPOTIFY_CLIENT_SECRET;
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
-  console.log(JSON.stringify(searchParams));
+
+  console.log(`[callback] ${JSON.stringify(searchParams)}`);
 
   const code = searchParams.get("code");
   const state = searchParams.get("state");
@@ -33,7 +33,15 @@ export async function GET(req: Request) {
     `${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`,
   ).toString("base64");
 
-  const spotifyRedirectUri = `${getBaseUrl()}/api/callback`;
+  const reqUrl = new URL(req.url);
+  let baseUrl = `${reqUrl.protocol}//${reqUrl.host}`;
+
+  // Convert localhost to 127.0.0.1 for Spotify compatibility
+  if (baseUrl.includes("localhost")) {
+    baseUrl = baseUrl.replace("localhost", "127.0.0.1");
+  }
+
+  const spotifyRedirectUri = `${baseUrl}/api/callback`;
 
   const { data: tokenData, error: tokenError } = await tryCatch(
     axios({
@@ -68,7 +76,7 @@ export async function GET(req: Request) {
   for (const [key, value] of Object.entries(cookiesData)) {
     cookiesStore.set(key, value ?? "", {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === "production",
       maxAge: expires_in,
       path: "/",
     });

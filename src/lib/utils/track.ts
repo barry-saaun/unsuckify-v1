@@ -8,7 +8,7 @@ import {
   type RecTracksInsertType,
   type TracksStatusInsertType,
 } from "~/server/db/schema";
-import { tryCatch } from "../try-catch";
+import { tryCatch } from "./try-catch";
 
 export async function deleteExpiredTables({
   ctx,

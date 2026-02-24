@@ -1,7 +1,6 @@
 import z from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { generateObject } from "ai";
-import { google } from "@ai-sdk/google";
+import { generateText, Output } from "ai";
 import {
   GetOrCreateRecommendationsSchema,
   RecommendedTrackObjectSchema,
@@ -26,29 +25,96 @@ import {
   insertRecommendedTracks,
   insertTracksStatus,
 } from "~/lib/utils/track";
-import { spotifyApi } from "~/lib/spotify";
+import { spotifyApi } from "~/lib/music/spotify";
+import { openRouterApi } from "~/lib/openrouter";
+import { lastFmApi } from "~/lib/music/lastfm";
+import { tryCatch } from "~/lib/utils/try-catch";
+import { getRecommendations } from "~/lib/pinecone/get-recommendations";
+
+const PlaylistSongSchema = z.object({
+  artist: z.string().min(1),
+  track: z.string().min(1),
+});
 
 export const trackRouter = createTRPCRouter({
-  getRecommendations: protectedProcedure
-    .input(z.array(z.string()))
+  getRecommendationsV2: protectedProcedure
+    .input(
+      z.object({
+        playlist: z.array(PlaylistSongSchema).min(1).max(300),
+        limit: z.number().min(1).max(50).default(20),
+        minScore: z.number().min(0).max(1).default(0.6),
+      }),
+    )
     .query(async ({ input }) => {
-      const { object } = await generateObject({
-        model: google("gemini-2.0-flash"),
-        prompt: SuperJSON.stringify(input),
-        schema: RecommendedTracksSchema,
-        system: systemPrompt,
-        schemaName: "Recommendations",
-      });
+      const { data, error } = await tryCatch(getRecommendations(input));
 
-      if (!object) {
+      if (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message:
-            "Failed to generate recommendations.\nThe AI model did not return valid recommendations.",
+            error instanceof Error
+              ? error.message
+              : "Failed to generate recommendations",
+          cause: error,
         });
       }
 
-      return object;
+      return data;
+    }),
+  getTrackInfo: protectedProcedure
+    .input(z.object({ artist: z.string(), track: z.string() }))
+    .query(async ({ input }) => {
+      const trackInfo = await lastFmApi.getTrackInfo({
+        artist: input.artist,
+        track: input.track,
+      });
+
+      if (trackInfo && typeof trackInfo === "object") {
+        return trackInfo;
+      }
+
+      return "Error";
+    }),
+  getRecommendations: protectedProcedure
+    .input(z.array(z.string()))
+    .query(async ({ input }) => {
+      try {
+        const { output } = await generateText({
+          model: openRouterApi.getChatModel("openai/gpt-5-mini"),
+          output: Output.object({
+            schema: z.object({
+              recommendations: RecommendedTracksSchema,
+            }),
+            name: "Recommendations",
+          }),
+          system: systemPrompt,
+          prompt: SuperJSON.stringify(input),
+        });
+
+        console.log(
+          "[model] ",
+          String(openRouterApi.getChatModel("openai/gpt-5-mini")),
+        );
+
+        if (!output || !output.recommendations) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message:
+              "Failed to generate recommendations.\nThe AI model did not return valid recommendations.",
+          });
+        }
+
+        return output.recommendations;
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `AI Provider error: ${errorMessage || "Failed to generate recommendations"}`,
+          cause: error,
+        });
+      }
     }),
   getRecommendationsMutate: protectedProcedure
     .input(z.array(z.string()))

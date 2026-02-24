@@ -11,6 +11,7 @@ import { useRecommendedInfTracks } from "~/hooks/useRecommendedInfTracks";
 import RecommendedTrackCard from "~/components/recommended-track-card";
 import RecommendedTrackCardSkeleton from "~/components/rec-track-card-skeleton";
 import { useUserContext } from "~/components/user-context-provider";
+import { cn } from "~/lib/utils";
 
 const TRACK_PER_INF_PAGE = 6;
 
@@ -111,58 +112,66 @@ export default function PlaylistContent() {
   }
 
   return (
-    <div className="mx-6 mb-10 flex min-h-screen flex-col items-center justify-center gap-2 border-none md:mx-8 lg:mx-10">
+    <div className="mx-6 mb-10 flex min-h-screen flex-col items-center justify-center gap-6 border-none md:mx-8 lg:mx-10">
       {playlistName && (
-        <h1 className="mt-10 mb-4 text-center text-2xl font-semibold text-gray-800 md:text-3xl lg:text-4xl dark:text-gray-200">
-          {playlistName}
-          <span className="mx-auto mt-2 block h-1 w-[50%] rounded bg-purple-400 opacity-60" />
-        </h1>
+        <div className="mt-10 mb-8 text-center">
+          <h1 className="text-center text-3xl font-bold text-gray-900 md:text-4xl lg:text-5xl dark:text-gray-100">
+            {playlistName}
+          </h1>
+          <div className="mx-auto mt-4 h-1 w-24 rounded-full bg-linear-to-r from-purple-500 to-pink-500" />
+        </div>
       )}
-      {!isOwned && (
-        <CreateNewPlaylistCard
-          selectedTracksUri={Array.from(selectedTracksUri)}
-          user_id={userId}
-        />
-      )}
-      <InfoBanner isOwned={isOwned} />
-      <div className="m-5 grid w-full grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-        {data?.pages.flatMap((page) =>
-          page.items.map((item, i) => (
-            <RecommendedTrackCard
-              key={`${i}-${item.id}`}
-              playlist_id={playlist_id}
-              handleNotIsOwnedCardClick={handleNotIsOwnedCardClick}
-              trackObj={item}
-              isOwned={isOwned}
-              track_id={item.id}
-              batch_id={item.batchId!}
-            />
-          )),
+
+      <div className="w-full max-w-6xl space-y-6">
+        {!isOwned && (
+          <CreateNewPlaylistCard
+            selectedTracksUri={Array.from(selectedTracksUri)}
+            user_id={userId}
+          />
         )}
 
-        {Array.from({ length: skeletonPages }, (_, pageIndex) =>
-          Array.from({ length: TRACK_PER_INF_PAGE }, (_, itemIndex) => (
-            <RecommendedTrackCardSkeleton
-              isOwned
-              key={`skeleton-${pageIndex}-${itemIndex}`}
-            />
-          )),
-        )}
-      </div>
-      {hasNextPage ? (
-        <Button
-          disabled={isFetchingNextPage}
-          onClick={handleFetchNextPage}
-          className="hover:bg-accent/90 mt-5 flex w-32 items-center justify-center border-2"
-          variant={"outline"}
-        >
-          {isFetchingNextPage ? (
-            <Spinner />
-          ) : (
-            <h1 className="text-sm font-semibold tracking-normal">Load More</h1>
+        <InfoBanner isOwned={isOwned} />
+
+        <div className="grid w-full grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {data?.pages.flatMap((page) =>
+            page.items.map((item, i) => (
+              <RecommendedTrackCard
+                key={`${i}-${item.id}`}
+                playlist_id={playlist_id}
+                handleNotIsOwnedCardClick={handleNotIsOwnedCardClick}
+                trackObj={item}
+                isOwned={isOwned}
+                track_id={item.id}
+                batch_id={item.batchId!}
+              />
+            )),
           )}
-        </Button>
-      ) : null}
+
+          {Array.from({ length: skeletonPages }, (_, pageIndex) =>
+            Array.from({ length: TRACK_PER_INF_PAGE }, (_, itemIndex) => (
+              <RecommendedTrackCardSkeleton
+                isOwned
+                key={`skeleton-${pageIndex}-${itemIndex}`}
+              />
+            )),
+          )}
+        </div>
+
+        {hasNextPage ? (
+          <div className="flex justify-center pt-4">
+            <Button
+              disabled={isFetchingNextPage}
+              onClick={handleFetchNextPage}
+              className={cn(
+                "bg-linear-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600",
+                "px-8 py-6 text-base font-medium",
+              )}
+            >
+              {isFetchingNextPage ? <Spinner /> : "Load More Tracks"}
+            </Button>
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { cookies } from "next/headers";
-import { spotifyApi } from "~/lib/spotify";
+import { spotifyApi } from "~/lib/music/spotify";
 import { allowedUsers } from "~/server/db/schema";
 import { eq } from "drizzle-orm";
 import z from "zod";

@@ -1,4 +1,4 @@
-import { spotifyApi } from "~/lib/spotify";
+import { spotifyApi } from "~/lib/music/spotify";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import type { UsersPlaylistMetadata } from "~/types";
 import { TRPCError } from "@trpc/server";

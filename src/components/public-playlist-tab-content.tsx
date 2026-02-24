@@ -1,113 +1,115 @@
 "use client";
-import { type FieldErrors, useForm } from "react-hook-form";
-
-import { Button } from "./ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "./ui/card";
-import { Form, FormControl, FormField, FormItem } from "./ui/form";
-import { Input } from "./ui/input";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAppToast } from "~/hooks/useAppToast";
-
-const FormSchema = z.object({
-  url: z
-    .string()
-    .min(1, { message: "Oops! The playlist URL field can’t be empty." })
-    .regex(
-      /^https:\/\/open\.spotify\.com\/playlist\/[a-zA-Z0-9]+(\?si=[a-zA-Z0-9]+)?$|^https:\/\/open\.spotify\.com\/playlist\/[a-zA-Z0-9]+$/,
-      { message: "Invalid Spotify Playlist URL." },
-    ),
-});
+import { cn } from "~/lib/utils";
 
 function PublicPlaylistTabContent() {
   const router = useRouter();
   const { toastError } = useAppToast();
+  const [url, setUrl] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const form = useForm<z.infer<typeof FormSchema>>({
-    resolver: zodResolver(FormSchema),
-    defaultValues: {
-      url: "",
-    },
-  });
-
-  const urlValue = form.watch("url");
-  const isFormEmpty = !urlValue || urlValue.trim() === "";
-
-  const onSubmit = (data: z.infer<typeof FormSchema>) => {
-    const playlistUrlObject = FormSchema.safeParse(data);
-
-    if (!playlistUrlObject.success || !playlistUrlObject.data.url) {
-      return;
-    }
-    const playlistId = playlistUrlObject.data.url
-      .split("?si")[0]
-      ?.split("playlist/")[1];
-
-    if (playlistId) {
-      router.push(`/dashboard/${playlistId}`);
-    }
+  const isValidSpotifyUrl = (input: string) => {
+    const regex =
+      /^https:\/\/open\.spotify\.com\/playlist\/[a-zA-Z0-9]+(\?si=[a-zA-Z0-9]+)?$|^https:\/\/open\.spotify\.com\/playlist\/[a-zA-Z0-9]+$/;
+    return regex.test(input.trim());
   };
 
-  const errorOnSubmit = (errors: FieldErrors<z.infer<typeof FormSchema>>) => {
-    const errorMessage = errors?.url;
-    if (errorMessage) {
-      toastError(` 😩 ${errorMessage.message}`);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!url.trim()) {
+      toastError("Playlist URL can't be empty");
+      return;
+    }
+
+    if (!isValidSpotifyUrl(url)) {
+      toastError("Invalid Spotify playlist URL");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const playlistId = url.split("?si")[0]?.split("playlist/")[1];
+      if (playlistId) {
+        router.push(`/dashboard/${playlistId}`);
+      }
+    } catch (error) {
+      toastError("Something went wrong");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="container flex w-full flex-grow items-center justify-center rounded-lg md:w-2/3 md:justify-start">
-      <Card className="flex-grow">
-        <CardHeader>
-          <CardTitle className="text-2xl">
-            Recommendation of a Public Playlist
-          </CardTitle>
-          <CardDescription>
-            Enter a public Spotify playlist URL to get songs recommendation and
-            JSON data.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(onSubmit, (errors) =>
-                errorOnSubmit(errors),
-              )}
-              className="flex items-center justify-between space-x-5"
-            >
-              <FormField
-                control={form.control}
-                name="url"
-                render={({ field }) => (
-                  <FormItem className="w-[90%]">
-                    <FormControl>
-                      <Input
-                        placeholder="https://open.spotify.com/playlist/..."
-                        className="text-sm font-medium"
-                        {...field}
-                      />
-                    </FormControl>
-                  </FormItem>
+    <div className="mx-auto w-full max-w-2xl">
+      <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-zinc-900/50 to-zinc-800/50 p-8 shadow-2xl backdrop-blur-sm">
+        <div className="mb-6">
+          <h2 className="text-bold mb-2 text-3xl font-medium">
+            Discover new music
+          </h2>
+          <p className="text-lg text-zinc-400">
+            Paste a Spotify playlist URL and let us find similar tracks you'll
+            love
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="relative">
+            <div className="absolute top-1/2 left-4 -translate-y-1/2">
+              <svg
+                className={cn(
+                  "h-5 w-5 transition-colors duration-200",
+                  isValidSpotifyUrl(url) ? "text-green-500" : "text-zinc-500",
                 )}
-              />
-              <Button
-                type="submit"
-                className="font-bold disabled:cursor-not-allowed"
-                disabled={isFormEmpty}
+                fill="currentColor"
+                viewBox="0 0 24 24"
               >
-                UNSUCKify
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+              </svg>
+            </div>
+            <input
+              type="url"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="https://open.spotify.com/playlist/..."
+              className={cn(
+                "w-full rounded-xl border border-white/10 bg-zinc-800/50 py-4 pr-4 pl-12 text-white placeholder-zinc-500 transition-all duration-200 focus:ring-1 focus:outline-none",
+                {
+                  "focus:border-green-500 focus:ring-green-500":
+                    isValidSpotifyUrl(url),
+                  "focus:border-red-500 focus:ring-red-500":
+                    !isValidSpotifyUrl(url),
+                },
+              )}
+              disabled={isLoading}
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={isLoading || !url.trim() || !isValidSpotifyUrl(url)}
+            className="w-full transform rounded-xl bg-green-600 py-4 font-medium text-white transition-all duration-200 hover:scale-[1.02] hover:bg-green-500 disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-500 disabled:hover:scale-100"
+          >
+            {isLoading ? (
+              <div className="flex items-center justify-center space-x-2">
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                <span>Finding tracks...</span>
+              </div>
+            ) : (
+              "Find similar tracks"
+            )}
+          </button>
+        </form>
+
+        <div className="mt-6 border-t border-white/10 pt-6">
+          <p className="text-center text-sm text-zinc-500">
+            Works with any public Spotify playlist
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

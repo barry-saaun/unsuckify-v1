@@ -11,7 +11,7 @@ const matchesRoute = (patterns: string[], path: string) =>
     match(pattern, { decode: decodeURIComponent })(path),
   );
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname;
 
   const isLoginRoute = matchesRoute(loginRoutes, path);
