@@ -7,6 +7,7 @@ import type {
   LastFmArtistTopTagsResponse,
   LastFmGetTrackInfoResponse,
 } from "./types";
+import { fetchArtistData } from "../utils/artist";
 
 const lastFmApiEndpoints = [
   "track.getinfo",
@@ -80,11 +81,26 @@ export const lastFmApi = {
 };
 
 export async function fetchLastFmData(artist: string, track: string) {
-  const [trackInfo, artistTopTags, artistSimilar] = await Promise.all([
+  const [trackInfo, artistData] = await Promise.all([
     lastFmApi.getTrackInfo({ artist, track }),
-    lastFmApi.getArtistTopTags({ artist }),
-    lastFmApi.getArtistSimilar({ artist }),
+    fetchArtistData(artist),
   ]);
+
+  const artistTopTags: LastFmArtistTopTagsResponse = {
+    toptags: {
+      tag: artistData.topTags.map((name) => ({ name, count: 0, url: "" })),
+    },
+  };
+
+  const artistSimilar: LastFmArtistSimilarResponse = {
+    similarartists: {
+      artist: artistData.similarArtists.map((name) => ({
+        name,
+        match: "1",
+        url: "",
+      })),
+    },
+  };
 
   return { trackInfo, artistTopTags, artistSimilar };
 }

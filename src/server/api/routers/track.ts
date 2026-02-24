@@ -1,6 +1,6 @@
 import z from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { generateText, Output, embedMany } from "ai";
+import { generateText, Output } from "ai";
 import {
   GetOrCreateRecommendationsSchema,
   RecommendedTrackObjectSchema,
@@ -28,8 +28,39 @@ import {
 import { spotifyApi } from "~/lib/music/spotify";
 import { openRouterApi } from "~/lib/openrouter";
 import { lastFmApi } from "~/lib/music/lastfm";
+import { tryCatch } from "~/lib/utils/try-catch";
+import { getRecommendations } from "~/lib/pinecone/get-recommendations";
+
+const PlaylistSongSchema = z.object({
+  artist: z.string().min(1),
+  track: z.string().min(1),
+});
 
 export const trackRouter = createTRPCRouter({
+  getRecommendationsV2: protectedProcedure
+    .input(
+      z.object({
+        playlist: z.array(PlaylistSongSchema).min(1).max(300),
+        limit: z.number().min(1).max(50).default(20),
+        minScore: z.number().min(0).max(1).default(0.6),
+      }),
+    )
+    .query(async ({ input }) => {
+      const { data, error } = await tryCatch(getRecommendations(input));
+
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Failed to generate recommendations",
+          cause: error,
+        });
+      }
+
+      return data;
+    }),
   getTrackInfo: protectedProcedure
     .input(z.object({ artist: z.string(), track: z.string() }))
     .query(async ({ input }) => {

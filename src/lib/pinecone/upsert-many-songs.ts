@@ -1,7 +1,7 @@
 import pLimit from "p-limit";
 import type { UpsertSongParams } from "./upsert-song";
-import { groupLastFmData } from "../ingestion/group-lastfm-data";
 import { buildSongKey } from "../ingestion/sanitise";
+import { groupLastFmData } from "../ingestion/group-lastfm-data";
 import { buildEmbeddingText } from "../ingestion/build-embedding-text";
 import { db } from "~/server/db";
 import { eq, inArray } from "drizzle-orm";
