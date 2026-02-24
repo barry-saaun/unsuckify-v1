@@ -1,7 +1,7 @@
 {
   "name": "unsuckify-v1",
   "version": "0.1.0",
-  "packageManager": "pnpm@10",
+  "packageManager": "pnpm@10.30.2",
   "private": true,
   "type": "module",
   "scripts": {
