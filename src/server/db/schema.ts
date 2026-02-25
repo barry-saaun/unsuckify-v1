@@ -12,7 +12,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { createSelectSchema } from "drizzle-zod";
 
-const embeddingStatusEnum = pgEnum("embedding_status", [
+export const embeddingStatusEnum = pgEnum("embedding_status", [
   "pending",
   "ready",
   "failed",
@@ -98,7 +98,7 @@ export const trackPlaylistStatus = pgTable("track_playlist_status", {
   trackId: integer("trackId").references(() => recommendationTracks.id, {
     onDelete: "cascade",
   }),
-  batchId: integer("batchId").references(() => recommendationTracks.batchId, {
+  batchId: integer("batchId").references(() => recommendationBatches.id, {
     onDelete: "cascade",
   }),
   status: trackStatusEnum("track_status").default("pending"),

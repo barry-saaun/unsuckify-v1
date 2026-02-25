@@ -1,8 +1,18 @@
+CREATE TYPE "public"."embedding_status" AS ENUM('pending', 'ready', 'failed');--> statement-breakpoint
 CREATE TYPE "public"."track_status" AS ENUM('pending', 'added', 'removed', 'failed');--> statement-breakpoint
 CREATE TABLE "allowed-users" (
 	"id" varchar(64) PRIMARY KEY NOT NULL,
 	"email" varchar(255) NOT NULL,
 	CONSTRAINT "allowed-users_email_unique" UNIQUE("email")
+);
+--> statement-breakpoint
+CREATE TABLE "artists" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"name" text NOT NULL,
+	"top_tags" text[] DEFAULT '{}'::text[] NOT NULL,
+	"similar_artists" text[] DEFAULT '{}'::text[] NOT NULL,
+	"last_fetched" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "artists_name_unique" UNIQUE("name")
 );
 --> statement-breakpoint
 CREATE TABLE "rec_batches" (
@@ -20,6 +30,20 @@ CREATE TABLE "rec_tracks" (
 	"album" varchar(255) NOT NULL,
 	"artists" varchar(255) NOT NULL,
 	"year" integer NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "songs" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"song_key" text NOT NULL,
+	"artist" text NOT NULL,
+	"track" text NOT NULL,
+	"album" text DEFAULT 'Unknown' NOT NULL,
+	"embedding_status" "embedding_status" DEFAULT 'pending' NOT NULL,
+	"embedding_text" text,
+	"metadata" jsonb,
+	"created_at" timestamp with time zone DEFAULT now(),
+	"updated_at" timestamp with time zone DEFAULT now(),
+	CONSTRAINT "songs_song_key_unique" UNIQUE("song_key")
 );
 --> statement-breakpoint
 CREATE TABLE "track_playlist_status" (

@@ -12,17 +12,12 @@ import { tryCatch } from "../utils/try-catch";
 import { buildEmbeddingText } from "../ingestion/build-embedding-text";
 import { generateEmbedding } from "../ingestion/generate-embedding";
 import { songsIndex } from "./pinecone";
+import { type UpsertSongResult } from "../music/types";
 
 export interface UpsertSongParams {
   trackInfo: LastFmGetTrackInfoResponse;
   artistTopTags: LastFmArtistTopTagsResponse;
   artistSimilar: LastFmArtistSimilarResponse;
-}
-
-interface UpsertSongResult {
-  songKey: string;
-  status: "updated" | "skipped";
-  usage?: { tokens: number };
 }
 
 async function embedAndIndexSong(
