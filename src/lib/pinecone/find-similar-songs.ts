@@ -31,7 +31,7 @@ interface SimilarSongParams {
 export async function findSimilarSongs({
   playlistSongKeys,
   limit = 20,
-  minScore = 0.6,
+  minScore = 0.4,
 }: SimilarSongParams): Promise<SimilaritySearchResult> {
   const { found, missing } = await fetchSongEmbeddings(playlistSongKeys);
 
@@ -67,7 +67,7 @@ export async function findSimilarSongs({
     if (playlistSet.has(match.id)) continue;
 
     // Exclude low-confidence in matches
-    if (match.score ?? 0 < minScore) continue;
+    if ((match.score ?? 0) < minScore) continue;
 
     const meta = match.metadata ?? {};
 

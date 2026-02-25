@@ -23,7 +23,7 @@ export interface GetRecommendationsResult {
 export async function getRecommendations(
   params: GetRecommendationsParams,
 ): Promise<GetRecommendationsResult> {
-  const { playlist, limit = 20, minScore = 0.6 } = params;
+  const { playlist, limit = 20, minScore = 0.4 } = params;
 
   const songKeys = playlist.map((s) => buildSongKey(s.artist, s.track));
 

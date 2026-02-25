@@ -63,7 +63,12 @@ export async function fetchArtistData(
 
   // --- Cache Hit ---
   const cached = await getCachedArtist(artist);
-  if (cached) return cached;
+
+  if (cached) {
+    console.log(`[artist-cache] HIT for "${artist}"`);
+    return cached;
+  }
+  console.log(`[artist-cache] MISS for "${artist}" — fetching from Last.fm`);
 
   const [topTagsRes, similarRes] = await Promise.all([
     lastFmApi.getArtistTopTags({ artist }),
