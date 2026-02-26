@@ -28,8 +28,10 @@ export const embedPlaylistFunction = inngest.createFunction(
 
     // --- Step 2: Fan out embed jobs for missing songs ---
     if (missing.length > 0) {
+      const missingKeysSet = new Set(missing);
+
       const missingSongs = playlist.filter((s) =>
-        missing.includes(buildSongKey(s.artist, s.track)),
+        missingKeysSet.has(buildSongKey(s.artist, s.track)),
       );
 
       await step.sendEvent(
@@ -49,7 +51,13 @@ export const embedPlaylistFunction = inngest.createFunction(
         missingSongs.map((s) => {
           const songKey = buildSongKey(s.artist, s.track);
 
-          return step.waitForEvent(`wait-for-${songKey}`, {
+          // better log, no need for the entire hash
+          const stepId = `wait-for-${s.artist}-${s.track}-${songKey}`.slice(
+            0,
+            50,
+          );
+
+          return step.waitForEvent(stepId, {
             event: "music/song.embed.completed",
             timeout: "5m",
             if: `async.data.userId == "${userId}" && async.data.songKey == "${songKey}"`,

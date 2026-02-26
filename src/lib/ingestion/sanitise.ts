@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 export function normaliseTags(
   tags: Array<{ name: string; count?: number }>,
 ): string[] {
@@ -25,5 +27,7 @@ export function normaliseArtistName(name: string): string {
 }
 
 export function buildSongKey(artist: string, track: string): string {
-  return `${artist}::${track}`.toLowerCase().replace(/\s+/g, "-");
+  const raw = `${artist}::${track}`.toLowerCase().trim();
+  // Return a deterministic hash (always safe ASCII)
+  return createHash("sha256").update(raw).digest("hex");
 }

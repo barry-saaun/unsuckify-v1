@@ -1,4 +1,4 @@
-import { EmptyResponseBodyError } from "ai";
+import { meta } from "zod";
 import type {
   LastFmArtistSimilarResponse,
   LastFmArtistTopTagsResponse,
@@ -7,6 +7,7 @@ import type {
 import { buildEmbeddingText } from "./build-embedding-text";
 import { generateEmbedding } from "./generate-embedding";
 import { groupLastFmData, type SanatisedMusicData } from "./group-lastfm-data";
+import { buildSongKey } from "./sanitise";
 
 export interface PreparedSong {
   songKey: string;
@@ -25,9 +26,7 @@ export async function prepareSongForEmbedding(params: {
   const embeddingText = buildEmbeddingText(metadata);
 
   // Stable, lowercase key for deduplication + DB lookups
-  const songKey = `${metadata.artist}::${metadata.track}`
-    .toLowerCase()
-    .replace(/\s+/g, "-");
+  const songKey = buildSongKey(metadata.artist, metadata.track);
 
   const { embedding, usage } = await generateEmbedding(embeddingText);
 
