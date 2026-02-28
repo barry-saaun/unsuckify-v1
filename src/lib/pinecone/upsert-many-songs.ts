@@ -31,10 +31,20 @@ const PINECONE_BATCH_SIZE = 100;
 function prepareSongs(rawSongs: SongRawData[]): PreparedSong[] {
   return rawSongs.map((s) => {
     const metadata = groupLastFmData(s);
+
+    const identityArtist = s.identityArtist ?? metadata.artist;
+    const identityTrack = s.identityTrack ?? metadata.track;
+
+    const embeddingMetadata = {
+      ...metadata,
+      artist: identityArtist,
+      track: identityTrack,
+    };
+
     return {
-      metadata,
-      songKey: buildSongKey(metadata.artist, metadata.track),
-      embeddingText: buildEmbeddingText(metadata),
+      metadata: embeddingMetadata,
+      songKey: buildSongKey(identityArtist, identityTrack),
+      embeddingText: buildEmbeddingText(embeddingMetadata),
     };
   });
 }

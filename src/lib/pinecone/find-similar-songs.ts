@@ -1,6 +1,10 @@
+import { db } from "~/server/db";
+import { songs } from "~/server/db/schema";
 import { averageEmbeddings } from "../ingestion/compute-playlist-embedding";
 import { fetchSongEmbeddings } from "./fetch-songs-embeddings";
 import { songsIndex } from "./pinecone";
+import { inArray } from "drizzle-orm";
+import type { SanatisedMusicData } from "../ingestion/group-lastfm-data";
 
 export interface SimilarSong {
   songKey: string;
@@ -31,7 +35,7 @@ interface SimilarSongParams {
 export async function findSimilarSongs({
   playlistSongKeys,
   limit = 20,
-  minScore = 0.4,
+  minScore = 0.6,
 }: SimilarSongParams): Promise<SimilaritySearchResult> {
   const { found, missing } = await fetchSongEmbeddings(playlistSongKeys);
 
@@ -41,6 +45,9 @@ export async function findSimilarSongs({
         "Run upsertSong() for these tracks first.",
     );
   }
+
+  // --- Build playlist tag profile from DB ---
+  const playlistTagSet = await buildPlaylistTagSet(playlistSongKeys);
 
   // --- Build playlist vector ---
   const playlistVector = averageEmbeddings(found.map((f) => f.embedding));
@@ -61,36 +68,73 @@ export async function findSimilarSongs({
   const recommendations: SimilarSong[] = [];
 
   for (const match of queryRes.matches) {
-    if (recommendations.length >= limit) break;
+    if (!match.id || playlistSet.has(match.id)) continue;
 
-    // Exclude songs already in the playlist
-    if (playlistSet.has(match.id)) continue;
-
-    // Exclude low-confidence in matches
-    if ((match.score ?? 0) < minScore) continue;
+    const vectorScore = match.score ?? 0;
+    if (vectorScore < minScore) continue;
 
     const meta = match.metadata ?? {};
+
+    const candidateTrackTags = toStringArray(meta.trackTags);
+    const candidateArtistTags = toStringArray(meta.artistTags);
+
+    const tagOverlapCount =
+      candidateTrackTags.filter((t) => playlistTagSet.has(t.toLowerCase()))
+        .length +
+      candidateArtistTags.filter((t) => playlistTagSet.has(t.toLowerCase()))
+        .length;
+
+    const normalizedTagOverlap =
+      tagOverlapCount /
+      Math.max(candidateTrackTags.length + candidateArtistTags.length, 1);
+
+    const finalScore = 0.8 * vectorScore + 0.2 * normalizedTagOverlap;
 
     recommendations.push({
       songKey: match.id,
       artist: String(meta.artist ?? ""),
       track: String(meta.track ?? ""),
       album: String(meta.album ?? ""),
-      trackTags: toStringArray(meta.trackTags),
-      artistTags: toStringArray(meta.artistTags),
+      trackTags: candidateTrackTags,
+      artistTags: candidateArtistTags,
       similarArtists: toStringArray(meta.similarArtists),
-      score: match.score ?? 0,
+      score: finalScore,
     });
   }
 
+  recommendations.sort((a, b) => b.score - a.score);
+
+  const finalRecs = recommendations.slice(0, limit);
+
   return {
-    recommendations,
+    recommendations: finalRecs,
     playlistCoverage: {
       embedded: found.length,
       total: playlistSongKeys.length,
       missing,
     },
   };
+}
+
+async function buildPlaylistTagSet(songKeys: string[]): Promise<Set<string>> {
+  const rows = await db
+    .select({ metadata: songs.metadata })
+    .from(songs)
+    .where(inArray(songs.songKey, songKeys));
+
+  const tagSet = new Set<string>();
+
+  for (const row of rows) {
+    const meta = row.metadata as SanatisedMusicData;
+
+    const trackTags = toStringArray(meta?.trackTags);
+    const artistTags = toStringArray(meta?.artistTags);
+
+    for (const tag of [...trackTags, ...artistTags]) {
+      tagSet.add(tag.toLowerCase());
+    }
+  }
+  return tagSet;
 }
 
 function toStringArray(value: unknown): string[] {

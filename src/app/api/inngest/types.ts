@@ -3,6 +3,7 @@ export type InngestEvents = {
     data: {
       userId: string;
       playlist: Array<{ artist: string; track: string }>;
+      mode?: "recommend" | "seed";
     };
   };
   "music/song.embed.requested": {

@@ -44,9 +44,19 @@ export const artists = pgTable("artists", {
     .array()
     .default(sql`'{}'::text[]`)
     .notNull(),
+  // Cached, structured Last.fm tag objects (preserves counts)
+  topTagsData: jsonb("top_tags_data")
+    .$type<Array<{ name: string; count: number; url?: string }>>()
+    .default(sql`'[]'::jsonb`)
+    .notNull(),
   similarArtists: text("similar_artists")
     .array()
     .default(sql`'{}'::text[]`)
+    .notNull(),
+  // Cached, structured Last.fm similar artist objects (preserves match score)
+  similarArtistsData: jsonb("similar_artists_data")
+    .$type<Array<{ name: string; match?: string; url?: string }>>()
+    .default(sql`'[]'::jsonb`)
     .notNull(),
   lastFetched: timestamp("last_fetched", { withTimezone: true })
     .default(sql`now()`)

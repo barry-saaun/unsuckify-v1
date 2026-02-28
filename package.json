@@ -7,6 +7,8 @@
     "build": "next build",
     "check": "next lint && tsc --noEmit",
     "dev": "next dev --turbo",
+    "server:seed": "npx tsx src/lib/music/seed/trigger-ingestion.ts",
+    "server:inngest": "npx --ignore-scripts=false inngest-cli@latest dev",
     "db:generate": "NODE_ENV=development drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",

@@ -3,21 +3,28 @@ import type { InngestEvents } from "../types";
 import { buildSongKey } from "~/lib/ingestion/sanitise";
 import { fetchSongEmbeddings } from "~/lib/pinecone/fetch-songs-embeddings";
 import { findSimilarSongs } from "~/lib/pinecone/find-similar-songs";
+
 export const embedPlaylistFunction = inngest.createFunction(
   {
     id: "embed-playlist",
     name: "Embed Playlist & Get Recommendations",
-    concurrency: {
-      limit: 1,
-      key: "event.data.userId",
-    },
+    concurrency: [
+      {
+        limit: 1,
+        key: "event.data.userId",
+      },
+      {
+        limit: 5,
+        scope: "fn",
+      },
+    ],
     retries: 2,
   },
   {
     event: "music/playlist.embed.requested" satisfies keyof InngestEvents,
   },
   async ({ event, step }) => {
-    const { playlist, userId } = event.data;
+    const { playlist, userId, mode } = event.data;
 
     const songKeys = playlist.map((s) => buildSongKey(s.artist, s.track));
 
@@ -46,24 +53,58 @@ export const embedPlaylistFunction = inngest.createFunction(
         })),
       );
 
-      // --- Step 3: Wait for each missing song to complete individually ---
-      await Promise.all(
-        missingSongs.map((s) => {
-          const songKey = buildSongKey(s.artist, s.track);
+      // ============================
+      // SEED MODE -> STOP HERE
+      // ============================
+      if (mode === "seed") {
+        return {
+          userId,
+          status: "seeded",
+          total: songKeys.length,
+          missing,
+        };
+      }
 
-          // better log, no need for the entire hash
-          const stepId = `wait-for-${s.artist}-${s.track}-${songKey}`.slice(
-            0,
-            50,
-          );
+      // ============================
+      // RECOMMEND MODE -> SHORT WAIT BUDGET (FOR BETTER UX)
+      // ============================
 
-          return step.waitForEvent(stepId, {
-            event: "music/song.embed.completed",
-            timeout: "5m",
-            if: `async.data.userId == "${userId}" && async.data.songKey == "${songKey}"`,
-          });
-        }),
-      );
+      if (missing.length > 0) {
+        const missingKeySets = new Set(missing);
+
+        const missingSongs = playlist.filter((s) =>
+          missingKeySets.has(buildSongKey(s.artist, s.track)),
+        );
+
+        // short 5s wait budget
+        await Promise.allSettled(
+          missingSongs.map((s) => {
+            const songKey = buildSongKey(s.artist, s.track);
+
+            // Not using the song key for better logging identification
+            const stepId = `wait-for-${s.track} - ${s.artist}`;
+
+            return step.waitForEvent(stepId, {
+              event: "music/song.embed.completed",
+              timeout: "5s",
+              if: `async.data.userId == "${userId}" && async.data.songKey == "${songKey}"`,
+            });
+          }),
+        );
+      }
+    }
+
+    // --- Re-fetch embeddings after short waits ---
+    const { found: updatedFound } = await step.run("refetch-embeddings", () =>
+      fetchSongEmbeddings(songKeys),
+    );
+
+    if (updatedFound.length < 3) {
+      return {
+        userId,
+        status: "warming-up",
+        embedded: updatedFound.length,
+      };
     }
 
     // --- Step 4: Run similarity search ---
@@ -75,6 +116,11 @@ export const embedPlaylistFunction = inngest.createFunction(
       }),
     );
 
-    return { userId, recommendations };
+    return {
+      userId,
+      recommendations,
+      status: "ready",
+      embedded: updatedFound.length,
+    };
   },
 );
