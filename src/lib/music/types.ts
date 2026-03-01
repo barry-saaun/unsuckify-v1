@@ -1,23 +1,23 @@
 export interface LastFmGetTrackInfoResponse {
-  track: {
-    name: string;
+  track?: {
+    name?: string;
     duration?: string;
     listeners?: string;
     playcount?: string;
-    artist: {
-      name: string;
+    artist?: {
+      name?: string;
       mbid?: string;
       url?: string;
     };
     album?: {
       artist?: string;
-      title: string;
+      title?: string;
       mbid?: string;
       url?: string;
     };
     toptags?: {
-      tag: Array<{
-        name: string;
+      tag?: Array<{
+        name?: string;
         url?: string;
       }>;
     };
@@ -30,19 +30,19 @@ export interface LastFmGetTrackInfoResponse {
 }
 
 export interface LastFmArtistTopTagsResponse {
-  toptags: {
-    tag: Array<{
-      name: string;
-      count: number;
+  toptags?: {
+    tag?: Array<{
+      name?: string;
+      count?: number;
       url?: string;
     }>;
   };
 }
 
 export interface LastFmArtistSimilarResponse {
-  similarartists: {
-    artist: Array<{
-      name: string;
+  similarartists?: {
+    artist?: Array<{
+      name?: string;
       match?: string;
       url?: string;
     }>;

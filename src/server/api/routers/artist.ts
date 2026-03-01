@@ -24,7 +24,7 @@ export const artistRouter = createTRPCRouter({
       );
 
       if (
-        data?.similarartists.artist &&
+        data?.similarartists?.artist &&
         typeof data.similarartists.artist === "object"
       ) {
         return data.similarartists.artist;

@@ -1,12 +1,14 @@
 import { createHash } from "node:crypto";
 
 export function normaliseTags(
-  tags: Array<{ name: string; count?: number }>,
+  tags: Array<{ name?: string; count?: number }>,
 ): string[] {
   const seen = new Set<string>();
   const normalized: string[] = [];
 
   for (const tag of tags) {
+    if (!tag.name) continue;
+
     const clean = tag.name
       .toLowerCase()
       .replace(/[^a-z0-9\s]/g, "")

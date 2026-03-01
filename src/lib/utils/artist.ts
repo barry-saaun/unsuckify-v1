@@ -116,11 +116,13 @@ export async function fetchArtistData(
 }
 
 function normaliseTagObjects(
-  tags: Array<{ name: string; count?: number; url?: string }>,
+  tags: Array<{ name?: string; count?: number; url?: string }>,
 ): Array<{ name: string; count: number; url?: string }> {
   const seen = new Map<string, { name: string; count: number; url?: string }>();
 
   for (const tag of tags) {
+    if (!tag.name) continue;
+
     const [clean] = normaliseTags([{ name: tag.name }]);
     if (!clean) continue;
 
@@ -140,7 +142,7 @@ function normaliseTagObjects(
 }
 
 function normaliseSimilarArtistObjects(
-  artistsInput: Array<{ name: string; match?: string; url?: string }>,
+  artistsInput: Array<{ name?: string; match?: string; url?: string }>,
 ): Array<{ name: string; match?: string; url?: string }> {
   const seen = new Map<
     string,
@@ -148,6 +150,8 @@ function normaliseSimilarArtistObjects(
   >();
 
   for (const a of artistsInput) {
+    if (!a.name) continue;
+
     const name = normaliseArtistName(a.name);
     if (!name) continue;
 
