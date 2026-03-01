@@ -88,19 +88,23 @@ export async function fetchLastFmData(artist: string, track: string) {
 
   const artistTopTags: LastFmArtistTopTagsResponse = {
     toptags: {
-      tag: artistData.topTags.map((name) => ({ name, count: 0, url: "" })),
+      tag: artistData.topTags,
     },
   };
 
   const artistSimilar: LastFmArtistSimilarResponse = {
     similarartists: {
-      artist: artistData.similarArtists.map((name) => ({
-        name,
-        match: "1",
-        url: "",
-      })),
+      artist: artistData.similarArtists,
     },
   };
 
-  return { trackInfo, artistTopTags, artistSimilar };
+  // Preserve the input identity (Spotify-derived in our pipeline) so downstream
+  // keying/DB rows stay consistent even if Last.fm returns a corrected name.
+  return {
+    identityArtist: artist,
+    identityTrack: track,
+    trackInfo,
+    artistTopTags,
+    artistSimilar,
+  };
 }

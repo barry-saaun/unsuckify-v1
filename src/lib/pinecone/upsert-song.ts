@@ -12,28 +12,32 @@ import { tryCatch } from "../utils/try-catch";
 import { buildEmbeddingText } from "../ingestion/build-embedding-text";
 import { generateEmbedding } from "../ingestion/generate-embedding";
 import { songsIndex } from "./pinecone";
+import { type UpsertSongResult } from "../music/types";
 
 export interface UpsertSongParams {
+  // Spotify-derived identity used for consistent keying.
+  // If omitted, we fall back to Last.fm track info values.
+  identityArtist?: string;
+  identityTrack?: string;
   trackInfo: LastFmGetTrackInfoResponse;
   artistTopTags: LastFmArtistTopTagsResponse;
   artistSimilar: LastFmArtistSimilarResponse;
 }
 
-interface UpsertSongResult {
-  songKey: string;
-  status: "updated" | "skipped";
-  usage?: { tokens: number };
-}
-
 async function embedAndIndexSong(
   songKey: string,
   metadata: ReturnType<typeof groupLastFmData>,
+  identity?: { artist: string; track: string },
 ) {
-  const embeddingText = buildEmbeddingText(metadata);
+  const embeddingMetadata = identity
+    ? { ...metadata, artist: identity.artist, track: identity.track }
+    : metadata;
+
+  const embeddingText = buildEmbeddingText(embeddingMetadata);
   const { embedding, usage } = await generateEmbedding(embeddingText);
 
   const { track, artist, album, trackTags, artistTags, similarArtists } =
-    metadata;
+    embeddingMetadata;
 
   await songsIndex.upsert({
     records: [
@@ -57,7 +61,7 @@ async function embedAndIndexSong(
     .set({
       embeddingStatus: "ready",
       embeddingText,
-      metadata,
+      metadata: embeddingMetadata,
       updatedAt: new Date(),
     })
     .where(eq(songs.songKey, songKey));
@@ -69,7 +73,11 @@ export async function upsertSong(
   params: UpsertSongParams,
 ): Promise<UpsertSongResult> {
   const metadata = groupLastFmData(params);
-  const songKey = buildSongKey(metadata.artist, metadata.track);
+
+  const identityArtist = params.identityArtist ?? metadata.artist;
+  const identityTrack = params.identityTrack ?? metadata.track;
+
+  const songKey = buildSongKey(identityArtist, identityTrack);
 
   // --- Check if already embedded ---
   const { data: existing, error: fetchError } = await tryCatch(
@@ -92,11 +100,11 @@ export async function upsertSong(
       .insert(songs)
       .values({
         songKey,
-        artist: metadata.artist,
-        track: metadata.track,
+        artist: identityArtist,
+        track: identityTrack,
         album: metadata.album,
         embeddingStatus: "pending",
-        metadata,
+        metadata: { ...metadata, artist: identityArtist, track: identityTrack },
       })
       .onConflictDoUpdate({
         target: songs.songKey,
@@ -111,7 +119,10 @@ export async function upsertSong(
 
   // --- Embed and index ---
   const { data: embedResult, error: embedError } = await tryCatch(
-    embedAndIndexSong(songKey, metadata),
+    embedAndIndexSong(songKey, metadata, {
+      artist: identityArtist,
+      track: identityTrack,
+    }),
   );
 
   // Mark as failed

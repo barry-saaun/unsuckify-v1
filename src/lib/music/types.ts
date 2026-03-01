@@ -48,3 +48,11 @@ export interface LastFmArtistSimilarResponse {
     }>;
   };
 }
+
+export type SongEmbeddingResultStatus = "updated" | "skipped";
+
+export interface UpsertSongResult {
+  songKey: string;
+  status: SongEmbeddingResultStatus;
+  usage?: { tokens: number };
+}

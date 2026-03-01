@@ -1,6 +1,6 @@
 "use client";
 import { skipToken } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import MyPlaylistsTabContent from "~/components/my-playlists-tab-content";
 import PublicPlaylistTabContent from "~/components/public-playlist-tab-content";
 import Spinner from "~/components/spinner";
@@ -10,27 +10,6 @@ import { api } from "~/trpc/react";
 import { motion } from "framer-motion";
 import { cn } from "~/lib/utils";
 import { Sparkles, Music, Link2 } from "lucide-react";
-import { Button } from "~/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "~/components/ui/card";
-import { Input } from "~/components/ui/input";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "~/components/ui/form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { useRouter } from "next/navigation";
-import { useAppToast } from "~/hooks/useAppToast";
 
 type TabStates = "my-playlists" | "public-playlist";
 
@@ -50,10 +29,10 @@ function Dashboard() {
   // Unified loading state
   if (isUserIdLoading || !userId || isUserAllowedLoading) {
     return (
-      <div className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-zinc-50 to-zinc-100 dark:from-zinc-900 dark:to-zinc-800">
+      <div className="flex min-h-screen w-full items-center justify-center bg-linear-to-br from-zinc-50 to-zinc-100 dark:from-zinc-900 dark:to-zinc-800">
         <div className="space-y-4 text-center">
           <div className="relative flex items-center justify-center">
-            <div className="absolute inset-0 top-0 left-0 animate-pulse rounded-full bg-gradient-to-r from-green-400 to-blue-500 opacity-20 blur-xl"></div>
+            <div className="absolute inset-0 top-0 left-0 animate-pulse rounded-full bg-linear-to-r from-green-400 to-blue-500 opacity-20 blur-xl"></div>
 
             <Spinner extraCN="h-12 w-12 top-0 left-0 text-zinc-600 dark:text-zinc-400" />
           </div>
@@ -71,7 +50,7 @@ function Dashboard() {
       </div>
     );
   }
-  if (isUserAllowed === false) {
+  if (!isUserAllowed) {
     return <UserNotAllowedAlertDialog />;
   }
 
@@ -85,7 +64,7 @@ function Dashboard() {
             transition={{ duration: 0.5 }}
             className="flex items-center space-x-3"
           >
-            <h1 className="bg-gradient-to-r from-zinc-900 to-zinc-600 bg-clip-text text-4xl font-bold text-transparent dark:from-white dark:to-zinc-300">
+            <h1 className="bg-linear-to-r from-zinc-900 to-zinc-600 bg-clip-text text-4xl font-bold text-transparent dark:from-white dark:to-zinc-300">
               {tabValue === "my-playlists" ? "Your Library" : "Discover"}
             </h1>
             <motion.div
