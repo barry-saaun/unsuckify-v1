@@ -17,6 +17,11 @@ export interface UpsertSongParams {
   trackInfo: LastFmGetTrackInfoResponse;
   artistTopTags: LastFmArtistTopTagsResponse;
   artistSimilar: LastFmArtistSimilarResponse;
+  // Optional identity overrides for consistent keying.
+  // If provided, the songKey will be built from these instead of Last.fm metadata.
+  // This ensures the key matches the original playlist identity.
+  identityArtist?: string;
+  identityTrack?: string;
 }
 
 interface UpsertSongResult {
@@ -69,7 +74,12 @@ export async function upsertSong(
   params: UpsertSongParams,
 ): Promise<UpsertSongResult> {
   const metadata = groupLastFmData(params);
-  const songKey = buildSongKey(metadata.artist, metadata.track);
+
+  // Build songKey from identity if provided (for consistent keying with playlist).
+  // Otherwise fall back to Last.fm-normalized values.
+  const identityArtist = params.identityArtist ?? metadata.artist;
+  const identityTrack = params.identityTrack ?? metadata.track;
+  const songKey = buildSongKey(identityArtist, identityTrack);
 
   // --- Check if already embedded ---
   const { data: existing, error: fetchError } = await tryCatch(
