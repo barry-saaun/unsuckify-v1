@@ -1,8 +1,8 @@
 {
   "name": "unsuckify-v1",
   "version": "0.1.0",
-  "private": true,
   "packageManager": "pnpm@10.30.2",
+  "private": true,
   "type": "module",
   "scripts": {
     "build": "next build",
@@ -46,7 +46,7 @@
     "@trpc/react-query": "^11.8.1",
     "@trpc/server": "^11.8.1",
     "@types/spotify-api": "^0.0.25",
-    "ai": "^6.0.6",
+    "ai": "^6.0.99",
     "axios": "^1.13.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
