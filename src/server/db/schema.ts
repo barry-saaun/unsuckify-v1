@@ -16,6 +16,7 @@ export const embeddingStatusEnum = pgEnum("embedding_status", [
   "pending",
   "ready",
   "failed",
+  "no_metadata",
 ]);
 // Source of truth for song identity and metadata
 export const songs = pgTable("songs", {

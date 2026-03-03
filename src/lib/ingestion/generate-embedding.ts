@@ -5,14 +5,14 @@ const EMBEDDING_MODEL = openRouterApi.getEmbeddingModel(
   "openai/text-embedding-3-small",
 );
 
-export interface EmbeddingResult {
+export interface VectorEmbeddingResult {
   embedding: number[];
   usage: { tokens: number };
 }
 
 export async function generateEmbedding(
   text: string,
-): Promise<EmbeddingResult> {
+): Promise<VectorEmbeddingResult> {
   const { embedding, usage } = await embed({
     model: EMBEDDING_MODEL,
     value: text,
@@ -29,7 +29,7 @@ export async function generateEmbedding(
  * */
 export async function generateEmbeddings(
   texts: string[],
-): Promise<EmbeddingResult[]> {
+): Promise<VectorEmbeddingResult[]> {
   const { embeddings, usage } = await embedMany({
     model: EMBEDDING_MODEL,
     values: texts,

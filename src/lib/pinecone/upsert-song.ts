@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, notInArray } from "drizzle-orm";
 import { db } from "~/server/db";
 import { groupLastFmData } from "../ingestion/group-lastfm-data";
 import { buildSongKey } from "../ingestion/sanitise";
@@ -12,9 +12,9 @@ import { tryCatch } from "../utils/try-catch";
 import { buildEmbeddingText } from "../ingestion/build-embedding-text";
 import { generateEmbedding } from "../ingestion/generate-embedding";
 import { songsIndex } from "./pinecone";
-import { type UpsertSongResult } from "../music/types";
+import { type EmbedJobResult } from "../music/types";
 
-export interface UpsertSongParams {
+export interface EmbedJobParams {
   // Spotify-derived identity used for consistent keying.
   // If omitted, we fall back to Last.fm track info values.
   identityArtist?: string;
@@ -70,29 +70,15 @@ async function embedAndIndexSong(
 }
 
 export async function upsertSong(
-  params: UpsertSongParams,
-): Promise<UpsertSongResult> {
+  userId: string,
+  params: EmbedJobParams,
+): Promise<EmbedJobResult> {
   const metadata = groupLastFmData(params);
 
   const identityArtist = params.identityArtist ?? metadata.artist;
   const identityTrack = params.identityTrack ?? metadata.track;
 
   const songKey = buildSongKey(identityArtist, identityTrack);
-
-  // --- Check if already embedded ---
-  const { data: existing, error: fetchError } = await tryCatch(
-    db
-      .select({ embeddingStatus: songs.embeddingStatus })
-      .from(songs)
-      .where(eq(songs.songKey, songKey))
-      .limit(1),
-  );
-
-  if (fetchError) throw fetchError;
-
-  if (existing[0]?.embeddingStatus === "ready") {
-    return { songKey, status: "skipped" };
-  }
 
   // --- Mark as pending in Postgres (or insert if new) ---
   const { error: pendingError } = await tryCatch(
@@ -112,6 +98,7 @@ export async function upsertSong(
           embeddingStatus: "pending",
           updatedAt: new Date(),
         },
+        setWhere: notInArray(songs.embeddingStatus, ["ready", "no_metadata"]),
       }),
   );
 
@@ -134,5 +121,5 @@ export async function upsertSong(
     throw embedError;
   }
 
-  return { songKey, status: "updated", usage: embedResult?.usage };
+  return { songKey, outcome: "embedded", userId, usage: embedResult?.usage };
 }

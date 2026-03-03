@@ -1,5 +1,5 @@
 import pLimit from "p-limit";
-import type { UpsertSongParams } from "./upsert-song";
+import type { EmbedJobParams } from "./upsert-song";
 import { buildSongKey } from "../ingestion/sanitise";
 import { groupLastFmData } from "../ingestion/group-lastfm-data";
 import { buildEmbeddingText } from "../ingestion/build-embedding-text";
@@ -10,7 +10,7 @@ import { tryCatch } from "../utils/try-catch";
 import { generateEmbeddings } from "../ingestion/generate-embedding";
 import { songsIndex } from "./pinecone";
 
-interface SongRawData extends UpsertSongParams {}
+interface SongRawData extends EmbedJobParams {}
 
 interface BatchUpsertResult {
   upserted: string[];

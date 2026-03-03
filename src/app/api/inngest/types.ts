@@ -1,3 +1,5 @@
+import type { EmbedJobResult } from "~/lib/music/types";
+
 export type InngestEvents = {
   "music/playlist.embed.requested": {
     data: {
@@ -15,10 +17,6 @@ export type InngestEvents = {
   };
 
   "music/song.embed.completed": {
-    data: {
-      userId: string;
-      songKey: string;
-      status: "skipped" | "updated";
-    };
+    data: EmbedJobResult;
   };
 };

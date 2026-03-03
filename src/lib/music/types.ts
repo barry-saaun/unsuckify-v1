@@ -49,10 +49,28 @@ export interface LastFmArtistSimilarResponse {
   };
 }
 
-export type SongEmbeddingResultStatus = "updated" | "skipped";
+type EmbedJobSkipReason =
+  | "not_found_on_lastfm"
+  | "no_metadata"
+  | "error"
+  | "pre_ready";
 
-export interface UpsertSongResult {
-  songKey: string;
-  status: SongEmbeddingResultStatus;
-  usage?: { tokens: number };
-}
+export type EmbedJobResult =
+  | {
+      songKey: string;
+      userId: string;
+      outcome: "embedded";
+      usage?: { tokens: number };
+    }
+  | {
+      songKey: string;
+      userId: string;
+      outcome: "skipped";
+      reason: EmbedJobSkipReason;
+    };
+
+export type EmbeddingCheckResult =
+  | {
+      skip: false;
+    }
+  | { skip: true; result: EmbedJobResult };
