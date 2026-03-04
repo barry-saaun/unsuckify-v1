@@ -14,9 +14,13 @@ export const authRouter = createTRPCRouter({
       return { isAuthenticated: false };
     }
 
-    await spotifyApi.getCurrentUsersProfile();
+    try {
+      await spotifyApi.getCurrentUsersProfile();
+    } catch {
+      return { isAuthenticated: false };
+    }
 
-    return { isAuthenticated };
+    return { isAuthenticated: true };
   }),
 
   logout: publicProcedure.mutation(async () => {
