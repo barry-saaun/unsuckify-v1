@@ -37,7 +37,7 @@ export default function RootLayout({
             <UserProvider>
               <NextThemeProvider
                 attribute="class"
-                defaultTheme="system"
+                defaultTheme="light"
                 enableSystem
                 disableTransitionOnChange
               >
