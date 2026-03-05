@@ -22,16 +22,18 @@ export default function UserNotAllowedAlertDialog() {
     <AlertDialog open>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Access Denied</AlertDialogTitle>
-          <AlertDialogDescription>
-            We&apos;re sorry, since the Spotify API limits the number of users,
-            you are not authorised. Please contact support to be added into the
-            list of test users.
-          </AlertDialogDescription>
+          <AlertDialogTitle>/ Access Denied</AlertDialogTitle>
         </AlertDialogHeader>
+        <AlertDialogDescription className="px-6 py-5 text-sm text-black/60 dark:text-white/60">
+          This app is currently awaiting Spotify production approval. Access is
+          limited to approved accounts during review.
+          <br />
+          <br />
+          Check the project README for demo.
+        </AlertDialogDescription>
         <AlertDialogFooter>
           <AlertDialogAction onClick={handleDialogAction}>
-            Return to Homepage
+            Return to Homepage →
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

@@ -1,7 +1,5 @@
 "use client";
 import { Icons, Spinner } from "~/components/Icons";
-import { Button } from "~/components/ui/button";
-import { ChevronLeft } from "lucide-react";
 import { useState } from "react";
 
 const LoginPage = () => {
@@ -17,34 +15,60 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="flex min-h-[100vh] w-full flex-col items-center justify-center">
-      <Button onClick={handleGoBack} className="absolute top-20 left-10 flex">
-        <ChevronLeft />
-        <span className="font-medium">Back</span>
-      </Button>
-      <div className="mx-auto flex w-3/4 flex-col justify-center space-y-6 sm:w-[350px] md:w-1/2">
-        <div className="flex flex-col space-y-2 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Welcome to UNSUCKify
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            Log in with your Spotify acccount to get started
+    <div className="flex h-full w-full flex-col bg-white font-mono dark:bg-black">
+      {/* Top bar */}
+      <div className="flex items-center justify-between border-b border-black px-6 py-4 dark:border-white">
+        <button
+          onClick={handleGoBack}
+          className="text-xs tracking-widest text-black uppercase transition-opacity hover:opacity-60 dark:text-white"
+        >
+          ← Back
+        </button>
+        <span className="text-xs tracking-widest text-black/40 uppercase dark:text-white/40">
+          / Login
+        </span>
+      </div>
+
+      {/* Main content */}
+      <div className="flex flex-1 flex-col items-center justify-center px-6 py-16">
+        <div className="w-full max-w-sm">
+          {/* Title block */}
+          <div className="mb-0 border border-black p-8 dark:border-white">
+            <p className="mb-4 text-xs tracking-widest text-black/40 uppercase dark:text-white/40">
+              / UNSUCKify
+            </p>
+            <h1 className="mb-4 text-4xl leading-none font-bold tracking-tight text-black dark:text-white">
+              FIX YOUR
+              <br />
+              PLAYLISTS.
+            </h1>
+            <p className="text-sm leading-relaxed text-black/60 dark:text-white/60">
+              Stop listening to the same 40 songs. Connect your Spotify and get
+              recommendations that don&apos;t suck.
+            </p>
+          </div>
+
+          {/* Login button */}
+          <button
+            onClick={handleLogin}
+            disabled={isLoading}
+            className="flex w-full items-center justify-center gap-3 border border-t-0 border-black bg-black px-6 py-4 text-sm font-bold tracking-widest text-white uppercase transition-opacity hover:opacity-80 disabled:opacity-40 dark:border-white dark:bg-white dark:text-black"
+          >
+            {isLoading ? (
+              <Spinner size={18} />
+            ) : (
+              <>
+                <Icons.spotify className="h-4 w-4 fill-current" />
+                <span>Continue with Spotify</span>
+              </>
+            )}
+          </button>
+
+          {/* Footer note */}
+          <p className="mt-4 text-center text-xs tracking-wider text-black/40 uppercase dark:text-white/40">
+            Playlist access only. No data stored.
           </p>
         </div>
-        <Button
-          className="flex flex-row gap-2 rounded-md bg-[#1DB954] px-4 py-2 font-semibold text-white shadow-md hover:bg-[#1aa34a] dark:bg-[#1DB954] dark:shadow-none"
-          onClick={handleLogin}
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <Spinner />
-          ) : (
-            <>
-              <Icons.spotify />
-              <p>Log in with Spotify</p>
-            </>
-          )}
-        </Button>
       </div>
     </div>
   );

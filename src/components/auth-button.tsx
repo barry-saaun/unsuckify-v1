@@ -1,5 +1,4 @@
 import { useRouter } from "next/navigation";
-import { Button } from "./ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -69,7 +68,7 @@ const AuthButton = () => {
 
   if (isLoading || isLoggingOut) {
     return (
-      <div className="bg-muted mx-2 flex h-10 w-10 items-center justify-center rounded-full">
+      <div className="flex h-12 w-12 items-center justify-center">
         <Spinner />
       </div>
     );
@@ -86,52 +85,51 @@ const AuthButton = () => {
   }
 
   return (
-    <div className={cn(isAuthenticated && userInfo ? "mx-2" : "")}>
+    <div className={cn(isAuthenticated && userInfo ? "pl-0" : "")}>
       {isAuthenticated && userInfo ? (
         <DropdownMenu>
-          <DropdownMenuTrigger
-            asChild
-            className="h-9 w-9"
-            disabled={isLoggingOut}
-          >
-            <Button
-              variant="outline"
-              className="rounded-full ring-2 ring-purple-100 dark:ring-purple-700"
-            >
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={userInfo?.images?.[0]?.url} />
-                <AvatarFallback>
+          <DropdownMenuTrigger asChild disabled={isLoggingOut}>
+            <button className="flex h-12 w-12 items-center justify-center transition-opacity hover:opacity-60 focus:outline-none">
+              <Avatar className="h-7 w-7 rounded-none">
+                <AvatarImage
+                  src={userInfo?.images?.[0]?.url}
+                  className="rounded-none"
+                />
+                <AvatarFallback className="rounded-none bg-black font-mono text-xs font-bold text-white dark:bg-white dark:text-black">
                   {getInitials(userInfo?.display_name ?? "")}
                 </AvatarFallback>
               </Avatar>
-            </Button>
+            </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem className="px-2">
+          <DropdownMenuContent
+            align="end"
+            className="min-w-48 rounded-none border-black font-mono dark:border-white"
+          >
+            <DropdownMenuItem className="rounded-none px-3 py-2 focus:bg-black focus:text-white dark:focus:bg-white dark:focus:text-black">
               <div
-                className="flex cursor-pointer items-center justify-between gap-10"
+                className="flex w-full cursor-pointer items-center justify-between gap-10"
                 onClick={() =>
                   window.open(`https://open.spotify.com/user/${userInfo?.id}`)
                 }
               >
                 <div className="flex flex-col space-y-[2px]">
-                  <h1 className="text-base font-bold tracking-tight">
+                  <span className="text-sm font-bold tracking-wide uppercase">
                     {userInfo?.display_name}
-                  </h1>
-                  <span className="text-gray-500 dark:text-gray-400">
+                  </span>
+                  <span className="text-xs text-black/50 dark:text-white/50">
                     {userInfo?.email}
                   </span>
                 </div>
-                <UserRound className="h-4 w-4 opacity-50" />
+                <UserRound className="h-3 w-3 opacity-40" />
               </div>
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator className="bg-black/20 dark:bg-white/20" />
             <DropdownMenuItem
-              className="text-red-600 focus:bg-red-50 focus:text-red-600"
+              className="rounded-none px-3 py-2 text-xs tracking-widest uppercase focus:bg-black focus:text-white dark:focus:bg-white dark:focus:text-black"
               onClick={handleLogout}
               disabled={isLoggingOut}
             >
-              <LogOutIcon className="mr-2 h-4 w-4" />
+              <LogOutIcon className="mr-2 h-3 w-3" />
               <span>{isLoggingOut ? "Logging out..." : "Log out"}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>

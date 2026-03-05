@@ -36,79 +36,75 @@ function PublicPlaylistTabContent() {
       if (playlistId) {
         router.push(`/dashboard/${playlistId}`);
       }
-    } catch (error) {
+    } catch {
       toastError("Something went wrong");
     } finally {
       setIsLoading(false);
     }
   };
 
-  return (
-    <div className="mx-auto w-full max-w-2xl">
-      <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-zinc-900/50 to-zinc-800/50 p-8 shadow-2xl backdrop-blur-sm">
-        <div className="mb-6">
-          <h2 className="text-bold mb-2 text-3xl font-medium">
-            Discover new music
-          </h2>
-          <p className="text-lg text-zinc-400">
-            Paste a Spotify playlist URL and let us find similar tracks you'll
-            love
-          </p>
-        </div>
+  const valid = isValidSpotifyUrl(url);
+  const canSubmit = !isLoading && !!url.trim() && valid;
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+  return (
+    <div className="flex h-full items-center justify-center px-6 py-16">
+      <div className="w-full max-w-lg font-mono">
+        {/* Label */}
+        <p className="mb-6 text-xs tracking-widest text-black/40 uppercase dark:text-white/40">
+          / Paste a public Spotify playlist URL
+        </p>
+
+        {/* Title */}
+        <h2 className="mb-8 text-3xl font-bold tracking-tight text-black uppercase dark:text-white">
+          Find Similar
+          <br />
+          Tracks.
+        </h2>
+
+        <form onSubmit={handleSubmit}>
+          {/* Input */}
           <div className="relative">
-            <div className="absolute top-1/2 left-4 -translate-y-1/2">
-              <svg
-                className={cn(
-                  "h-5 w-5 transition-colors duration-200",
-                  isValidSpotifyUrl(url) ? "text-green-500" : "text-zinc-500",
-                )}
-                fill="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-              </svg>
-            </div>
             <input
               type="url"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="https://open.spotify.com/playlist/..."
-              className={cn(
-                "w-full rounded-xl border border-white/10 bg-zinc-800/50 py-4 pr-4 pl-12 text-white placeholder-zinc-500 transition-all duration-200 focus:ring-1 focus:outline-none",
-                {
-                  "focus:border-green-500 focus:ring-green-500":
-                    isValidSpotifyUrl(url),
-                  "focus:border-red-500 focus:ring-red-500":
-                    !isValidSpotifyUrl(url),
-                },
-              )}
               disabled={isLoading}
+              className={cn(
+                "w-full border border-black bg-white px-4 py-4 text-sm text-black placeholder-black/30 focus:outline-none dark:border-white dark:bg-black dark:text-white dark:placeholder-white/30",
+                url.trim() && !valid && "border-red-600 dark:border-red-500",
+                valid && "border-black dark:border-white",
+              )}
             />
+            {/* Validation tick */}
+            {valid && (
+              <span className="absolute top-1/2 right-4 -translate-y-1/2 text-xs tracking-widest text-black/40 uppercase dark:text-white/40">
+                ✓
+              </span>
+            )}
           </div>
 
+          {/* Error hint */}
+          {url.trim() && !valid && (
+            <p className="mt-2 text-xs tracking-widest text-red-600 uppercase dark:text-red-500">
+              Invalid Spotify playlist URL
+            </p>
+          )}
+
+          {/* Submit */}
           <button
             type="submit"
-            disabled={isLoading || !url.trim() || !isValidSpotifyUrl(url)}
-            className="w-full transform rounded-xl bg-green-600 py-4 font-medium text-white transition-all duration-200 hover:scale-[1.02] hover:bg-green-500 disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-500 disabled:hover:scale-100"
+            disabled={!canSubmit}
+            className="mt-0 w-full border border-t-0 border-black bg-black py-4 text-sm font-bold tracking-widest text-white uppercase transition-opacity hover:opacity-80 disabled:opacity-30 dark:border-white dark:bg-white dark:text-black"
           >
-            {isLoading ? (
-              <div className="flex items-center justify-center space-x-2">
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                <span>Finding tracks...</span>
-              </div>
-            ) : (
-              "Find similar tracks"
-            )}
+            {isLoading ? "Finding tracks..." : "Find similar tracks →"}
           </button>
         </form>
 
-        <div className="mt-6 border-t border-white/10 pt-6">
-          <p className="text-center text-sm text-zinc-500">
-            Works with any public Spotify playlist
-          </p>
-        </div>
+        {/* Footer */}
+        <p className="mt-6 text-xs tracking-widest text-black/30 uppercase dark:text-white/30">
+          Works with any public Spotify playlist
+        </p>
       </div>
     </div>
   );

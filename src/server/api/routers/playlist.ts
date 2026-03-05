@@ -25,7 +25,7 @@ export const playlistRouter = createTRPCRouter({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message:
-            "It looks like the Spotify Playlist ID you provide might be invalid or the playlist doesn&apos;t exist.\n Please double-check the ID and try again.",
+            "The Spotify playlist ID is invalid or the playlist does not exist.",
           cause: res.error,
         });
       }
@@ -48,7 +48,7 @@ export const playlistRouter = createTRPCRouter({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message:
-            "It looks like the Spotify Playlist ID you provide might be invalid or the playlist doesn&apos;t exist.\n Please double-check the ID and try again.",
+            "The Spotify playlist ID is invalid or the playlist does not exist.",
           cause: res.error,
         });
       }

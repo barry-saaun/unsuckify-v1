@@ -1,73 +1,94 @@
 "use client";
-import { motion } from "framer-motion";
-import { HeroHighlight, Highlight } from "~/components/ui/hero-highlight";
 import useIsAuthenticated from "~/hooks/useIsAuthenticated";
 import Link from "next/link";
-import { HoverBorderGradient } from "./hover-border-gradient";
-import { AuroraBackground } from "../aurora-bg";
 
 const HeroSection = () => {
   const { isAuthenticated } = useIsAuthenticated();
+
   return (
-    <AuroraBackground>
-      <motion.div
-        initial={{ opacity: 0.0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{
-          delay: 0.3,
-          duration: 0.8,
-          ease: "easeInOut",
-        }}
-        className="relative flex flex-col items-center justify-center gap-4 px-4"
-      >
-        <HeroHighlight
-          className="flex h-full items-center justify-center"
-          containerClassName="min-h-[calc(100vh-56px)] flex items-center justify-center"
-        >
-          <motion.h1
-            initial={{
-              opacity: 0,
-              y: 20,
-            }}
-            animate={{
-              opacity: 1,
-              y: [20, -5, 0],
-            }}
-            transition={{
-              duration: 0.25,
-              ease: [0.4, 0.0, 0.2, 1],
-            }}
-            className="mx-auto max-w-4xl px-4 text-center text-2xl leading-relaxed font-bold text-neutral-700 md:text-4xl lg:text-5xl lg:leading-snug dark:text-white"
-          >
-            <div className="flex flex-col space-y-2 md:space-y-6">
-              <h1 className="text-4xl leading-relaxed font-bold tracking-tighter sm:text-6xl lg:text-7xl">
-                Your{" "}
-                <span className="text-green-500 dark:text-green-400">
-                  Spotify
-                </span>{" "}
-                Playlist Sucks?
-                <Highlight isBlock>Let&apos;s unsuck it.</Highlight>
-              </h1>
-              <p className="mx-auto max-w-[700px] text-gray-500 sm:text-lg md:text-xl dark:text-gray-300">
-                Transform your <span className="font-bold">mid</span> spotify
-                playlist to JSON format and received songs recommendation from
-                AI.
-              </p>
-              <div className="flex items-center justify-center py-8 md:py-12">
-                <HoverBorderGradient as="button">
-                  <Link
-                    href={isAuthenticated ? "/dashboard" : "/login"}
-                    className="text-sm font-light md:text-xl"
-                  >
-                    {isAuthenticated ? "Go to Dashboard" : "Get Started"}
-                  </Link>
-                </HoverBorderGradient>
-              </div>
-            </div>
-          </motion.h1>
-        </HeroHighlight>
-      </motion.div>
-    </AuroraBackground>
+    <div className="flex h-full flex-col overflow-hidden font-mono">
+      {/* Main hero — fills remaining height */}
+      <div className="flex flex-1 flex-col border-b border-black dark:border-white">
+        {/* Top label row */}
+        <div className="flex items-center justify-between border-b border-black px-6 py-3 dark:border-white">
+          <span className="text-xs tracking-widest text-black/40 uppercase dark:text-white/40">
+            / Hero
+          </span>
+          <span className="text-xs tracking-widest text-black/40 uppercase dark:text-white/40">
+            ■
+          </span>
+        </div>
+
+        {/* Hero content */}
+        <div className="flex flex-1 flex-col items-start justify-center px-6 py-8 md:px-12 lg:px-20">
+          <p className="mb-6 text-xs tracking-widest text-black/40 uppercase dark:text-white/40">
+            / Your playlists are mid.
+          </p>
+          <h1 className="max-w-3xl text-5xl leading-none font-bold tracking-tight text-black sm:text-6xl lg:text-6xl dark:text-white">
+            STOP
+            <br />
+            LISTENING
+            <br />
+            TO THE SAME
+            <br />
+            67 SONGS.
+          </h1>
+          <p className="mt-6 max-w-xl text-sm leading-relaxed text-black/60 dark:text-white/60">
+            Connect your Spotify. Pick a playlist. Get AI recommendations that
+            actually fit — no fluff, no filters, no vibe-check marketing copy.
+            Get <span className="uppercase">SENDY.</span>
+          </p>
+
+          <div className="mt-8 flex flex-col gap-0 sm:flex-row">
+            <Link
+              href={isAuthenticated ? "/dashboard" : "/login"}
+              className="border border-black bg-black px-8 py-4 text-sm font-bold tracking-widest text-white uppercase transition-opacity hover:opacity-80 dark:border-white dark:bg-white dark:text-black"
+            >
+              {isAuthenticated ? "Go to Dashboard →" : "Get Started →"}
+            </Link>
+            {!isAuthenticated && (
+              <a
+                href="https://github.com/barry-saaun/unsuckify-v1"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="border border-l-0 border-black bg-transparent px-8 py-4 text-sm font-bold tracking-widest text-black uppercase transition-opacity hover:opacity-60 sm:border-l-0 dark:border-white dark:text-white"
+              >
+                View Source
+              </a>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom stats bar */}
+      <div className="grid grid-cols-3 divide-x divide-black dark:divide-white">
+        <div className="px-6 py-5">
+          <p className="mb-1 text-xs tracking-widest text-black/40 uppercase dark:text-white/40">
+            / Powered by
+          </p>
+          <p className="text-sm font-bold tracking-wide text-black uppercase dark:text-white">
+            Spotify API
+          </p>
+        </div>
+        <div className="px-6 py-5">
+          <p className="mb-1 text-xs tracking-widest text-black/40 uppercase dark:text-white/40">
+            / Method
+          </p>
+          <p className="text-sm font-bold tracking-wide text-black uppercase dark:text-white">
+            Vector Similarity
+          </p>
+        </div>
+        <div className="px-6 py-5">
+          <p className="mb-1 text-xs tracking-widest text-black/40 uppercase dark:text-white/40">
+            / Privacy
+          </p>
+          <p className="text-sm font-bold tracking-wide text-black uppercase dark:text-white">
+            No Data Stored
+          </p>
+        </div>
+      </div>
+    </div>
   );
 };
+
 export default HeroSection;

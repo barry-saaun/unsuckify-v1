@@ -26,8 +26,12 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${geist.variable}`} suppressHydrationWarning>
-      <body>
+    <html
+      lang="en"
+      className={`${geist.variable} h-full`}
+      suppressHydrationWarning
+    >
+      <body className="h-full overflow-hidden">
         <AuthErrorProvider>
           <TRPCReactProvider>
             <UserProvider>
@@ -39,8 +43,12 @@ export default function RootLayout({
               >
                 <SessionExpiredAlertDialog />
                 <ToasterProvider />
-                <NavBar />
-                {children}
+                <div className="flex h-full flex-col">
+                  <NavBar />
+                  <main className="min-h-0 flex-1 overflow-y-auto">
+                    {children}
+                  </main>
+                </div>
               </NextThemeProvider>
             </UserProvider>
           </TRPCReactProvider>

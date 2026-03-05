@@ -55,14 +55,14 @@ export default function SessionExpiredAlertDialog() {
     <AlertDialog open={sessionExpired} onOpenChange={handleOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Session Expired</AlertDialogTitle>
-          <AlertDialogDescription>
-            Your session has expired. Please log in again.
-          </AlertDialogDescription>
+          <AlertDialogTitle>/ Session Expired</AlertDialogTitle>
         </AlertDialogHeader>
+        <AlertDialogDescription className="px-6 py-5 text-sm text-black/60 dark:text-white/60">
+          Your session has expired. Please log in again.
+        </AlertDialogDescription>
         <AlertDialogFooter>
           <AlertDialogAction onClick={handleConfirm}>
-            Continue
+            Continue →
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
