@@ -16,7 +16,6 @@ export const RecommendedTrackObjectSchema = z.object({
   track: z.string().describe("The title of the recommended track"),
   album: z.string().describe("The name of the album of the recommended tracks"),
   artists: z.string().describe("The name of artists of the recommended track"),
-  year: z.number().describe("The year that the track was released."),
 });
 
 export type TRecommendedTrackObject = z.infer<

@@ -7,8 +7,8 @@ import { Button } from "~/components/ui/button";
 import Spinner from "~/components/spinner";
 import InfoBanner from "~/components/info-banner";
 import CreateNewPlaylistCard from "~/components/create-new-playlist-card";
-import { useRecommendedInfTracks } from "~/hooks/useRecommendedInfTracks";
-import RecommendedTrackCard from "~/components/recommended-track-card";
+import { legacy_useRecommendedInfTracks } from "~/hooks/legacy_useRecommendedInfTracks";
+import Legacy_RecommendedTrackCard from "~/components/legacy_recommended-track-card";
 import RecommendedTrackCardSkeleton from "~/components/rec-track-card-skeleton";
 import { useUserContext } from "~/components/user-context-provider";
 import { cn } from "~/lib/utils";
@@ -25,13 +25,7 @@ export default function PlaylistContent() {
   const ownerId = searchParams.get("ownerId");
   const playlistName = searchParams.get("playlistName");
 
-  let isOwned: boolean;
-
-  if (ownerId && ownerId === userId) {
-    isOwned = true;
-  } else {
-    isOwned = false;
-  }
+  const isOwned = ownerId === userId;
 
   const playlist_id = params.playlist_id;
 
@@ -44,7 +38,7 @@ export default function PlaylistContent() {
     playlistData,
     rec_tracks,
     hasNextPage,
-  } = useRecommendedInfTracks({
+  } = legacy_useRecommendedInfTracks({
     playlist_id: playlist_id ?? "",
     userId: userId ?? "",
     limit: TRACK_PER_INF_PAGE,
@@ -82,7 +76,7 @@ export default function PlaylistContent() {
   // Handle loading states for either query
   if (isLoadingAny) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4">
+      <div className="flex h-full flex-col items-center justify-center gap-6">
         <div className="hungry-loader" />
         <LoadingMessages interval={2500} />
       </div>
@@ -135,7 +129,7 @@ export default function PlaylistContent() {
         <div className="grid w-full grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {data?.pages.flatMap((page) =>
             page.items.map((item, i) => (
-              <RecommendedTrackCard
+              <Legacy_RecommendedTrackCard
                 key={`${i}-${item.id}`}
                 playlist_id={playlist_id}
                 handleNotIsOwnedCardClick={handleNotIsOwnedCardClick}

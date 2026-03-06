@@ -6,6 +6,7 @@ import { TRPCError } from "@trpc/server";
 import { appRouter } from "../root";
 import { trackPlaylistStatus } from "~/server/db/schema";
 import { and, eq } from "drizzle-orm";
+import type { RawTrack } from "~/lib/music/types";
 
 const LIMIT = 20;
 
@@ -56,9 +57,9 @@ export const playlistRouter = createTRPCRouter({
       return res.data;
     }),
 
-  // TODO: testing purposes
+  // NOTE:  New arhcitecture to get all the raw data
 
-  test_getPlaylistItemsAll: protectedProcedure
+  getPlaylistItemsAll: protectedProcedure
     .input(z.object({ playlist_id: z.string() }))
     .query(async ({ input, ctx }) => {
       const caller = appRouter.createCaller(ctx);
@@ -66,15 +67,7 @@ export const playlistRouter = createTRPCRouter({
       let offset = 0;
       let hasNextBatch = true;
 
-      type RawTrack = {
-        trackName: string;
-        artistName: string;
-        albumName: string;
-      };
-
       let allTracks: RawTrack[] = [];
-
-      // let allTracks: string[] = [];
 
       while (hasNextBatch) {
         const data = await caller.playlist.getPlaylistItems({
@@ -120,7 +113,7 @@ export const playlistRouter = createTRPCRouter({
 
   /* end testing */
 
-  getPlaylistItemsAll: protectedProcedure
+  legacy_getPlaylistItemsAll: protectedProcedure
     .input(z.object({ playlist_id: z.string() }))
     .query(async ({ input, ctx }) => {
       const caller = appRouter.createCaller(ctx);

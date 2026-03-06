@@ -31,6 +31,8 @@ import { lastFmApi } from "~/lib/music/lastfm";
 import { tryCatch } from "~/lib/utils/try-catch";
 import { getRecommendations } from "~/lib/pinecone/get-recommendations";
 
+const UNKNOWN_ALBUM = "Unknown";
+
 const PlaylistSongSchema = z.object({
   artist: z.string().min(1),
   track: z.string().min(1),
@@ -123,55 +125,55 @@ export const trackRouter = createTRPCRouter({
       return await caller.getRecommendations(input);
     }),
 
-  pushRecommendations: protectedProcedure
-    .input(
-      z.object({
-        userId: z.string(),
-        playlist_id: z.string(),
-        recommendations: RecommendedTracksSchema,
-      }),
-    )
-    .mutation(async ({ input, ctx }) => {
-      await ensureUserExistence({ input, ctx });
-
-      const [batch] = await ctx.db
-        .insert(recommendationBatches)
-        .values({
-          userId: input.userId,
-          playlistId: input.playlist_id,
-          generatedAt: new Date(),
-        })
-        .returning();
-
-      if (!batch) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to create recommendation batch.",
-        });
-      }
-
-      const tracksToInsert = input.recommendations.map((rec) => ({
-        track: rec.track,
-        album: rec.album,
-        artists: rec.artists,
-        year: rec.year,
-        batchId: batch?.id,
-      }));
-
-      const { tracks } = await insertRecommendedTracks({ ctx, tracksToInsert });
-
-      const tracksStatusToInsert: TracksStatusInsertType[] = tracks.map(
-        (track) => ({
-          batchId: track.batchId,
-          trackId: track.id,
-        }),
-      );
-
-      await insertTracksStatus({ ctx, tracksStatusToInsert });
-
-      // await ctx.db.insert(recommendationTracks).values(tracksToInsert);
-      return { success: true, batchId: batch.id };
-    }),
+  // pushRecommendations: protectedProcedure
+  //   .input(
+  //     z.object({
+  //       userId: z.string(),
+  //       playlist_id: z.string(),
+  //       recommendations: RecommendedTracksSchema,
+  //     }),
+  //   )
+  //   .mutation(async ({ input, ctx }) => {
+  //     await ensureUserExistence({ input, ctx });
+  //
+  //     const [batch] = await ctx.db
+  //       .insert(recommendationBatches)
+  //       .values({
+  //         userId: input.userId,
+  //         playlistId: input.playlist_id,
+  //         generatedAt: new Date(),
+  //       })
+  //       .returning();
+  //
+  //     if (!batch) {
+  //       throw new TRPCError({
+  //         code: "INTERNAL_SERVER_ERROR",
+  //         message: "Failed to create recommendation batch.",
+  //       });
+  //     }
+  //
+  //     const tracksToInsert = input.recommendations.map((rec) => ({
+  //       track: rec.track,
+  //       album: rec.album,
+  //       artists: rec.artists,
+  //       year: rec.year,
+  //       batchId: batch?.id,
+  //     }));
+  //
+  //     const { tracks } = await insertRecommendedTracks({ ctx, tracksToInsert });
+  //
+  //     const tracksStatusToInsert: TracksStatusInsertType[] = tracks.map(
+  //       (track) => ({
+  //         batchId: track.batchId,
+  //         trackId: track.id,
+  //       }),
+  //     );
+  //
+  //     await insertTracksStatus({ ctx, tracksStatusToInsert });
+  //
+  //     // await ctx.db.insert(recommendationTracks).values(tracksToInsert);
+  //     return { success: true, batchId: batch.id };
+  //   }),
 
   getLatestBatch: protectedProcedure
     .input(
@@ -194,108 +196,108 @@ export const trackRouter = createTRPCRouter({
 
       return latestBatch;
     }),
-  getOrCreateRecommendations: protectedProcedure
-    .input(GetOrCreateRecommendationsSchema)
-    .query(
-      async ({ ctx, input }): Promise<HandleRecommendationTracksReturn> => {
-        const { latestBatchInput } = input;
-        console.log("latestbatchinput:", latestBatchInput);
-
-        const caller = trackRouter.createCaller(ctx);
-        const latestBatch =
-          latestBatchInput ?? (await caller.getLatestBatch(input));
-
-        const now = new Date();
-        let within24hours = false;
-        let batchId = null;
-        let timeLeft: number | null = null;
-
-        if (latestBatch) {
-          batchId = latestBatch.id;
-          const generatedAt = latestBatch.generatedAt;
-          const msSince = now.getTime() - generatedAt.getTime();
-          const ms24h = 24 * 60 * 60 * 1000;
-
-          within24hours = msSince < ms24h;
-          if (within24hours) {
-            timeLeft = ms24h - msSince;
-          } else {
-            await deleteExpiredTables({ ctx, batchId });
-          }
-        }
-
-        console.log("[track]: batchId", batchId);
-
-        // Case 1: Data exists and is fresh (not expired)
-        if (within24hours && batchId) {
-          console.log(`Attempting to select tracks for batchId: ${batchId}`);
-          const resolvedTracks = await ctx.db
-            .select()
-            .from(recommendationTracks)
-            .where(eq(recommendationTracks.batchId, batchId));
-
-          return {
-            resolvedTracks: resolvedTracks.map((track) => ({
-              track: track.track,
-              album: track.album,
-              artists: track.artists,
-              year: track.year,
-            })),
-            timeLeft,
-            batchId,
-            success: true,
-          };
-        }
-
-        console.log("[track]: input new track", input.newTracks);
-
-        // gracefully handle the case where it's undefined
-        if (!input.newTracks) {
-          return {
-            resolvedTracks: [],
-            timeLeft: null,
-            success: false,
-            batchId: null,
-          };
-        }
-
-        const result = await caller.pushRecommendations({
-          userId: input.userId,
-          playlist_id: input.playlist_id,
-          recommendations: input.newTracks,
-        });
-
-        console.log("[pushRec]: is called");
-
-        if (!result.success) {
-          console.log("log from !success");
-          return {
-            resolvedTracks: [],
-            timeLeft: new Date().getTime(),
-            success: false,
-            batchId: null,
-          };
-        }
-        batchId = result.batchId;
-        timeLeft = 24 * 60 * 60 * 1000;
-
-        return {
-          resolvedTracks: input.newTracks,
-          timeLeft,
-          success: true,
-          batchId,
-        };
-      },
-    ),
-
-  getOrCreateRecommendationsMutate: protectedProcedure
-    .input(GetOrCreateRecommendationsSchema)
-    .mutation(
-      async ({ ctx, input }): Promise<HandleRecommendationTracksReturn> => {
-        const caller = trackRouter.createCaller(ctx);
-        return await caller.getOrCreateRecommendations(input);
-      },
-    ),
+  // getOrCreateRecommendations: protectedProcedure
+  //   .input(GetOrCreateRecommendationsSchema)
+  //   .query(
+  //     async ({ ctx, input }): Promise<HandleRecommendationTracksReturn> => {
+  //       const { latestBatchInput } = input;
+  //       console.log("latestbatchinput:", latestBatchInput);
+  //
+  //       const caller = trackRouter.createCaller(ctx);
+  //       const latestBatch =
+  //         latestBatchInput ?? (await caller.getLatestBatch(input));
+  //
+  //       const now = new Date();
+  //       let within24hours = false;
+  //       let batchId = null;
+  //       let timeLeft: number | null = null;
+  //
+  //       if (latestBatch) {
+  //         batchId = latestBatch.id;
+  //         const generatedAt = latestBatch.generatedAt;
+  //         const msSince = now.getTime() - generatedAt.getTime();
+  //         const ms24h = 24 * 60 * 60 * 1000;
+  //
+  //         within24hours = msSince < ms24h;
+  //         if (within24hours) {
+  //           timeLeft = ms24h - msSince;
+  //         } else {
+  //           await deleteExpiredTables({ ctx, batchId });
+  //         }
+  //       }
+  //
+  //       console.log("[track]: batchId", batchId);
+  //
+  //       // Case 1: Data exists and is fresh (not expired)
+  //       if (within24hours && batchId) {
+  //         console.log(`Attempting to select tracks for batchId: ${batchId}`);
+  //         const resolvedTracks = await ctx.db
+  //           .select()
+  //           .from(recommendationTracks)
+  //           .where(eq(recommendationTracks.batchId, batchId));
+  //
+  //         return {
+  //           resolvedTracks: resolvedTracks.map((track) => ({
+  //             track: track.track,
+  //             album: track.album,
+  //             artists: track.artists,
+  //             year: track.year,
+  //           })),
+  //           timeLeft,
+  //           batchId,
+  //           success: true,
+  //         };
+  //       }
+  //
+  //       console.log("[track]: input new track", input.newTracks);
+  //
+  //       // gracefully handle the case where it's undefined
+  //       if (!input.newTracks) {
+  //         return {
+  //           resolvedTracks: [],
+  //           timeLeft: null,
+  //           success: false,
+  //           batchId: null,
+  //         };
+  //       }
+  //
+  //       const result = await caller.pushRecommendations({
+  //         userId: input.userId,
+  //         playlist_id: input.playlist_id,
+  //         recommendations: input.newTracks,
+  //       });
+  //
+  //       console.log("[pushRec]: is called");
+  //
+  //       if (!result.success) {
+  //         console.log("log from !success");
+  //         return {
+  //           resolvedTracks: [],
+  //           timeLeft: new Date().getTime(),
+  //           success: false,
+  //           batchId: null,
+  //         };
+  //       }
+  //       batchId = result.batchId;
+  //       timeLeft = 24 * 60 * 60 * 1000;
+  //
+  //       return {
+  //         resolvedTracks: input.newTracks,
+  //         timeLeft,
+  //         success: true,
+  //         batchId,
+  //       };
+  //     },
+  //   ),
+  //
+  // getOrCreateRecommendationsMutate: protectedProcedure
+  //   .input(GetOrCreateRecommendationsSchema)
+  //   .mutation(
+  //     async ({ ctx, input }): Promise<HandleRecommendationTracksReturn> => {
+  //       const caller = trackRouter.createCaller(ctx);
+  //       return await caller.getOrCreateRecommendations(input);
+  //     },
+  //   ),
   infiniteTracks: protectedProcedure
     .input(
       z.object({
@@ -334,29 +336,37 @@ export const trackRouter = createTRPCRouter({
   searchForTracks: protectedProcedure
     .input(RecommendedTrackObjectSchema)
     .query(async ({ input }) => {
-      const { track, album, artists, year } = input;
+      const { track, artists } = input;
 
-      const queryParts = [];
-      if (album) queryParts.push(`album:"${album}"`);
-      if (artists) queryParts.push(`artist:"${artists}"`);
-      if (track) queryParts.push(`track:"${track}"`);
-      if (year) queryParts.push(`year:${year}`);
+      // 1. Build a cleaner query.
+      // We combine them but avoid strict field prefixes to allow for fuzzy matching.
+      const artistName = Array.isArray(artists)
+        ? artists[0]
+        : artists?.split(",")[0];
 
-      const query = queryParts.join(" ");
+      // Attempt 1: Strict-ish search
+      let query = `${track} ${artistName || ""}`.trim();
 
       console.log(`[searchForTrack query]:`, query);
 
-      const type = "track" as const;
+      const result = await spotifyApi.searchForTrack({
+        q: query,
+        type: "track",
+        limit: 1,
+      });
 
-      const result = await spotifyApi.searchForTrack({ q: query, type });
+      const items = result?.tracks?.items;
 
-      const firstTrack = result?.tracks?.items?.[0];
-      const albumImage = firstTrack?.album?.images?.[0]?.url;
-      const trackUri = firstTrack?.uri;
-
-      if (!result || !firstTrack || !albumImage) {
+      if (!items || items.length === 0) {
+        // Optional: Fallback logic here if primary search fails
         return null;
       }
+
+      const firstTrack = items[0];
+
+      // Use optional chaining and provide a fallback image if possible
+      const albumImage = firstTrack?.album?.images?.[0]?.url || null;
+      const trackUri = firstTrack?.uri;
 
       return { trackUri, albumImage };
     }),

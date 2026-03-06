@@ -9,7 +9,7 @@ type useRecommendedInfTracksParams = {
   playlistLSExpired?: boolean;
 };
 
-export const useRecommendedInfTracks = ({
+export const legacy_useRecommendedInfTracks = ({
   playlist_id,
   userId,
   limit,
@@ -44,7 +44,7 @@ export const useRecommendedInfTracks = ({
     data: playlistData,
     isLoading: isLoadingPlaylist,
     error: playlistError,
-  } = api.playlist.getPlaylistItemsAll.useQuery(
+  } = api.playlist.legacy_getPlaylistItemsAll.useQuery(
     {
       playlist_id,
     },

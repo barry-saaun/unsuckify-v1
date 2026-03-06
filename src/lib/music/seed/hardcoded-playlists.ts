@@ -3,4 +3,9 @@
  *
  * */
 
-export const DEV_SEED_PLAYLIST: { id: string; label: string }[] = [];
+export const DEV_SEED_PLAYLIST: { id: string; label: string }[] = [
+  {
+    id: "37i9dQZF1DWVYgpMbMPJMz",
+    label: "Worship now",
+  },
+];
