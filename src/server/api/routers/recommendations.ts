@@ -14,7 +14,7 @@ export const recommendationsRouter = createTRPCRouter({
   getForPlaylist: protectedProcedure
     .input(
       z.object({
-        limit: z.number().int().min(1).max(50).optional(),
+        limit: z.number().int().min(1).max(80).optional(),
         minScore: z.number().min(0).max(1).optional(),
         playlist: z.array(RawTrackSchema),
       }),

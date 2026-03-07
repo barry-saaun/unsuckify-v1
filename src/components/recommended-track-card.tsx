@@ -1,80 +1,200 @@
 "use client";
 import type { SimilarSong } from "~/lib/pinecone/find-similar-songs";
+import type { ResolvedTrack } from "~/hooks/useResolvedTracks";
 import Image from "next/image";
 import ImagePlaceholder from "./image-placeholder";
-import { api } from "~/trpc/react";
 
-// async function mockFetchSpotifyData(
-//   _song: SimilarSong,
-// ): Promise<TrackSpotifyData> {
-//   // Artificial delay — replace with real API call later
-//   await new Promise((resolve) =>
-//     setTimeout(resolve, 2000 + Math.random() * 1500),
-//   );
-//   return {
-//     trackUri: "spotify:track:mock",
-//     albumImage: "",
-//   };
-// }
+export type AddStatus = "idle" | "adding" | "added" | "removing" | "error";
 
 type RecommendedTrackCardProps = {
   song: SimilarSong;
   isOwned: boolean;
-  onSelectAction?: (song: SimilarSong) => void;
+  /** Resolved Spotify data passed from the parent. null = still loading. */
+  resolvedTrack: ResolvedTrack | undefined;
+  trackLoading: boolean;
+  onSelectAction?: (song: SimilarSong, trackUri: string) => void;
   isSelected?: boolean;
+  /** isOwned only — current mode */
+  ownedMode?: "add" | "new";
+  /** isOwned + add mode — per-card state driven by parent */
+  addStatus?: AddStatus;
+  /** isOwned + add mode — fires when user clicks the card to add */
+  onAddAction?: (song: SimilarSong, trackUri: string) => void;
+  /** isOwned + add mode — fires when user clicks undo on an added card */
+  onUndoAction?: (song: SimilarSong, trackUri: string) => void;
 };
 
 export default function RecommendedTrackCard({
   song,
   isOwned,
-  onSelectAction: onSelect,
+  resolvedTrack,
+  trackLoading,
+  onSelectAction,
   isSelected = false,
+  ownedMode = "new",
+  addStatus = "idle",
+  onAddAction,
+  onUndoAction,
 }: RecommendedTrackCardProps) {
-  const { artist, track, album } = song;
-
-  const { data: searchedTrack, isLoading: trackLoading } =
-    api.track.searchForTracks.useQuery({
-      artists: artist,
-      track,
-      album,
-    });
-
-  console.log(
-    `[seached track] track: ${track} \n` +
-      JSON.stringify(searchedTrack, null, 2) +
-      "\n",
-  );
-
   // Three states: loading -> dead (no data back) -> live (has trackUri)
-  const isDead = !trackLoading && !searchedTrack;
-  const isLive = !trackLoading && !!searchedTrack;
+  const isDead = !trackLoading && (!resolvedTrack || !resolvedTrack.trackUri);
+  const isLive = !trackLoading && !!resolvedTrack?.trackUri;
 
-  const selectable = !isOwned && isLive;
+  const isAdding = addStatus === "adding";
+  const isAdded = addStatus === "added";
+  const isRemoving = addStatus === "removing";
+  const isAddError = addStatus === "error";
+  const isBusy = isAdding || isRemoving;
 
-  const borderMuted = isSelected
+  // "new" mode: select/deselect like before
+  const selectableNew = isOwned && ownedMode === "new" && isLive;
+  // "add" mode: click main card body to add (idle or error only)
+  const selectableAdd =
+    isOwned &&
+    ownedMode === "add" &&
+    isLive &&
+    (addStatus === "idle" || addStatus === "error");
+  // non-owned: select for new playlist
+  const selectableNotOwned = !isOwned && isLive;
+
+  const isClickable = selectableNew || selectableAdd || selectableNotOwned;
+
+  // Visual "selected / added" background inversion
+  const showInverted = isSelected || (ownedMode === "add" && isAdded);
+
+  const borderMuted = showInverted
     ? "border-white dark:border-black"
     : "border-black dark:border-white";
 
+  const handleClick = () => {
+    if (!resolvedTrack?.trackUri) return;
+    if (selectableNew) {
+      onSelectAction?.(song, resolvedTrack.trackUri);
+    } else if (selectableAdd) {
+      onAddAction?.(song, resolvedTrack.trackUri);
+    } else if (selectableNotOwned) {
+      onSelectAction?.(song, resolvedTrack.trackUri);
+    }
+  };
+
+  const handleUndoClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // don't trigger the card's handleClick
+    if (!resolvedTrack?.trackUri || isBusy) return;
+    onUndoAction?.(song, resolvedTrack.trackUri);
+  };
+
+  // ── Action strip ─────────────────────────────────────────────────────────
+  const showActionStrip = !isOwned || (isOwned && ownedMode === "add");
+
+  const renderActionStrip = () => {
+    // Shared base classes
+    const base =
+      "border-t text-[9px] font-bold tracking-[0.2em] uppercase transition-all";
+
+    // Loading / busy states — show animated bars
+    if (trackLoading || isBusy) {
+      const label = isRemoving ? "■ undoing" : "■ ...";
+      return (
+        <div
+          className={`${base} flex items-center justify-center gap-[3px] py-2 border-black/20 text-black/40 dark:border-white/20 dark:text-white/40`}
+        >
+          {[0, 1, 2, 3].map((i) => (
+            <span
+              key={i}
+              className="inline-block w-[3px] origin-bottom animate-[stretch_1s_ease-in-out_infinite] bg-current"
+              style={{ height: "10px", animationDelay: `${i * 0.15}s` }}
+            />
+          ))}
+          <span className="ml-1">{label}</span>
+        </div>
+      );
+    }
+
+    if (isDead) {
+      return (
+        <div
+          className={`${base} py-2 text-center border-black/15 text-black/20 dark:border-white/10 dark:text-white/15`}
+        >
+          ■ no match
+        </div>
+      );
+    }
+
+    if (isOwned && ownedMode === "add") {
+      if (isAdded) {
+        // Two-cell row: "■ Added" on the left + "Undo →" clickable on the right
+        return (
+          <div
+            className={`${base} flex items-stretch border-black bg-black text-white dark:border-white dark:bg-white dark:text-black`}
+          >
+            <span className="flex-1 py-2 text-center">■ Added</span>
+            <button
+              onClick={handleUndoClick}
+              className="border-l border-white/20 px-3 py-2 text-white/60 transition-colors hover:bg-white/10 dark:border-black/20 dark:text-black/60 dark:hover:bg-black/10"
+            >
+              Undo
+            </button>
+          </div>
+        );
+      }
+      if (isAddError) {
+        return (
+          <div
+            className={`${base} py-2 text-center border-black/40 text-black/60 dark:border-white/40 dark:text-white/60`}
+          >
+            ■ Error — retry
+          </div>
+        );
+      }
+      // idle — reveal on hover
+      return (
+        <div
+          className={`${base} py-2 text-center border-black text-black/50 opacity-0 group-hover:opacity-100 dark:border-white dark:text-white/50`}
+        >
+          Add →
+        </div>
+      );
+    }
+
+    // !isOwned
+    if (isSelected) {
+      return (
+        <div
+          className={`${base} py-2 text-center border-white bg-white text-black dark:border-black dark:bg-black dark:text-white`}
+        >
+          ■ Selected
+        </div>
+      );
+    }
+    return (
+      <div
+        className={`${base} py-2 text-center border-black bg-black text-white opacity-0 group-hover:opacity-100 dark:border-white dark:bg-white dark:text-black`}
+      >
+        Select →
+      </div>
+    );
+  };
+
   return (
     <div
-      onClick={() => selectable && onSelect?.(song)}
+      onClick={handleClick}
       className={`group border font-mono transition-colors ${
         isDead
           ? "border-black/30 bg-white text-black/40 dark:border-white/20 dark:bg-black dark:text-white/30"
-          : isSelected
+          : showInverted
             ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
-            : "border-black bg-white text-black dark:border-white dark:bg-black dark:text-white"
-      } ${selectable ? "cursor-pointer" : "cursor-default"}`}
+            : isBusy
+              ? "border-black/50 bg-white text-black dark:border-white/50 dark:bg-black dark:text-white"
+              : "border-black bg-white text-black dark:border-white dark:bg-black dark:text-white"
+      } ${isClickable ? "cursor-pointer" : "cursor-default"}`}
     >
       {/* Square image area */}
       <div className="relative aspect-square w-full overflow-hidden bg-black/5 dark:bg-white/5">
         {trackLoading ? (
           <>
-            {/* Dimmed placeholder behind loader */}
             <div className="absolute inset-0 opacity-30">
               <ImagePlaceholder />
             </div>
-            {/* Brutalist loading overlay */}
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
               <div className="flex gap-[3px]">
                 {[0, 1, 2, 3].map((i) => (
@@ -92,11 +212,9 @@ export default function RecommendedTrackCard({
           </>
         ) : isDead ? (
           <>
-            {/* Very faint placeholder */}
             <div className="absolute inset-0 opacity-15">
               <ImagePlaceholder />
             </div>
-            {/* Dead-state overlay — frozen bars */}
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
               <div className="flex gap-[3px]">
                 {[0.25, 1, 0.5, 0.75].map((scale, i) => (
@@ -112,9 +230,35 @@ export default function RecommendedTrackCard({
               </span>
             </div>
           </>
-        ) : searchedTrack?.albumImage ? (
+        ) : isBusy ? (
+          <>
+            {resolvedTrack?.albumImage && (
+              <Image
+                src={resolvedTrack.albumImage}
+                alt={`${song.track} album art`}
+                fill
+                className="object-cover opacity-40"
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+              />
+            )}
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+              <div className="flex gap-[3px]">
+                {[0, 1, 2, 3].map((i) => (
+                  <span
+                    key={i}
+                    className="inline-block h-4 w-[3px] origin-bottom animate-[stretch_1s_ease-in-out_infinite] bg-black dark:bg-white"
+                    style={{ animationDelay: `${i * 0.15}s` }}
+                  />
+                ))}
+              </div>
+              <span className="text-[9px] font-bold tracking-[0.25em] text-black/50 uppercase dark:text-white/50">
+                {isRemoving ? "■ undoing" : "■ adding"}
+              </span>
+            </div>
+          </>
+        ) : resolvedTrack?.albumImage ? (
           <Image
-            src={searchedTrack.albumImage}
+            src={resolvedTrack.albumImage}
             alt={`${song.track} album art`}
             fill
             className="object-cover"
@@ -139,7 +283,7 @@ export default function RecommendedTrackCard({
             className={`truncate text-xs tracking-widest uppercase ${
               isDead
                 ? "text-black/25 dark:text-white/20"
-                : isSelected
+                : showInverted
                   ? "text-white/60 dark:text-black/60"
                   : "text-black/40 dark:text-white/40"
             }`}
@@ -151,7 +295,7 @@ export default function RecommendedTrackCard({
               className={`shrink-0 text-[9px] font-bold tracking-widest uppercase ${
                 isDead
                   ? "text-black/20 dark:text-white/15"
-                  : isSelected
+                  : showInverted
                     ? "text-white/50 dark:text-black/50"
                     : "text-black/30 dark:text-white/30"
               }`}
@@ -160,13 +304,12 @@ export default function RecommendedTrackCard({
             </span>
           )}
         </div>
-        {/* Album name — tertiary row */}
         {song.album && (
           <p
             className={`mt-1 truncate text-[9px] tracking-widest uppercase ${
               isDead
                 ? "text-black/20 dark:text-white/15"
-                : isSelected
+                : showInverted
                   ? "text-white/40 dark:text-black/40"
                   : "text-black/25 dark:text-white/25"
             }`}
@@ -176,28 +319,8 @@ export default function RecommendedTrackCard({
         )}
       </div>
 
-      {/* Select action — only for non-owned playlists */}
-      {!isOwned && (
-        <div
-          className={`border-t py-2 text-center text-[9px] font-bold tracking-[0.2em] uppercase transition-opacity ${
-            trackLoading
-              ? "border-black/20 text-black/20 opacity-100 dark:border-white/20 dark:text-white/20"
-              : isDead
-                ? "border-black/15 text-black/20 opacity-100 dark:border-white/10 dark:text-white/15"
-                : isSelected
-                  ? "border-white bg-white text-black opacity-100 dark:border-black dark:bg-black dark:text-white"
-                  : "border-black bg-black text-white opacity-0 group-hover:opacity-100 dark:border-white dark:bg-white dark:text-black"
-          }`}
-        >
-          {trackLoading
-            ? "■ ..."
-            : isDead
-              ? "■ no match"
-              : isSelected
-                ? "■ Selected"
-                : "Select →"}
-        </div>
-      )}
+      {/* Action strip */}
+      {showActionStrip && renderActionStrip()}
     </div>
   );
 }

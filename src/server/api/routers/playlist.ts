@@ -165,7 +165,39 @@ export const playlistRouter = createTRPCRouter({
 
       return allTracks;
     }),
+
   addItemsToPlaylist: protectedProcedure
+    .input(
+      z.strictObject({
+        playlist_id: z.string(),
+        params: z.object({
+          track_uris: z.array(z.string()),
+        }),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const { playlist_id, params } = input;
+
+      const { data, error } = await tryCatch(
+        spotifyApi.addTracksToPlaylist({
+          playlist_id,
+          requestBody: {
+            uris: params.track_uris,
+          },
+        }),
+      );
+
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            "Sorry! We could not add this track to your playlist at the moment.",
+        });
+      }
+      return { snapshot_id: data?.snapshot_id };
+    }),
+
+  legacy_addItemsToPlaylist: protectedProcedure
     .input(
       z.object({
         playlist_id: z.string(),
@@ -218,7 +250,41 @@ export const playlistRouter = createTRPCRouter({
 
       return { snapshot_id: data?.snapshot_id, status: addedStatus };
     }),
+
   removePlaylistItems: protectedProcedure
+    .input(
+      z.object({
+        playlist_id: z.string(),
+        params: z.object({
+          uri: z.string(),
+          snapshot_id: z.string(),
+        }),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const { playlist_id, params } = input;
+
+      const { error } = await tryCatch(
+        spotifyApi.removePlaylistItems({
+          playlist_id,
+          requestBody: {
+            tracks: [{ uri: params.uri, snapshot_id: params.snapshot_id }],
+          },
+        }),
+      );
+
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            "Sorry! We could not remove this track from the playlist at the moment.",
+        });
+      }
+
+      return { success_msg: "Poof! The song is out of your playlist" };
+    }),
+
+  legacy_removePlaylistItems: protectedProcedure
     .input(
       z.object({
         playlist_id: z.string(),
@@ -305,7 +371,6 @@ export const playlistRouter = createTRPCRouter({
         name: z.string(),
         isPublic: z.boolean(),
         description: z.string().optional(),
-
         track_uris: z.array(z.string()),
       }),
     )

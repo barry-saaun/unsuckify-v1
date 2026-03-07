@@ -2,10 +2,8 @@ import z from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { generateText, Output } from "ai";
 import {
-  GetOrCreateRecommendationsSchema,
   RecommendedTrackObjectSchema,
   RecommendedTracksSchema,
-  type HandleRecommendationTracksReturn,
   type TRecommendedTracks,
 } from "~/types";
 import { systemPrompt } from "~/constants/system-prompt";
@@ -14,17 +12,10 @@ import {
   recommendationBatches,
   recommendationTracks,
   trackPlaylistStatus,
-  type TracksStatusInsertType,
 } from "~/server/db/schema";
 import { and, eq, gte } from "drizzle-orm";
-import { ensureUserExistence } from "~/lib/utils/user";
 import { TRPCError } from "@trpc/server";
-import {
-  deleteExpiredTables,
-  getFirstTrackOfBatchId,
-  insertRecommendedTracks,
-  insertTracksStatus,
-} from "~/lib/utils/track";
+import { getFirstTrackOfBatchId } from "~/lib/utils/track";
 import { spotifyApi } from "~/lib/music/spotify";
 import { openRouterApi } from "~/lib/openrouter";
 import { lastFmApi } from "~/lib/music/lastfm";

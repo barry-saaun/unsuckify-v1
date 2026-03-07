@@ -47,7 +47,7 @@ export default function useTrackAction({
     }
   }, [queryTrackStatus]);
 
-  const addMutation = api.playlist.addItemsToPlaylist.useMutation({
+  const addMutation = api.playlist.legacy_addItemsToPlaylist.useMutation({
     onMutate: () => {
       setActionIsPending(true);
     },
@@ -67,7 +67,7 @@ export default function useTrackAction({
     },
   });
 
-  const removeMutation = api.playlist.removePlaylistItems.useMutation({
+  const removeMutation = api.playlist.legacy_removePlaylistItems.useMutation({
     onMutate: () => {
       setActionIsPending(true);
       setTrackStatus("pending");
