@@ -22,7 +22,7 @@ const PlaylistCard = ({
 
   const handleClick = () => {
     router.push(
-      `dashboard/new/${playlistId}?ownerId=${ownerId}&playlistName=${playlistName}`,
+      `dashboard/${playlistId}?ownerId=${ownerId}&playlistName=${playlistName}`,
     );
   };
 

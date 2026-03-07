@@ -96,7 +96,7 @@ export default function RecommendedTrackCard({
       const label = isRemoving ? "■ undoing" : "■ ...";
       return (
         <div
-          className={`${base} flex items-center justify-center gap-[3px] py-2 border-black/20 text-black/40 dark:border-white/20 dark:text-white/40`}
+          className={`${base} flex items-center justify-center gap-[3px] border-black/20 py-2 text-black/40 dark:border-white/20 dark:text-white/40`}
         >
           {[0, 1, 2, 3].map((i) => (
             <span
@@ -113,7 +113,7 @@ export default function RecommendedTrackCard({
     if (isDead) {
       return (
         <div
-          className={`${base} py-2 text-center border-black/15 text-black/20 dark:border-white/10 dark:text-white/15`}
+          className={`${base} border-black/15 py-2 text-center text-black/20 dark:border-white/10 dark:text-white/15`}
         >
           ■ no match
         </div>
@@ -140,7 +140,7 @@ export default function RecommendedTrackCard({
       if (isAddError) {
         return (
           <div
-            className={`${base} py-2 text-center border-black/40 text-black/60 dark:border-white/40 dark:text-white/60`}
+            className={`${base} border-black/40 py-2 text-center text-black/60 dark:border-white/40 dark:text-white/60`}
           >
             ■ Error — retry
           </div>
@@ -149,7 +149,7 @@ export default function RecommendedTrackCard({
       // idle — reveal on hover
       return (
         <div
-          className={`${base} py-2 text-center border-black text-black/50 opacity-0 group-hover:opacity-100 dark:border-white dark:text-white/50`}
+          className={`${base} border-black py-2 text-center text-black/50 opacity-0 group-hover:opacity-100 dark:border-white dark:text-white/50`}
         >
           Add →
         </div>
@@ -160,7 +160,7 @@ export default function RecommendedTrackCard({
     if (isSelected) {
       return (
         <div
-          className={`${base} py-2 text-center border-white bg-white text-black dark:border-black dark:bg-black dark:text-white`}
+          className={`${base} border-white bg-white py-2 text-center text-black dark:border-black dark:bg-black dark:text-white`}
         >
           ■ Selected
         </div>
@@ -168,7 +168,7 @@ export default function RecommendedTrackCard({
     }
     return (
       <div
-        className={`${base} py-2 text-center border-black bg-black text-white opacity-0 group-hover:opacity-100 dark:border-white dark:bg-white dark:text-black`}
+        className={`${base} border-black bg-black py-2 text-center text-white opacity-0 group-hover:opacity-100 dark:border-white dark:bg-white dark:text-black`}
       >
         Select →
       </div>
@@ -290,19 +290,19 @@ export default function RecommendedTrackCard({
           >
             {song.artist}
           </span>
-          {song.score !== undefined && (
-            <span
-              className={`shrink-0 text-[9px] font-bold tracking-widest uppercase ${
-                isDead
-                  ? "text-black/20 dark:text-white/15"
-                  : showInverted
-                    ? "text-white/50 dark:text-black/50"
-                    : "text-black/30 dark:text-white/30"
-              }`}
-            >
-              {Math.round(song.score * 100)}%
-            </span>
-          )}
+          {/* {song.score !== undefined && ( */}
+          {/*   <span */}
+          {/*     className={`shrink-0 text-[9px] font-bold tracking-widest uppercase ${ */}
+          {/*       isDead */}
+          {/*         ? "text-black/20 dark:text-white/15" */}
+          {/*         : showInverted */}
+          {/*           ? "text-white/50 dark:text-black/50" */}
+          {/*           : "text-black/30 dark:text-white/30" */}
+          {/*     }`} */}
+          {/*   > */}
+          {/*     {Math.round(song.score * 100)}% */}
+          {/*   </span> */}
+          {/* )} */}
         </div>
         {song.album && (
           <p

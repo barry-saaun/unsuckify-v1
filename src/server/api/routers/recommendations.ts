@@ -1,8 +1,7 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { buildSongKey } from "~/lib/ingestion/sanitise";
-import { findSimilarSongs } from "~/lib/pinecone/find-similar-songs";
+import { getRecommendations } from "~/lib/pinecone/get-recommendations";
 
 const RawTrackSchema = z.object({
   artistName: z.string(),
@@ -20,23 +19,20 @@ export const recommendationsRouter = createTRPCRouter({
       }),
     )
     .query(async ({ input }) => {
-      const songKeys = input.playlist.map(({ artistName, trackName }) =>
-        buildSongKey(artistName, trackName),
-      );
-
-      const result = await findSimilarSongs({
-        playlistSongKeys: songKeys,
-        limit: input.limit,
-        minScore: input.minScore,
-      });
-
-      if (!result.ok) {
+      try {
+        return await getRecommendations({
+          playlist: input.playlist.map(({ artistName, trackName }) => ({
+            artist: artistName,
+            track: trackName,
+          })),
+          limit: input.limit,
+          minScore: input.minScore ?? 0.6,
+        });
+      } catch (err) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: result.error,
+          message: err instanceof Error ? err.message : "Unknown error",
         });
       }
-
-      return result;
     }),
 });

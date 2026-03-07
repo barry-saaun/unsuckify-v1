@@ -2,7 +2,7 @@ import { useState } from "react";
 import { api } from "~/trpc/react";
 import { type RawTrack } from "~/lib/music/types";
 
-const PAGE_SIZE = 9;
+const PAGE_SIZE = 10;
 
 interface usePlaylistRecommendationsParams {
   playlist: RawTrack[];
@@ -42,7 +42,7 @@ export function usePlaylistRecommendations({
   const isLoading = isEnabled && isQueryLoading;
 
   const allRecs = data?.recommendations ?? [];
-  const coverage = data?.playlistCoverage ?? undefined;
+  const coverage = data?.meta.coverage ?? undefined;
 
   const visibleRecs = allRecs.slice(0, page * PAGE_SIZE);
 
