@@ -22,17 +22,17 @@ const PlaylistCard = ({
 
   const handleClick = () => {
     router.push(
-      `dashboard/new/${playlistId}?ownerId=${ownerId}&playlistName=${playlistName}`,
+      `dashboard/${playlistId}?ownerId=${ownerId}&playlistName=${playlistName}`,
     );
   };
 
   return (
     <div
       onClick={handleClick}
-      className="group cursor-pointer border border-black font-mono dark:border-white"
+      className="group cursor-pointer border border-black font-mono dark:border-white/40"
     >
       {/* Square image */}
-      <div className="relative aspect-square w-full overflow-hidden bg-black/5 dark:bg-white/5">
+      <div className="relative aspect-square w-full overflow-hidden bg-black/5 dark:bg-white/3">
         {typeof playlistImg === "string" ? (
           <Image
             fill
@@ -49,22 +49,22 @@ const PlaylistCard = ({
       </div>
 
       {/* Info row */}
-      <div className="border-t border-black p-3 dark:border-white">
-        <p className="truncate text-xs font-bold tracking-wide text-black uppercase dark:text-white">
+      <div className="border-t border-black p-3 dark:border-white/40">
+        <p className="truncate text-xs font-bold tracking-wide text-black uppercase dark:text-white/80">
           {playlistName}
         </p>
         <div className="mt-1 flex items-center justify-between">
-          <span className="text-xs tracking-widest text-black/40 uppercase dark:text-white/40">
+          <span className="text-xs tracking-widest text-black/40 uppercase dark:text-white/50">
             {owner}
           </span>
-          <span className="text-xs tracking-widest text-black/40 uppercase dark:text-white/40">
+          <span className="text-xs tracking-widest text-black/40 uppercase dark:text-white/50">
             {numberOfTracks} tracks
           </span>
         </div>
       </div>
 
       {/* Hover action */}
-      <div className="border-t border-black bg-black py-2 text-center text-xs font-bold tracking-widest text-white uppercase opacity-0 transition-opacity duration-150 group-hover:opacity-100 dark:border-white dark:bg-white dark:text-black">
+      <div className="border-t border-black bg-black py-2 text-center text-xs font-bold tracking-widest text-white uppercase opacity-0 transition-opacity duration-150 group-hover:opacity-100 dark:border-white/40 dark:bg-white/10 dark:text-white/80">
         Unsuckify →
       </div>
     </div>

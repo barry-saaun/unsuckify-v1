@@ -38,21 +38,39 @@ export async function getRecommendations(
       missing.includes(buildSongKey(s.artist, s.track)),
     );
 
-    // Fetch Last.fm data for all missing songs in parallel
-    const rawData = await Promise.all(
+    // Fetch Last.fm data for all missing songs in parallel.
+    // Some tracks may not exist on Last.fm — skip those rather than failing
+    // the whole request.
+    const rawDataResults = await Promise.allSettled(
       missingSongs.map((s) => fetchLastFmData(s.artist, s.track)),
     );
 
-    const upsertResult = await upsertManySongs(rawData);
+    const rawData = rawDataResults.flatMap((r) => {
+      if (r.status === "fulfilled") return [r.value];
+      console.warn(
+        "[get-recommendations] skipping track, Last.fm fetch failed:",
+        r.reason,
+      );
+      return [];
+    });
+
+    const upsertResult =
+      rawData.length > 0 ? await upsertManySongs(rawData) : { upserted: [] };
     embeddedOnDemand = upsertResult.upserted.length;
   }
 
   // --- Run similar search ---
-  const { recommendations, playlistCoverage } = await findSimilarSongs({
+  const result = await findSimilarSongs({
     playlistSongKeys: songKeys,
     limit,
     minScore,
   });
+
+  if (!result.ok) {
+    throw new Error(result.error);
+  }
+
+  const { recommendations, playlistCoverage } = result;
 
   return {
     recommendations,

@@ -1,177 +1,325 @@
 "use client";
 import { useParams, useSearchParams } from "next/navigation";
 import ErrorScreen from "~/components/error-screen";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import LoadingMessages from "~/components/loading-messages";
-import { Button } from "~/components/ui/button";
-import Spinner from "~/components/spinner";
 import InfoBanner from "~/components/info-banner";
-import CreateNewPlaylistCard from "~/components/create-new-playlist-card";
-import { useRecommendedInfTracks } from "~/hooks/useRecommendedInfTracks";
-import RecommendedTrackCard from "~/components/recommended-track-card";
 import RecommendedTrackCardSkeleton from "~/components/rec-track-card-skeleton";
 import { useUserContext } from "~/components/user-context-provider";
-import { cn } from "~/lib/utils";
+import { api } from "~/trpc/react";
+import { usePlaylistRecommendations } from "~/hooks/usePlaylistRecommendations";
+import { useResolvedTracks } from "~/hooks/useResolvedTracks";
+import type { SimilarSong } from "~/lib/pinecone/find-similar-songs";
+import RecommendedTrackCard, {
+  type AddStatus,
+} from "~/components/recommended-track-card";
+import CreateNewPlaylistCard from "~/components/create-new-playlist-card";
+
+type TrackAddState = {
+  status: AddStatus;
+  snapshotId?: string;
+};
 
 const TRACK_PER_INF_PAGE = 6;
 
+type OwnedMode = "add" | "new";
+
 export default function PlaylistContent() {
   const params = useParams<{ playlist_id: string }>();
-
   const searchParams = useSearchParams();
-
   const { userId } = useUserContext();
 
   const ownerId = searchParams.get("ownerId");
   const playlistName = searchParams.get("playlistName");
-
-  let isOwned: boolean;
-
-  if (ownerId && ownerId === userId) {
-    isOwned = true;
-  } else {
-    isOwned = false;
-  }
-
+  const isOwned = ownerId === userId;
   const playlist_id = params.playlist_id;
 
-  const {
-    data,
-    isLoadingAny,
-    errorAny,
-    fetchNextPage,
-    isFetchingNextPage,
-    playlistData,
-    rec_tracks,
-    hasNextPage,
-  } = useRecommendedInfTracks({
-    playlist_id: playlist_id ?? "",
-    userId: userId ?? "",
-    limit: TRACK_PER_INF_PAGE,
-  });
+  // Mode only relevant when `isOwned === true`
+  const [ownedMode, setOwnedMode] = useState<OwnedMode>("add");
 
-  const [selectedTracksUri, setSelectedTracksUri] = useState(
-    new Set<string>(new Set()),
+  // Selected track URIs for "new playlist" flow
+  const [selectedTrackUris, setSelectedTrackUris] = useState(new Set<string>());
+  const [skeletonPages] = useState(0);
+
+  // Per-card state for "add to playlist" flow: status + snapshot_id for undo
+  const [addStateMap, setAddStateMap] = useState(
+    new Map<string, TrackAddState>(),
   );
 
-  const [skeletonPages, setSkeletonPages] = useState(0);
+  const addTracksToPlaylistMutation =
+    api.playlist.addItemsToPlaylist.useMutation();
 
-  const handleFetchNextPage = async () => {
-    setSkeletonPages((prev) => prev + 1);
-    try {
-      await fetchNextPage();
-    } finally {
-      setSkeletonPages((prev) => Math.max(0, prev - 1));
-    }
-  };
+  const removePlaylistItemsMutation =
+    api.playlist.removePlaylistItems.useMutation();
 
-  const handleNotIsOwnedCardClick = (track_uri: string) => {
-    setSelectedTracksUri((prevUris) => {
-      const newUris = new Set(prevUris);
-      if (newUris.has(track_uri)) {
-        newUris.delete(track_uri);
+  const {
+    data: playlist,
+    isLoading: isLoadingPlaylist,
+    error: playlistError,
+  } = api.playlist.getPlaylistItemsAll.useQuery({
+    playlist_id: playlist_id ?? "",
+  });
+
+  const {
+    visibleRecs,
+    hasNextPage,
+    hasPrevPage,
+    nextPage,
+    prevPage,
+    page,
+    totalPages,
+    coverage,
+    isLoading: isLoadingRecs,
+    error: recsError,
+  } = usePlaylistRecommendations({
+    playlist: playlist ?? [],
+    enabled:
+      !isLoadingPlaylist && !playlistError && (playlist?.length ?? 0) > 0,
+    querySettings: {
+      limit: 80,
+      minScore: 0.6,
+    },
+  });
+
+  // Resolve Spotify data (trackUri + albumImage) for all visible recs in the parent
+  const { resolvedMap, loadingMap } = useResolvedTracks(visibleRecs);
+
+  // ── "New playlist" mode handlers ─────────────────────────────────────────
+  const handleCardSelect = (_song: SimilarSong, trackUri: string) => {
+    setSelectedTrackUris((prev) => {
+      const next = new Set(prev);
+      if (next.has(trackUri)) {
+        next.delete(trackUri);
       } else {
-        newUris.add(track_uri);
+        next.add(trackUri);
       }
-      return newUris;
+      return next;
     });
   };
 
-  console.log(selectedTracksUri);
+  const setTrackState = useCallback(
+    (trackUri: string, patch: Partial<TrackAddState>) => {
+      setAddStateMap((prev) => {
+        const next = new Map(prev);
+        next.set(trackUri, {
+          ...(prev.get(trackUri) ?? { status: "idle" }),
+          ...patch,
+        });
+        return next;
+      });
+    },
+    [],
+  );
 
-  // Handle loading states for either query
-  if (isLoadingAny) {
+  // ── "Add to playlist" mode handlers ──────────────────────────────────────
+  const handleCardAdd = useCallback(
+    async (_song: SimilarSong, trackUri: string) => {
+      if (!playlist_id) return;
+
+      setTrackState(trackUri, { status: "adding" });
+
+      try {
+        const result = await addTracksToPlaylistMutation.mutateAsync({
+          playlist_id,
+          params: { track_uris: [trackUri] },
+        });
+        setTrackState(trackUri, {
+          status: "added",
+          snapshotId: result.snapshot_id ?? undefined,
+        });
+      } catch {
+        setTrackState(trackUri, { status: "error" });
+      }
+    },
+    [playlist_id, addTracksToPlaylistMutation, setTrackState],
+  );
+
+  // ── "Undo add" handler — remove the just-added track ──────────────────────
+  const handleCardUndo = useCallback(
+    async (_song: SimilarSong, trackUri: string) => {
+      if (!playlist_id) return;
+      const snapshotId = addStateMap.get(trackUri)?.snapshotId;
+      if (!snapshotId) return;
+
+      setTrackState(trackUri, { status: "removing" });
+
+      try {
+        await removePlaylistItemsMutation.mutateAsync({
+          playlist_id,
+          params: { uri: trackUri, snapshot_id: snapshotId },
+        });
+        setTrackState(trackUri, { status: "idle", snapshotId: undefined });
+      } catch {
+        // On undo failure, keep the card in "added" state so the user can retry
+        setTrackState(trackUri, { status: "added" });
+      }
+    },
+    [playlist_id, addStateMap, removePlaylistItemsMutation, setTrackState],
+  );
+
+  // When switching modes, clear the relevant state so the UI resets cleanly
+  const handleModeSwitch = (mode: OwnedMode) => {
+    setOwnedMode(mode);
+    if (mode === "add") {
+      setSelectedTrackUris(new Set());
+    } else {
+      setAddStateMap(new Map());
+    }
+  };
+
+  if (!playlist_id) return <ErrorScreen message="Invalid Playlist ID." />;
+  if (!userId)
+    return <ErrorScreen message="Sorry! We could not get your Spotify ID." />;
+  if (playlistError) return <ErrorScreen message={playlistError.message} />;
+  if (recsError) return <ErrorScreen message={recsError.message} />;
+
+  if (!playlistError && (!playlist || isLoadingPlaylist || isLoadingRecs)) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4">
+      <div className="flex h-full flex-col items-center justify-center gap-6">
         <div className="hungry-loader" />
         <LoadingMessages interval={2500} />
       </div>
     );
   }
 
-  if (errorAny) {
-    return <ErrorScreen message={errorAny.message} />;
-  }
+  const selectedUrisList = Array.from(selectedTrackUris);
 
-  if (playlistData === null) {
-    console.error("No playlist data found.");
-    return <ErrorScreen message="No playlist data found." />;
-  }
-
-  if (rec_tracks === null) {
-    console.error("No recommendation data found.");
-    return <ErrorScreen message="No recommendation data found." />;
-  }
-
-  if (!userId) {
-    return <ErrorScreen message="Sorry! We could not get your Spotify ID." />;
-  }
-
-  if (!playlist_id) {
-    return <ErrorScreen message="Invalid Playlist ID." />;
-  }
+  // "new" mode panel: slide in when tracks are selected
+  const showNewPlaylistPanel =
+    isOwned && ownedMode === "new" && selectedUrisList.length > 0;
+  // "add" mode panel: not needed — adds are fire-and-forget per card
+  // For !isOwned, same "new playlist" panel but always active once any track selected
+  const showNotOwnedPanel = !isOwned && selectedUrisList.length > 0;
 
   return (
-    <div className="mx-6 mb-10 flex min-h-screen flex-col items-center justify-center gap-6 border-none md:mx-8 lg:mx-10">
-      {playlistName && (
-        <div className="mt-10 mb-8 text-center">
-          <h1 className="text-center text-3xl font-bold text-gray-900 md:text-4xl lg:text-5xl dark:text-gray-100">
-            {playlistName}
-          </h1>
-          <div className="mx-auto mt-4 h-1 w-24 rounded-full bg-linear-to-r from-purple-500 to-pink-500" />
+    <div className="bg-background flex h-full flex-col font-mono">
+      {/* Page header */}
+      <div className="border-border flex items-center justify-between border-b px-6 py-3">
+        <span className="text-muted-foreground text-xs tracking-widest uppercase">
+          / Recommendations
+        </span>
+        {/* {coverage && ( */}
+        {/*   <span className="text-muted-foreground text-xs tracking-widest uppercase"> */}
+        {/*     {coverage.embedded}/{coverage.total} matched */}
+        {/*   </span> */}
+        {/* )} */}
+      </div>
+
+      {/* Mode switcher — only for owned playlists */}
+      {isOwned && (
+        <div className="border-border flex border-b">
+          {/* Left mode tab */}
+          <button
+            onClick={() => handleModeSwitch("add")}
+            className={`border-border flex-1 border-r py-2.5 text-[9px] font-bold tracking-[0.25em] uppercase transition-colors ${
+              ownedMode === "add"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            + Add to this playlist
+          </button>
+          {/* Right mode tab */}
+          <button
+            onClick={() => handleModeSwitch("new")}
+            className={`flex-1 py-2.5 text-[9px] font-bold tracking-[0.25em] uppercase transition-colors ${
+              ownedMode === "new"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            ■ Create new playlist
+          </button>
         </div>
       )}
 
-      <div className="w-full max-w-6xl space-y-6">
-        {!isOwned && (
-          <CreateNewPlaylistCard
-            selectedTracksUri={Array.from(selectedTracksUri)}
-            user_id={userId}
-          />
+      {/* Info banner */}
+      <div className="border-border border-b px-6 py-0">
+        <InfoBanner isOwned={isOwned} ownedMode={ownedMode} />
+      </div>
+
+      {/* Track grid */}
+      <div className="min-h-0 flex-1 overflow-y-auto p-6">
+        {playlistName && (
+          <h1 className="text-foreground mb-6 text-center text-3xl font-bold tracking-tight uppercase">
+            {playlistName}
+          </h1>
         )}
-
-        <InfoBanner isOwned={isOwned} />
-
-        <div className="grid w-full grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {data?.pages.flatMap((page) =>
-            page.items.map((item, i) => (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+          {visibleRecs.map((song: SimilarSong) => {
+            const resolved = resolvedMap.get(song.songKey);
+            const isLoading = loadingMap.get(song.songKey) ?? true;
+            const trackUri = resolved?.trackUri;
+            return (
               <RecommendedTrackCard
-                key={`${i}-${item.id}`}
-                playlist_id={playlist_id}
-                handleNotIsOwnedCardClick={handleNotIsOwnedCardClick}
-                trackObj={item}
+                key={song.songKey}
+                song={song}
                 isOwned={isOwned}
-                track_id={item.id}
-                batch_id={item.batchId!}
+                resolvedTrack={resolved ?? null}
+                trackLoading={isLoading}
+                isSelected={!!trackUri && selectedTrackUris.has(trackUri)}
+                onSelectAction={handleCardSelect}
+                ownedMode={ownedMode}
+                addStatus={
+                  trackUri
+                    ? (addStateMap.get(trackUri)?.status ?? "idle")
+                    : "idle"
+                }
+                onAddAction={handleCardAdd}
+                onUndoAction={handleCardUndo}
               />
-            )),
-          )}
-
-          {Array.from({ length: skeletonPages }, (_, pageIndex) =>
-            Array.from({ length: TRACK_PER_INF_PAGE }, (_, itemIndex) => (
+            );
+          })}
+          {Array.from({ length: skeletonPages }, (_page, pageIndex) =>
+            Array.from({ length: TRACK_PER_INF_PAGE }, (_item, itemIndex) => (
               <RecommendedTrackCardSkeleton
-                isOwned
+                isOwned={isOwned}
                 key={`skeleton-${pageIndex}-${itemIndex}`}
               />
             )),
           )}
         </div>
-
-        {hasNextPage ? (
-          <div className="flex justify-center pt-4">
-            <Button
-              disabled={isFetchingNextPage}
-              onClick={handleFetchNextPage}
-              className={cn(
-                "bg-linear-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600",
-                "px-8 py-6 text-base font-medium",
-              )}
-            >
-              {isFetchingNextPage ? <Spinner /> : "Load More Tracks"}
-            </Button>
-          </div>
-        ) : null}
       </div>
+
+      {/* Create playlist panel — slides in when tracks are selected */}
+      {(showNewPlaylistPanel || showNotOwnedPanel) && (
+        <div
+          className={`transition-all duration-300 ease-in-out ${
+            showNewPlaylistPanel || showNotOwnedPanel
+              ? "max-h-56 pt-2 opacity-100"
+              : "max-h-0 overflow-hidden opacity-0"
+          }`}
+        >
+          <CreateNewPlaylistCard
+            selectedTracksUri={selectedUrisList}
+            user_id={userId}
+            onDismiss={() => setSelectedTrackUris(new Set())}
+          />
+        </div>
+      )}
+
+      {/* Pagination */}
+      {(hasNextPage || hasPrevPage) && (
+        <div className="border-border flex items-center border-t">
+          <button
+            onClick={prevPage}
+            disabled={!hasPrevPage}
+            className="border-border text-foreground flex-1 border-r py-4 text-xs font-bold tracking-widest uppercase transition-opacity hover:opacity-60 disabled:opacity-20"
+          >
+            ← Previous
+          </button>
+          <span className="text-muted-foreground px-6 text-xs tracking-widest uppercase">
+            {page} / {totalPages}
+          </span>
+          <button
+            onClick={nextPage}
+            disabled={!hasNextPage}
+            className="border-border text-foreground flex-1 border-l py-4 text-xs font-bold tracking-widest uppercase transition-opacity hover:opacity-60 disabled:opacity-20"
+          >
+            Next →
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -53,23 +53,3 @@ function weightTierFromMatch(match: number): number {
 
   return 1;
 }
-
-const data: SanatisedMusicData = {
-  track: "Teardrop",
-  artist: "Massive Attack",
-  album: "Mezzanine",
-  trackTags: ["trip-hop", "chillout", "electronic"],
-  artistTags: [],
-  artistTagsWeighted: [
-    { name: "trip-hop", count: 120 },
-    { name: "electronic", count: 95 },
-    { name: "downtempo", count: 60 },
-  ],
-  similarArtists: [],
-  similarArtistsWeighted: [
-    { name: "Portishead", match: 0.89234 },
-    { name: "Tricky", match: 0.84512 },
-  ],
-};
-
-console.log(buildEmbeddingText(data));
