@@ -63,8 +63,8 @@ export default function RecommendedTrackCard({
   const showInverted = isSelected || (ownedMode === "add" && isAdded);
 
   const borderMuted = showInverted
-    ? "border-white dark:border-black"
-    : "border-black dark:border-white";
+    ? "border-white dark:border-black/50"
+    : "border-black dark:border-white/40";
 
   const handleClick = () => {
     if (!resolvedTrack?.trackUri) return;
@@ -96,7 +96,7 @@ export default function RecommendedTrackCard({
       const label = isRemoving ? "■ undoing" : "■ ...";
       return (
         <div
-          className={`${base} flex items-center justify-center gap-[3px] border-black/20 py-2 text-black/40 dark:border-white/20 dark:text-white/40`}
+          className={`${base} flex items-center justify-center gap-[3px] border-black/20 py-2 text-black/40 dark:border-white/10 dark:text-white/50`}
         >
           {[0, 1, 2, 3].map((i) => (
             <span
@@ -113,7 +113,7 @@ export default function RecommendedTrackCard({
     if (isDead) {
       return (
         <div
-          className={`${base} border-black/15 py-2 text-center text-black/20 dark:border-white/10 dark:text-white/15`}
+          className={`${base} border-black/15 py-2 text-center text-black/20 dark:border-white/5 dark:text-white/25`}
         >
           ■ no match
         </div>
@@ -125,12 +125,12 @@ export default function RecommendedTrackCard({
         // Two-cell row: "■ Added" on the left + "Undo →" clickable on the right
         return (
           <div
-            className={`${base} flex items-stretch border-black bg-black text-white dark:border-white dark:bg-white dark:text-black`}
+            className={`${base} flex items-stretch border-black bg-black text-white dark:border-white/40 dark:bg-white/10 dark:text-white/80`}
           >
             <span className="flex-1 py-2 text-center">■ Added</span>
             <button
               onClick={handleUndoClick}
-              className="border-l border-white/20 px-3 py-2 text-white/60 transition-colors hover:bg-white/10 dark:border-black/20 dark:text-black/60 dark:hover:bg-black/10"
+              className="border-l border-white/20 px-3 py-2 text-white/60 transition-colors hover:bg-white/10 dark:border-white/10 dark:text-white/60 dark:hover:bg-white/20"
             >
               Undo
             </button>
@@ -140,7 +140,7 @@ export default function RecommendedTrackCard({
       if (isAddError) {
         return (
           <div
-            className={`${base} border-black/40 py-2 text-center text-black/60 dark:border-white/40 dark:text-white/60`}
+            className={`${base} border-black/40 py-2 text-center text-black/60 dark:border-white/20 dark:text-white/60`}
           >
             ■ Error — retry
           </div>
@@ -149,7 +149,7 @@ export default function RecommendedTrackCard({
       // idle — reveal on hover
       return (
         <div
-          className={`${base} border-black py-2 text-center text-black/50 opacity-0 group-hover:opacity-100 dark:border-white dark:text-white/50`}
+          className={`${base} border-black py-2 text-center text-black/50 opacity-0 group-hover:opacity-100 dark:border-white/40 dark:text-white/50`}
         >
           Add →
         </div>
@@ -160,7 +160,7 @@ export default function RecommendedTrackCard({
     if (isSelected) {
       return (
         <div
-          className={`${base} border-white bg-white py-2 text-center text-black dark:border-black dark:bg-black dark:text-white`}
+          className={`${base} border-white bg-white py-2 text-center text-black dark:border-white/40 dark:bg-white/10 dark:text-white/80`}
         >
           ■ Selected
         </div>
@@ -168,7 +168,7 @@ export default function RecommendedTrackCard({
     }
     return (
       <div
-        className={`${base} border-black bg-black py-2 text-center text-white opacity-0 group-hover:opacity-100 dark:border-white dark:bg-white dark:text-black`}
+        className={`${base} border-black bg-black py-2 text-center text-white opacity-0 group-hover:opacity-100 dark:border-white/40 dark:bg-white/10 dark:text-white/80`}
       >
         Select →
       </div>
@@ -180,16 +180,16 @@ export default function RecommendedTrackCard({
       onClick={handleClick}
       className={`group border font-mono transition-colors ${
         isDead
-          ? "border-black/30 bg-white text-black/40 dark:border-white/20 dark:bg-black dark:text-white/30"
+          ? "border-black/30 bg-white text-black/40 dark:border-white/10 dark:bg-black dark:text-white/40"
           : showInverted
-            ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
+            ? "border-black bg-black text-white dark:border-white/40 dark:bg-white/10 dark:text-white/80"
             : isBusy
-              ? "border-black/50 bg-white text-black dark:border-white/50 dark:bg-black dark:text-white"
-              : "border-black bg-white text-black dark:border-white dark:bg-black dark:text-white"
+              ? "border-black/50 bg-white text-black dark:border-white/30 dark:bg-black dark:text-white/80"
+              : "border-black bg-white text-black dark:border-white/40 dark:bg-black dark:text-white/80"
       } ${isClickable ? "cursor-pointer" : "cursor-default"}`}
     >
       {/* Square image area */}
-      <div className="relative aspect-square w-full overflow-hidden bg-black/5 dark:bg-white/5">
+      <div className="relative aspect-square w-full overflow-hidden bg-black/5 dark:bg-white/3">
         {trackLoading ? (
           <>
             <div className="absolute inset-0 opacity-30">
@@ -205,7 +205,7 @@ export default function RecommendedTrackCard({
                   />
                 ))}
               </div>
-              <span className="text-[9px] font-bold tracking-[0.25em] text-black/50 uppercase dark:text-white/50">
+              <span className="text-[9px] font-bold tracking-[0.25em] text-black/50 uppercase dark:text-white/60">
                 ■ loading
               </span>
             </div>
@@ -225,7 +225,7 @@ export default function RecommendedTrackCard({
                   />
                 ))}
               </div>
-              <span className="text-[9px] font-bold tracking-[0.25em] text-black/30 uppercase dark:text-white/25">
+              <span className="text-[9px] font-bold tracking-[0.25em] text-black/30 uppercase dark:text-white/35">
                 ■ unavailable
               </span>
             </div>
@@ -251,7 +251,7 @@ export default function RecommendedTrackCard({
                   />
                 ))}
               </div>
-              <span className="text-[9px] font-bold tracking-[0.25em] text-black/50 uppercase dark:text-white/50">
+              <span className="text-[9px] font-bold tracking-[0.25em] text-black/50 uppercase dark:text-white/60">
                 {isRemoving ? "■ undoing" : "■ adding"}
               </span>
             </div>
@@ -271,7 +271,7 @@ export default function RecommendedTrackCard({
 
       {/* Info strip */}
       <div
-        className={`border-t p-3 ${isDead ? "border-black/20 dark:border-white/15" : borderMuted}`}
+        className={`border-t p-3 ${isDead ? "border-black/20 dark:border-white/8" : borderMuted}`}
       >
         <p
           className={`truncate text-xs font-bold tracking-wide uppercase ${isDead ? "opacity-40" : ""}`}
@@ -282,10 +282,10 @@ export default function RecommendedTrackCard({
           <span
             className={`truncate text-xs tracking-widest uppercase ${
               isDead
-                ? "text-black/25 dark:text-white/20"
+                ? "text-black/25 dark:text-white/30"
                 : showInverted
-                  ? "text-white/60 dark:text-black/60"
-                  : "text-black/40 dark:text-white/40"
+                  ? "text-white/60 dark:text-black/70"
+                  : "text-black/40 dark:text-white/50"
             }`}
           >
             {song.artist}
@@ -308,10 +308,10 @@ export default function RecommendedTrackCard({
           <p
             className={`mt-1 truncate text-[9px] tracking-widest uppercase ${
               isDead
-                ? "text-black/20 dark:text-white/15"
+                ? "text-black/20 dark:text-white/25"
                 : showInverted
-                  ? "text-white/40 dark:text-black/40"
-                  : "text-black/25 dark:text-white/25"
+                  ? "text-white/40 dark:text-black/60"
+                  : "text-black/25 dark:text-white/35"
             }`}
           >
             {song.album}
