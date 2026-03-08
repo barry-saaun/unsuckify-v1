@@ -192,29 +192,29 @@ export default function PlaylistContent() {
   const showNotOwnedPanel = !isOwned && selectedUrisList.length > 0;
 
   return (
-    <div className="flex h-full flex-col bg-white font-mono dark:bg-black">
+    <div className="bg-background flex h-full flex-col font-mono">
       {/* Page header */}
-      <div className="flex items-center justify-between border-b border-black px-6 py-3 dark:border-white">
-        <span className="text-xs tracking-widest text-black/40 uppercase dark:text-white/40">
+      <div className="border-border flex items-center justify-between border-b px-6 py-3">
+        <span className="text-muted-foreground text-xs tracking-widest uppercase">
           / Recommendations
         </span>
-        {coverage && (
-          <span className="text-xs tracking-widest text-black/40 uppercase dark:text-white/40">
-            {coverage.embedded}/{coverage.total} matched
-          </span>
-        )}
+        {/* {coverage && ( */}
+        {/*   <span className="text-muted-foreground text-xs tracking-widest uppercase"> */}
+        {/*     {coverage.embedded}/{coverage.total} matched */}
+        {/*   </span> */}
+        {/* )} */}
       </div>
 
       {/* Mode switcher — only for owned playlists */}
       {isOwned && (
-        <div className="flex border-b border-black dark:border-white">
+        <div className="border-border flex border-b">
           {/* Left mode tab */}
           <button
             onClick={() => handleModeSwitch("add")}
-            className={`flex-1 border-r border-black py-2.5 text-[9px] font-bold tracking-[0.25em] uppercase transition-colors dark:border-white ${
+            className={`border-border flex-1 border-r py-2.5 text-[9px] font-bold tracking-[0.25em] uppercase transition-colors ${
               ownedMode === "add"
-                ? "bg-black text-white dark:bg-white dark:text-black"
-                : "text-black/40 hover:text-black dark:text-white/40 dark:hover:text-white"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             + Add to this playlist
@@ -224,8 +224,8 @@ export default function PlaylistContent() {
             onClick={() => handleModeSwitch("new")}
             className={`flex-1 py-2.5 text-[9px] font-bold tracking-[0.25em] uppercase transition-colors ${
               ownedMode === "new"
-                ? "bg-black text-white dark:bg-white dark:text-black"
-                : "text-black/40 hover:text-black dark:text-white/40 dark:hover:text-white"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             ■ Create new playlist
@@ -234,14 +234,14 @@ export default function PlaylistContent() {
       )}
 
       {/* Info banner */}
-      <div className="border-b border-black px-6 py-0 dark:border-white">
+      <div className="border-border border-b px-6 py-0">
         <InfoBanner isOwned={isOwned} ownedMode={ownedMode} />
       </div>
 
       {/* Track grid */}
       <div className="min-h-0 flex-1 overflow-y-auto p-6">
         {playlistName && (
-          <h1 className="mb-6 text-center text-3xl font-bold tracking-tight text-black uppercase dark:text-white">
+          <h1 className="text-foreground mb-6 text-center text-3xl font-bold tracking-tight uppercase">
             {playlistName}
           </h1>
         )}
@@ -300,21 +300,21 @@ export default function PlaylistContent() {
 
       {/* Pagination */}
       {(hasNextPage || hasPrevPage) && (
-        <div className="flex items-center border-t border-black dark:border-white">
+        <div className="border-border flex items-center border-t">
           <button
             onClick={prevPage}
             disabled={!hasPrevPage}
-            className="flex-1 border-r border-black py-4 text-xs font-bold tracking-widest text-black uppercase transition-opacity hover:opacity-60 disabled:opacity-20 dark:border-white dark:text-white"
+            className="border-border text-foreground flex-1 border-r py-4 text-xs font-bold tracking-widest uppercase transition-opacity hover:opacity-60 disabled:opacity-20"
           >
             ← Previous
           </button>
-          <span className="px-6 text-xs tracking-widest text-black/40 uppercase dark:text-white/40">
+          <span className="text-muted-foreground px-6 text-xs tracking-widest uppercase">
             {page} / {totalPages}
           </span>
           <button
             onClick={nextPage}
             disabled={!hasNextPage}
-            className="flex-1 border-l border-black py-4 text-xs font-bold tracking-widest text-black uppercase transition-opacity hover:opacity-60 disabled:opacity-20 dark:border-white dark:text-white"
+            className="border-border text-foreground flex-1 border-l py-4 text-xs font-bold tracking-widest uppercase transition-opacity hover:opacity-60 disabled:opacity-20"
           >
             Next →
           </button>
