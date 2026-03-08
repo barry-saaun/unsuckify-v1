@@ -34,7 +34,7 @@ export default function MyPlaylistsTabContent() {
 
   return (
     <div className="p-6">
-      <div className="grid grid-cols-2 gap-px border border-black bg-black sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 dark:border-white/40 dark:bg-white/5">
+      <div className="grid grid-cols-2 gap-px border border-black bg-black sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 dark:border-white dark:bg-white">
         {isLoading
           ? Array.from({ length: numberOfSkeleton }).map((_, idx) => (
               <div key={idx} className="bg-white dark:bg-black">

@@ -144,20 +144,8 @@ export const spotifyApi = {
       { playlist_id },
       { offset, limit },
     ),
-  searchForTrack: ({
-    q,
-    type,
-    limit,
-  }: {
-    q: string;
-    type: string;
-    limit: number;
-  }) =>
-    spotifyFetch<TrackSearchResponse>("GET", "/search", undefined, {
-      q,
-      type,
-      limit,
-    }),
+  searchForTrack: ({ q, type }: { q: string; type: string }) =>
+    spotifyFetch<TrackSearchResponse>("GET", "/search", undefined, { q, type }),
   addTracksToPlaylist: ({
     playlist_id,
     requestBody,

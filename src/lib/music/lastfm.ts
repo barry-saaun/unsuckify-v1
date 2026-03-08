@@ -86,14 +86,6 @@ export async function fetchLastFmData(artist: string, track: string) {
     fetchArtistData(artist),
   ]);
 
-  // Last.fm returns a 200 with no `track` property when it doesn't recognise
-  // the track. Throw here so callers can skip this song gracefully.
-  if (!trackInfo.track) {
-    throw new Error(
-      `Last.fm API returned invalid track data: track object is missing (artist="${artist}", track="${track}")`,
-    );
-  }
-
   const artistTopTags: LastFmArtistTopTagsResponse = {
     toptags: {
       tag: artistData.topTags,

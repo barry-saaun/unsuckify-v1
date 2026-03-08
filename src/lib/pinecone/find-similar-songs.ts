@@ -6,7 +6,7 @@ import { songsIndex } from "./pinecone";
 import { inArray } from "drizzle-orm";
 import type { SanatisedMusicData } from "../ingestion/group-lastfm-data";
 
-export type SimilarSong = {
+export interface SimilarSong {
   songKey: string;
   artist: string;
   track: string;
@@ -15,22 +15,16 @@ export type SimilarSong = {
   artistTags: string[];
   similarArtists: string[];
   score: number; // cosine similarity 0–1
-};
+}
 
-export type SimilaritySearchResult =
-  | {
-      ok: true;
-      recommendations: SimilarSong[];
-      playlistCoverage: {
-        embedded: number;
-        total: number;
-        missing: string[];
-      };
-    }
-  | {
-      ok: false;
-      error: string;
-    };
+export interface SimilaritySearchResult {
+  recommendations: SimilarSong[];
+  playlistCoverage: {
+    embedded: number; // how many playlist songs had vectors
+    total: number; // how many were requested
+    missing: string[]; // song keys that had no vector
+  };
+}
 
 interface SimilarSongParams {
   playlistSongKeys: string[];
@@ -45,15 +39,11 @@ export async function findSimilarSongs({
 }: SimilarSongParams): Promise<SimilaritySearchResult> {
   const { found, missing } = await fetchSongEmbeddings(playlistSongKeys);
 
-  console.log(playlistSongKeys);
-
   if (found.length === 0) {
-    return {
-      ok: false,
-      error:
-        "Recommendations for this playlist is not available at the moment." +
-        " Please contact support",
-    };
+    throw new Error(
+      "None of the playlist songs have embeddings yet. " +
+        "Run upsertSong() for these tracks first.",
+    );
   }
 
   // --- Build playlist tag profile from DB ---
@@ -117,7 +107,6 @@ export async function findSimilarSongs({
   const finalRecs = recommendations.slice(0, limit);
 
   return {
-    ok: true,
     recommendations: finalRecs,
     playlistCoverage: {
       embedded: found.length,

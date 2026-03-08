@@ -1,9 +1,3 @@
-export interface RawTrack {
-  artistName: string;
-  albumName?: string;
-  trackName: string;
-}
-
 export interface LastFmGetTrackInfoResponse {
   track?: {
     name?: string;

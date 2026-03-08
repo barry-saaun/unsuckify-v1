@@ -50,15 +50,6 @@ export async function getCachedArtist(
     (topTags?.length ?? 0) > 0 || (similarArtists?.length ?? 0) > 0;
   if (!structuredHasAny && legacyHasAny) return null;
 
-  // Don't serve a cache entry where either field is empty — force a refetch
-  // so stale/incomplete rows (visible in the screenshot) get overwritten.
-  if (
-    (topTagsData?.length ?? 0) === 0 ||
-    (similarArtistsData?.length ?? 0) === 0
-  ) {
-    return null;
-  }
-
   return { topTags: topTagsData, similarArtists: similarArtistsData };
 }
 

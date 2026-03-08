@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-const MESSAGES = [
+export const MESSAGES = [
   "We're crunching your recommendations in the factory.",
   "We're cooking something you ain't ready for.",
   "Hold tight, twin! Let it cook!",

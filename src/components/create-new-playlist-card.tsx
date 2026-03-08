@@ -1,210 +1,366 @@
 "use client";
+import React, { useState, useEffect } from "react";
+import {
+  Plus,
+  Globe,
+  Lock,
+  Edit3,
+  X,
+  List,
+  Lightbulb,
+  Zap,
+  Heart,
+  Coffee,
+  Car,
+  Dumbbell,
+  Moon,
+  CloudRain,
+  Sun,
+} from "lucide-react";
 
-import { useCallback, useState } from "react";
-import { api } from "~/trpc/react";
+import { Card, CardContent } from "~/components/ui/card";
+import { Input } from "~/components/ui/input";
+import { Button } from "~/components/ui/button";
+import Spinner from "~/components/spinner";
+import useCreatePlaylistWithTracks from "~/hooks/useCreatePlaylistWithTracks";
+import { useAppToast } from "~/hooks/useAppToast";
+import { useDebounce } from "use-debounce";
+import { cn } from "~/lib/utils";
 
-type CreateNewPlaylistCardProps = {
+type CreateNewPlaylistCardProp = {
   selectedTracksUri: string[];
   user_id: string;
-  onDismiss?: () => void;
 };
 
-type Status = "idle" | "creating" | "success" | "error";
-
-export default function CreateNewPlaylistCard({
-  selectedTracksUri,
+const CreateNewPlaylistCard: React.FC<CreateNewPlaylistCardProp> = ({
   user_id,
-  onDismiss,
-}: CreateNewPlaylistCardProps) {
-  const [name, setName] = useState("");
-  const [isPublic, setIsPublic] = useState(false);
-  const [status, setStatus] = useState<Status>("idle");
+  selectedTracksUri,
+}) => {
+  const [newPlaylistName, setNewPlaylistName] = useState<string>("");
+  const [debouncePlaylistName] = useDebounce(newPlaylistName, 500);
+  const [isPublic, setIsPublic] = useState<boolean>(false);
+  const [showPrivacyOptions, setShowPrivacyOptions] = useState<boolean>(false);
+  const [isEditingName, setIsEditingName] = useState<boolean>(false);
+  const [inputError, setInputError] = useState<string>("");
 
-  const count = selectedTracksUri.length;
-  const canSubmit = name.trim().length > 0 && count > 0 && status === "idle";
+  const { isCreated, isCreating, error, handleCreateNewPlaylist } =
+    useCreatePlaylistWithTracks({
+      isPublic,
+      newPlaylistName: debouncePlaylistName,
+      user_id,
+    });
 
-  const createPlaylistMutation =
-    api.playlist.createPlaylistWithTracks.useMutation();
+  const { toastError } = useAppToast();
 
-  const mutationErrMessage =
-    createPlaylistMutation.error?.message ?? "Something went wrong. Try again.";
-
-  const handleCreate = useCallback(async () => {
-    if (!canSubmit) return;
-
-    setStatus("creating");
-
-    try {
-      await createPlaylistMutation.mutateAsync({
-        track_uris: selectedTracksUri,
-        isPublic,
-        name: name.trim(),
-        description: "",
-        user_id,
-      });
-      setStatus("success");
-    } catch {
-      setStatus("error");
-    }
-  }, [
-    canSubmit,
-    createPlaylistMutation,
-    selectedTracksUri,
-    isPublic,
-    name,
-    user_id,
-  ]);
-
-  function handleReset() {
-    setName("");
-    setIsPublic(false);
-    setStatus("idle");
-    onDismiss?.();
+  if (error) {
+    toastError(error.message, {
+      id: "error-creating-playist-with-tracks",
+    });
   }
 
-  const isCreating = status === "creating";
-  const isSuccess = status === "success";
+  const [showSuccess, setShowSuccess] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (isCreated) {
+      setShowSuccess(true);
+      const timer = setTimeout(() => {
+        setShowSuccess(false);
+        setNewPlaylistName("");
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isCreated]);
+
+  const hasSelectedTracks = selectedTracksUri.length > 0;
+  const maxLength = 100;
+  const isNearLimit = newPlaylistName.length > maxLength - 20;
+  const isOverLimit = newPlaylistName.length > maxLength;
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value.length <= maxLength) {
+      setNewPlaylistName(value);
+      setInputError("");
+    } else {
+      setInputError(`Maximum ${maxLength} characters allowed`);
+    }
+  };
+
+  const handleNameBlur = () => {
+    setIsEditingName(false);
+    if (newPlaylistName.trim() === "") {
+      setNewPlaylistName("");
+    }
+  };
+
+  const [suggestionIcon, setSuggestionIcon] = useState(() => {
+    const icons = [
+      { icon: Lightbulb, suggestion: "Based on my mood" },
+      { icon: Moon, suggestion: "Late night vibes" },
+      { icon: Car, suggestion: "Road trip essentials" },
+      { icon: Dumbbell, suggestion: "Workout motivation" },
+      { icon: Coffee, suggestion: "Chill & relax" },
+      { icon: Zap, suggestion: "Monday morning energy" },
+      { icon: CloudRain, suggestion: "Rainy day mood" },
+      { icon: Sun, suggestion: "Summer memories" },
+      { icon: Heart, suggestion: "Feel good hits" },
+    ];
+    return icons[Math.floor(Math.random() * icons.length)];
+  });
+
+  // Refresh suggestion every 10 seconds when not editing
+  useEffect(() => {
+    if (!isEditingName && newPlaylistName.length === 0) {
+      const interval = setInterval(() => {
+        const icons = [
+          { icon: Lightbulb, suggestion: "Based on my mood" },
+          { icon: Moon, suggestion: "Late night vibes" },
+          { icon: Car, suggestion: "Road trip essentials" },
+          { icon: Dumbbell, suggestion: "Workout motivation" },
+          { icon: Coffee, suggestion: "Chill & relax" },
+          { icon: Zap, suggestion: "Monday morning energy" },
+          { icon: CloudRain, suggestion: "Rainy day mood" },
+          { icon: Sun, suggestion: "Summer memories" },
+          { icon: Heart, suggestion: "Feel good hits" },
+        ];
+        setSuggestionIcon(icons[Math.floor(Math.random() * icons.length)]);
+      }, 10000); // Change every 10 seconds
+      return () => clearInterval(interval);
+    }
+  }, [isEditingName, newPlaylistName.length]);
+
+  const getPlaylistSuggestions = () =>
+    suggestionIcon?.suggestion || "My awesome playlist";
+  const getSuggestionIcon = () => suggestionIcon?.icon || Lightbulb;
 
   return (
-    // Brutalist floating panel — hard offset shadow lifts it off the page
-    <div className="mx-6 mb-6 border-2 border-black bg-white font-mono text-black shadow-[6px_6px_0_0_#000] dark:border-white dark:bg-black dark:text-white dark:shadow-[6px_6px_0_0_#fff]">
-      {/* Header row */}
-      <div className="flex items-center justify-between border-b border-black px-6 py-3 dark:border-white">
-        <span className="text-[9px] font-bold tracking-[0.25em] text-black/50 uppercase dark:text-white/50">
-          / New playlist
-        </span>
-        <div className="flex items-center gap-3">
-          {/* Track count badge */}
-          <span className="border border-black px-2 py-0.5 text-[9px] font-bold tracking-[0.2em] uppercase dark:border-white">
-            {count} {count === 1 ? "track" : "tracks"}
-          </span>
-          {/* Dismiss */}
-          {onDismiss && (
-            <button
-              onClick={handleReset}
-              className="text-[9px] font-bold tracking-[0.2em] text-black/40 uppercase transition-colors hover:text-black dark:text-white/40 dark:hover:text-white"
-            >
-              ✕ clear
-            </button>
-          )}
-        </div>
-      </div>
-
-      {isSuccess ? (
-        // ── Success state ──────────────────────────────────────────────────
-        <div className="flex items-center justify-between px-6 py-5">
-          <div>
-            <p className="text-xs font-bold tracking-widest uppercase">
-              ■ Playlist created
-            </p>
-            <p className="mt-1 text-[9px] tracking-widest text-black/40 uppercase dark:text-white/40">
-              &ldquo;{name}&rdquo; &mdash; {isPublic ? "public" : "private"}{" "}
-              &middot; {count} tracks
-            </p>
-          </div>
-          <button
-            onClick={handleReset}
-            className="border border-black px-4 py-2 text-[9px] font-bold tracking-[0.2em] uppercase transition-colors hover:bg-black hover:text-white dark:border-white dark:hover:bg-white dark:hover:text-black"
-          >
-            Done →
-          </button>
-        </div>
-      ) : (
-        // ── Form state ─────────────────────────────────────────────────────
-        <div className="flex items-stretch">
-          {/* Playlist name input */}
-          <div className="flex-1 border-r border-black dark:border-white">
-            <label className="block border-b border-black/20 px-6 py-1.5 text-[8px] font-bold tracking-[0.25em] text-black/40 uppercase dark:border-white/20 dark:text-white/40">
-              Playlist name
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-              disabled={isCreating}
-              placeholder="My new playlist..."
-              maxLength={100}
-              className="w-full bg-transparent px-6 py-4 text-sm font-bold tracking-wide placeholder-black/25 outline-none disabled:opacity-40 dark:placeholder-white/25"
-            />
+    <Card className="mb-8 w-full border-0 bg-linear-to-br from-purple-500/10 via-transparent to-pink-500/10 backdrop-blur-sm">
+      <CardContent className="p-6">
+        <div className="flex items-start gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-linear-to-br from-purple-500 to-pink-500">
+            <List className="h-6 w-6 text-white" />
           </div>
 
-          {/* Privacy toggle */}
-          <div className="shrink-0 border-r border-black dark:border-white">
-            <p className="border-b border-black/20 px-5 py-1.5 text-[8px] font-bold tracking-[0.25em] text-black/40 uppercase dark:border-white/20 dark:text-white/40">
-              Privacy
-            </p>
-            <div className="flex h-[52px] items-center">
-              <button
-                onClick={() => setIsPublic(false)}
-                disabled={isCreating}
-                className={`h-full border-r border-black/20 px-5 text-[9px] font-bold tracking-[0.2em] uppercase transition-colors dark:border-white/20 ${
-                  !isPublic
-                    ? "bg-black text-white dark:bg-white dark:text-black"
-                    : "text-black/40 hover:text-black dark:text-white/40 dark:hover:text-white"
-                }`}
+          <div className="flex-1 space-y-4">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                Create from selected tracks
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {hasSelectedTracks
+                  ? `${selectedTracksUri.length} tracks selected`
+                  : "Select tracks below to get started"}
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <div className="relative">
+                <div
+                  className={cn(
+                    "group relative rounded-lg transition-all duration-200",
+                    isEditingName &&
+                      "shadow-sm ring-2 shadow-purple-500/20 ring-purple-500/50",
+                  )}
+                >
+                  <Input
+                    value={newPlaylistName}
+                    onChange={handleNameChange}
+                    onFocus={() => setIsEditingName(true)}
+                    onBlur={handleNameBlur}
+                    placeholder={
+                      isEditingName
+                        ? "My awesome playlist..."
+                        : getPlaylistSuggestions()
+                    }
+                    className={cn(
+                      "border-0 bg-white/70 pr-16 dark:bg-gray-800/70",
+                      "placeholder:text-gray-400 dark:placeholder:text-gray-500",
+                      "focus:bg-white dark:focus:bg-gray-800",
+                      "transition-all duration-200",
+                      isOverLimit && "ring-2 ring-red-500/50",
+                      newPlaylistName.length > 0 && "pr-20",
+                    )}
+                    maxLength={maxLength}
+                  />
+
+                  {/* Input status indicator */}
+                  <div className="absolute top-1/2 right-3 flex -translate-y-1/2 items-center gap-2">
+                    {newPlaylistName.length > 0 && (
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setNewPlaylistName("");
+                        }}
+                        className="text-gray-400 transition-colors hover:scale-110 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
+
+                    {isNearLimit && (
+                      <span
+                        className={cn(
+                          "text-xs font-medium transition-colors",
+                          isOverLimit
+                            ? "animate-pulse text-red-500"
+                            : "text-orange-500",
+                        )}
+                      >
+                        {maxLength - newPlaylistName.length}
+                      </span>
+                    )}
+
+                    <div
+                      className={cn(
+                        "transition-all",
+                        newPlaylistName.length > 0
+                          ? "text-green-500"
+                          : "text-gray-400 group-hover:text-gray-600",
+                      )}
+                    >
+                      <Edit3 className="h-4 w-4" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Input feedback */}
+                {inputError && (
+                  <p className="mt-1 flex animate-pulse items-center gap-1 text-sm text-red-500">
+                    <X className="h-3 w-3" />
+                    {inputError}
+                  </p>
+                )}
+
+                {/* Character counter for longer names */}
+                {newPlaylistName.length > 30 && !isOverLimit && (
+                  <p className="mt-1 flex items-center gap-1 text-xs text-gray-500">
+                    <span className="h-1 w-1 rounded-full bg-gray-400"></span>
+                    {newPlaylistName.length}/{maxLength} characters
+                  </p>
+                )}
+
+                {/* Smart suggestions */}
+                {!isEditingName && newPlaylistName.length === 0 && (
+                  <div className="mt-2 flex animate-pulse items-center gap-2">
+                    {React.createElement(getSuggestionIcon(), {
+                      className: "h-3 w-3 text-purple-500",
+                    })}
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Try: "{getPlaylistSuggestions()}"
+                    </p>
+                    <button
+                      onClick={() => {
+                        setNewPlaylistName(getPlaylistSuggestions());
+                        setIsEditingName(true);
+                      }}
+                      className="text-xs font-medium text-purple-600 hover:text-purple-700 hover:underline dark:text-purple-400 dark:hover:text-purple-300"
+                    >
+                      Use this
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Playlist Privacy
+                  </label>
+                  <button
+                    onClick={() => setShowPrivacyOptions(!showPrivacyOptions)}
+                    className={cn(
+                      "flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-all",
+                      "bg-white/50 dark:bg-gray-800/50",
+                      "hover:bg-white/80 dark:hover:bg-gray-700/50",
+                      "border border-gray-200/50 dark:border-gray-700/50",
+                      "text-gray-700 dark:text-gray-300",
+                    )}
+                  >
+                    {isPublic ? (
+                      <Globe className="h-4 w-4" />
+                    ) : (
+                      <Lock className="h-4 w-4" />
+                    )}
+                    {isPublic ? "Public" : "Private"}
+                    <div
+                      className={cn(
+                        "ml-1 h-2 w-2 rounded-full transition-all",
+                        isPublic ? "bg-green-500" : "bg-orange-500",
+                      )}
+                    />
+                  </button>
+                </div>
+
+                {showPrivacyOptions && (
+                  <div className="space-y-3 rounded-lg bg-gray-50/50 p-4 dark:bg-gray-800/30">
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => {
+                          setIsPublic(true);
+                          setShowPrivacyOptions(false);
+                        }}
+                        className={cn(
+                          "flex flex-col items-center gap-2 rounded-lg p-3 text-sm transition-all",
+                          isPublic
+                            ? "border-2 border-green-500 bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100"
+                            : "border border-gray-200/50 bg-white/50 text-gray-600 hover:bg-white/80 dark:border-gray-600/50 dark:bg-gray-700/50 dark:text-gray-400 dark:hover:bg-gray-700/80",
+                        )}
+                      >
+                        <Globe className="h-5 w-5" />
+                        <span className="font-medium">Public</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsPublic(false);
+                          setShowPrivacyOptions(false);
+                        }}
+                        className={cn(
+                          "flex flex-col items-center gap-2 rounded-lg p-3 text-sm transition-all",
+                          !isPublic
+                            ? "border-2 border-orange-500 bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100"
+                            : "border border-gray-200/50 bg-white/50 text-gray-600 hover:bg-white/80 dark:border-gray-600/50 dark:bg-gray-700/50 dark:text-gray-400 dark:hover:bg-gray-700/80",
+                        )}
+                      >
+                        <Lock className="h-5 w-5" />
+                        <span className="font-medium">Private</span>
+                      </button>
+                    </div>
+
+                    <p className="text-center text-xs text-gray-500 dark:text-gray-400">
+                      {isPublic
+                        ? "Anyone can find and listen to your playlist"
+                        : "Only you can access this playlist"}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <Button
+                onClick={() => handleCreateNewPlaylist(selectedTracksUri)}
+                disabled={!newPlaylistName || !hasSelectedTracks || isCreating}
+                className={cn(
+                  "w-full bg-linear-to-r from-purple-500 to-pink-500 text-white",
+                  "hover:from-purple-600 hover:to-pink-600",
+                  "disabled:from-gray-300 disabled:to-gray-300 dark:disabled:from-gray-700 dark:disabled:to-gray-700",
+                )}
               >
-                Private
-              </button>
-              <button
-                onClick={() => setIsPublic(true)}
-                disabled={isCreating}
-                className={`h-full px-5 text-[9px] font-bold tracking-[0.2em] uppercase transition-colors ${
-                  isPublic
-                    ? "bg-black text-white dark:bg-white dark:text-black"
-                    : "text-black/40 hover:text-black dark:text-white/40 dark:hover:text-white"
-                }`}
-              >
-                Public
-              </button>
+                {isCreating ? (
+                  <Spinner />
+                ) : showSuccess ? (
+                  <div className="flex items-center gap-2">Created!</div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Plus className="h-4 w-4" />
+                    Create Playlist
+                  </div>
+                )}
+              </Button>
             </div>
           </div>
-
-          {/* Submit button */}
-          <button
-            onClick={handleCreate}
-            disabled={!canSubmit}
-            className={`flex shrink-0 flex-col items-center justify-center gap-1.5 px-8 text-[9px] font-bold tracking-[0.2em] uppercase transition-colors disabled:cursor-not-allowed ${
-              canSubmit
-                ? "bg-black text-white hover:bg-black/80 dark:bg-white dark:text-black dark:hover:bg-white/80"
-                : "bg-black/10 text-black/30 dark:bg-white/10 dark:text-white/30"
-            }`}
-          >
-            {isCreating ? (
-              <>
-                <div className="flex gap-[3px]">
-                  {[0, 1, 2, 3].map((i) => (
-                    <span
-                      key={i}
-                      className={`inline-block w-[3px] origin-bottom animate-[stretch_1s_ease-in-out_infinite] ${canSubmit || isCreating ? "bg-white dark:bg-black" : "bg-black/30 dark:bg-white/30"}`}
-                      style={{ height: "14px", animationDelay: `${i * 0.15}s` }}
-                    />
-                  ))}
-                </div>
-                <span>Creating</span>
-              </>
-            ) : (
-              <>
-                <span className="text-base leading-none">+</span>
-                <span>Create</span>
-              </>
-            )}
-          </button>
         </div>
-      )}
-
-      {/* Error */}
-      {status === "error" && (
-        <div className="border-t border-black/20 px-6 py-2 text-[9px] font-bold tracking-[0.2em] text-black/60 uppercase dark:border-white/20 dark:text-white/60">
-          ■ {mutationErrMessage}
-          <button
-            onClick={() => setStatus("idle")}
-            className="ml-3 underline underline-offset-2"
-          >
-            Retry
-          </button>
-        </div>
-      )}
-    </div>
+      </CardContent>
+    </Card>
   );
-}
+};
+
+export default CreateNewPlaylistCard;

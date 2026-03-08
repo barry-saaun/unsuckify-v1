@@ -1,6 +1,9 @@
 import { env } from "~/env";
 import { createOpenAI } from "@ai-sdk/openai";
 
+// const openRouterApiEndpoints = ["chat/completions", "embeddings"] as const;
+// type TOpenRouterApiEndpoints = (typeof openRouterApiEndpoints)[number];
+
 type OpenRouterChatModels =
   | "moonshotai/kimi-k2-0905"
   | "x-ai/grok-4.1-fast"

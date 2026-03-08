@@ -1,20 +1,37 @@
+import { PlusIcon } from "lucide-react";
+import {
+  Card,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "./ui/card";
+import { Skeleton } from "./ui/skeleton";
+import { Button } from "./ui/button";
+
 const RecommendedTrackCardSkeleton = ({ isOwned }: { isOwned: boolean }) => {
   return (
-    <div className="border border-black font-mono dark:border-white">
-      {/* Image area */}
-      <div className="aspect-square w-full animate-pulse bg-black/10 dark:bg-white/10" />
-      {/* Info strip */}
-      <div className="border-t border-black p-3 dark:border-white">
-        <div className="mb-2 h-3 w-3/4 animate-pulse bg-black/15 dark:bg-white/15" />
-        <div className="h-2 w-1/2 animate-pulse bg-black/10 dark:bg-white/10" />
+    <Card className="overflow-hidden pt-0">
+      <div className="relative aspect-square overflow-hidden rounded-t-md">
+        <Skeleton className="h-full w-full" />
       </div>
-      {/* Action strip */}
-      {!isOwned && (
-        <div className="border-t border-black p-2 dark:border-white">
-          <div className="h-3 w-1/3 animate-pulse bg-black/10 dark:bg-white/10" />
-        </div>
-      )}
-    </div>
+      <CardHeader>
+        <CardTitle className="line-clamp-1">
+          <Skeleton className="h-6 w-3/4" />
+        </CardTitle>
+        <CardDescription className="flex items-center">
+          <Skeleton className="h-4 w-1/2" />
+        </CardDescription>
+      </CardHeader>
+      <CardFooter>
+        {isOwned && (
+          <Button disabled className="w-full bg-purple-700 dark:bg-purple-300">
+            <PlusIcon className="mr-2 h-4 w-4" />
+            Add to Playlist
+          </Button>
+        )}
+      </CardFooter>
+    </Card>
   );
 };
 

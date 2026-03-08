@@ -5,7 +5,7 @@ const EMBEDDING_MODEL = openRouterApi.getEmbeddingModel(
   "openai/text-embedding-3-small",
 );
 
-interface VectorEmbeddingResult {
+export interface VectorEmbeddingResult {
   embedding: number[];
   usage: { tokens: number };
 }

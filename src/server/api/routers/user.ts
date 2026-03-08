@@ -1,19 +1,7 @@
 import { spotifyApi } from "~/lib/music/spotify";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
+import type { UsersPlaylistMetadata } from "~/types";
 import { TRPCError } from "@trpc/server";
-import z from "zod";
-
-const UsersPlaylistMetadataSchema = z.object({
-  id: z.string(),
-  description: z.string(),
-  url: z.string(),
-  owner: z.string(),
-  ownerId: z.string(),
-  total: z.number(),
-  name: z.string(),
-});
-
-type UsersPlaylistMetadata = z.infer<typeof UsersPlaylistMetadataSchema>;
 
 export const userRouter = createTRPCRouter({
   getCurrentUserProfile: protectedProcedure.query(async () => {

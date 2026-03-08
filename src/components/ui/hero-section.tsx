@@ -36,8 +36,7 @@ const HeroSection = () => {
           <p className="mt-6 max-w-xl text-sm leading-relaxed text-black/60 dark:text-white/60">
             Connect your Spotify. Pick a playlist. Get AI recommendations that
             actually fit — no fluff, no filters, no vibe-check marketing copy.
-            <br />
-            <span className="uppercase">GET SENDY.</span>
+            Get <span className="uppercase">SENDY.</span>
           </p>
 
           <div className="mt-8 flex flex-col gap-0 sm:flex-row">

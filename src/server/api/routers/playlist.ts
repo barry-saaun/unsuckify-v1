@@ -4,7 +4,8 @@ import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { tryCatch } from "~/lib/utils/try-catch";
 import { TRPCError } from "@trpc/server";
 import { appRouter } from "../root";
-import type { RawTrack } from "~/lib/music/types";
+import { trackPlaylistStatus } from "~/server/db/schema";
+import { and, eq } from "drizzle-orm";
 
 const LIMIT = 20;
 
@@ -23,7 +24,8 @@ export const playlistRouter = createTRPCRouter({
       if (res.error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Playlist not found. Or Spotify refused to give it to us.",
+          message:
+            "The Spotify playlist ID is invalid or the playlist does not exist.",
           cause: res.error,
         });
       }
@@ -45,7 +47,8 @@ export const playlistRouter = createTRPCRouter({
       if (res.error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Could not load playlist tracks.",
+          message:
+            "The Spotify playlist ID is invalid or the playlist does not exist.",
           cause: res.error,
         });
       }
@@ -53,7 +56,9 @@ export const playlistRouter = createTRPCRouter({
       return res.data;
     }),
 
-  getPlaylistItemsAll: protectedProcedure
+  // TODO: testing purposes
+
+  test_getPlaylistItemsAll: protectedProcedure
     .input(z.object({ playlist_id: z.string() }))
     .query(async ({ input, ctx }) => {
       const caller = appRouter.createCaller(ctx);
@@ -61,7 +66,15 @@ export const playlistRouter = createTRPCRouter({
       let offset = 0;
       let hasNextBatch = true;
 
+      type RawTrack = {
+        trackName: string;
+        artistName: string;
+        albumName: string;
+      };
+
       let allTracks: RawTrack[] = [];
+
+      // let allTracks: string[] = [];
 
       while (hasNextBatch) {
         const data = await caller.playlist.getPlaylistItems({
@@ -74,7 +87,7 @@ export const playlistRouter = createTRPCRouter({
           console.warn(
             `No data received for playlist_id: ${input.playlist_id} at offset: ${offset}`,
           );
-          hasNextBatch = false;
+          hasNextBatch = false; // Stop fetching if data is null
           break;
         }
 
@@ -105,23 +118,77 @@ export const playlistRouter = createTRPCRouter({
       return allTracks;
     }),
 
+  /* end testing */
+
+  getPlaylistItemsAll: protectedProcedure
+    .input(z.object({ playlist_id: z.string() }))
+    .query(async ({ input, ctx }) => {
+      const caller = appRouter.createCaller(ctx);
+
+      let offset = 0;
+
+      let allTracks: string[] = [];
+
+      let hasNextBatch = true;
+
+      while (hasNextBatch) {
+        const data = await caller.playlist.getPlaylistItems({
+          playlist_id: input.playlist_id,
+          offset,
+          limit: LIMIT,
+        });
+
+        if (!data) {
+          console.warn(
+            `No data received for playlist_id: ${input.playlist_id} at offset: ${offset}`,
+          );
+          hasNextBatch = false; // Stop fetching if data is null
+          break;
+        }
+
+        const trackStr = data.items
+          .filter((item) => !item.is_local && item.track)
+          .map((item) => {
+            const track = item.track;
+
+            const trackName = track?.name;
+            const albumName = track?.album.name;
+
+            const artistsName = track?.artists
+              .map((artist) => artist.name)
+              .join(" & ");
+            return `${trackName} - (${artistsName}) - ${albumName}`;
+          });
+
+        allTracks = [...allTracks, ...trackStr];
+
+        if (!data.next) {
+          hasNextBatch = false;
+          break;
+        }
+
+        offset += LIMIT;
+      }
+
+      return allTracks;
+    }),
   addItemsToPlaylist: protectedProcedure
     .input(
-      z.strictObject({
+      z.object({
         playlist_id: z.string(),
-        params: z.object({
-          track_uris: z.array(z.string()),
-        }),
+        track_uris: z.array(z.string()),
+        batchId: z.number(),
+        trackId: z.number(),
       }),
     )
-    .mutation(async ({ input }) => {
-      const { playlist_id, params } = input;
+    .mutation(async ({ input, ctx }) => {
+      const { playlist_id, track_uris, batchId, trackId } = input;
 
       const { data, error } = await tryCatch(
         spotifyApi.addTracksToPlaylist({
           playlist_id,
           requestBody: {
-            uris: params.track_uris,
+            uris: track_uris,
           },
         }),
       );
@@ -129,45 +196,84 @@ export const playlistRouter = createTRPCRouter({
       if (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Tracks not added.",
+          message:
+            "Sorry! We could not add this track to your playlist at the moment.",
         });
       }
 
-      return { snapshot_id: data?.snapshot_id };
-    }),
+      const addedStatus = "added";
+      // console.log("snapshot_id:", data?.snapshot_id);
+      // console.log("batchId:", batchId);
+      // console.log("track_id:", trackId);
 
+      const trackLocationInTable = and(
+        eq(trackPlaylistStatus.batchId, batchId),
+        eq(trackPlaylistStatus.trackId, trackId),
+      );
+
+      // insert the snapshot id to the status table
+      await Promise.all([
+        ctx.db
+          .update(trackPlaylistStatus)
+          .set({ snapshotId: data?.snapshot_id })
+          .where(trackLocationInTable),
+        ctx.db
+          .update(trackPlaylistStatus)
+          .set({ status: addedStatus })
+          .where(and(trackLocationInTable)),
+      ]);
+
+      return { snapshot_id: data?.snapshot_id, status: addedStatus };
+    }),
   removePlaylistItems: protectedProcedure
     .input(
       z.object({
         playlist_id: z.string(),
-        params: z.object({
-          uri: z.string(),
-          snapshot_id: z.string(),
-        }),
+        track_uris: z.string(),
+        snapshot_id: z.string(),
+        batchId: z.number(),
+        trackId: z.number(),
       }),
     )
-    .mutation(async ({ input }) => {
-      const { playlist_id, params } = input;
+    .mutation(async ({ input, ctx }) => {
+      const { playlist_id, track_uris, snapshot_id, batchId, trackId } = input;
 
       const { error } = await tryCatch(
         spotifyApi.removePlaylistItems({
           playlist_id,
-          requestBody: {
-            tracks: [{ uri: params.uri, snapshot_id: params.snapshot_id }],
-          },
+          requestBody: { tracks: [{ uri: track_uris, snapshot_id }] },
         }),
       );
 
       if (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Track stayed. Removal failed.",
+          message:
+            "Sorry! We could not remove this track from the playlist at the moment.",
         });
       }
 
-      return { success_msg: "Track removed." };
-    }),
+      const trackLocationInTable = and(
+        eq(trackPlaylistStatus.batchId, batchId),
+        eq(trackPlaylistStatus.trackId, trackId),
+      );
 
+      const removedStatus = "removed";
+
+      // insert the snapshot id to the status table
+      await Promise.all([
+        ctx.db
+          .update(trackPlaylistStatus)
+          .set({ snapshotId: null })
+          .where(trackLocationInTable),
+        ctx.db
+          .update(trackPlaylistStatus)
+          .set({ status: removedStatus })
+          .where(and(trackLocationInTable)),
+      ]);
+
+      return { success_msg: "Poof! The song is out of your playlist" };
+    }),
   createPlaylist: protectedProcedure
     .input(
       z.object({
@@ -193,13 +299,12 @@ export const playlistRouter = createTRPCRouter({
       if (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Playlist creation failed.",
+          message: "Sorry! We could not creat a new playlist at the moment!",
         });
       }
 
       return data;
     }),
-
   createPlaylistWithTracks: protectedProcedure
     .input(
       z.object({
@@ -207,6 +312,7 @@ export const playlistRouter = createTRPCRouter({
         name: z.string(),
         isPublic: z.boolean(),
         description: z.string().optional(),
+
         track_uris: z.array(z.string()),
       }),
     )
@@ -224,7 +330,7 @@ export const playlistRouter = createTRPCRouter({
       if (!createPlaylistRes) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Playlist was not created.",
+          message: "Error creating the playlist",
         });
       }
 
@@ -242,7 +348,7 @@ export const playlistRouter = createTRPCRouter({
       if (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Playlist exists. Tracks do not.",
+          message: "Sorry! We could not create this playlist at the moment.",
         });
       }
     }),

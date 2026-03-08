@@ -2,9 +2,8 @@ import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
 import { authRouter } from "~/server/api/routers/auth";
 import { userRouter } from "~/server/api/routers/user";
 import { playlistRouter } from "~/server/api/routers/playlist";
+import { trackRouter } from "~/server/api/routers/track";
 import { artistRouter } from "./routers/artist";
-import { recommendationsRouter } from "./routers/recommendations";
-import { trackRouter } from "./routers/track";
 
 /**
  * This is the primary router for your server.
@@ -15,9 +14,8 @@ export const appRouter = createTRPCRouter({
   auth: authRouter,
   user: userRouter,
   playlist: playlistRouter,
-  artist: artistRouter,
   track: trackRouter,
-  recommendations: recommendationsRouter,
+  artist: artistRouter,
 });
 
 // export type definition of API
