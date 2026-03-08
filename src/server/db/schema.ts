@@ -22,6 +22,11 @@ export const songs = pgTable("songs", {
   artist: text("artist").notNull(),
   track: text("track").notNull(),
   album: text("album").default("Unknown").notNull(),
+
+  // From Spotify `/search` endpoint
+  trackUri: text("track_uri"),
+  albumImage: text("albumImage"),
+
   // Tracks whether this song has a vector in Pinecone
   embeddingStatus: embeddingStatusEnum("embedding_status")
     .default("pending")

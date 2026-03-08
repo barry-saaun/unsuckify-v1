@@ -22,7 +22,8 @@ export function useResolvedTracks(songs: SimilarSong[]): {
 } {
   const results = api.useQueries((t) =>
     songs.map((song) =>
-      t.track.searchForTracks({
+      t.track.searchForTrack({
+        songKey: song.songKey,
         artists: song.artist,
         track: song.track,
         album: song.album,
