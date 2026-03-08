@@ -179,16 +179,30 @@ export const playlistRouter = createTRPCRouter({
     )
     .mutation(async ({ input }) => {
       const { user_id, name, isPublic, description } = input;
+
+      console.log("[create playlist] input: ", {
+        user_id,
+        name,
+        isPublic,
+        description,
+      });
+
+      const payload = {
+        name,
+        public: isPublic,
+        description,
+      };
+
+      console.log("spotify payload", payload);
+
       const { data, error } = await tryCatch(
         spotifyApi.createPlaylist({
           user_id,
-          requestBody: {
-            name,
-            public: isPublic,
-            description,
-          },
+          requestBody: payload,
         }),
       );
+
+      console.log("createPlaylist response", data);
 
       if (error) {
         throw new TRPCError({
