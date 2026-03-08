@@ -3,7 +3,6 @@ import { env } from "~/env";
 import queryString from "query-string";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { getBaseUrl } from "~/lib/utils/api";
 
 const SPOTIFY_CLIENT_ID = env.SPOTIFY_CLIENT_ID;
 

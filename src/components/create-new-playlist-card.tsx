@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import debounce from "lodash.debounce";
 import { api } from "~/trpc/react";
 
 type CreateNewPlaylistCardProps = {
@@ -16,9 +17,30 @@ export default function CreateNewPlaylistCard({
   user_id,
   onDismiss,
 }: CreateNewPlaylistCardProps) {
+  const [inputValue, setInputValue] = useState("");
   const [name, setName] = useState("");
   const [isPublic, setIsPublic] = useState(false);
   const [status, setStatus] = useState<Status>("idle");
+
+  const debouncedSetName = useRef(
+    debounce((value: string) => {
+      setName(value);
+    }, 50),
+  ).current;
+
+  useEffect(() => {
+    return () => {
+      debouncedSetName.cancel();
+    };
+  }, [debouncedSetName]);
+
+  const handleInputChange = useCallback(
+    (value: string) => {
+      setInputValue(value);
+      debouncedSetName(value);
+    },
+    [debouncedSetName],
+  );
 
   const count = selectedTracksUri.length;
   const canSubmit = name.trim().length > 0 && count > 0 && status === "idle";
@@ -56,6 +78,7 @@ export default function CreateNewPlaylistCard({
   ]);
 
   function handleReset() {
+    setInputValue("");
     setName("");
     setIsPublic(false);
     setStatus("idle");
@@ -119,8 +142,8 @@ export default function CreateNewPlaylistCard({
             </label>
             <input
               type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={inputValue}
+              onChange={(e) => handleInputChange(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleCreate()}
               disabled={isCreating}
               placeholder="My new playlist..."
