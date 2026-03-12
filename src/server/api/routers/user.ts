@@ -52,4 +52,31 @@ export const userRouter = createTRPCRouter({
       message: "Failed to load your playlists. Please try again later.",
     });
   }),
+  // Dev-only: Get public playlists for a given user ID
+  getUsersPublicPlaylists: protectedProcedure
+    .input(z.object({ user_id: z.string() }))
+    .query(async ({ input }) => {
+      if (process.env.NODE_ENV !== "development") {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "This endpoint is only available in development mode.",
+        });
+      }
+
+      const playlists = await spotifyApi.getUsersPlaylists(input.user_id);
+
+      if (playlists && typeof playlists === "object") {
+        return playlists.items
+          .filter((item) => item.public)
+          .map((item) => ({
+            id: item.id,
+            label: item.name,
+          }));
+      }
+
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to load playlists for this user.",
+      });
+    }),
 });

@@ -125,6 +125,12 @@ export const spotifyApi = {
     spotifyFetch<CurrentUsersProfileResponse>("GET", "/me"),
   getListOfCurrentUsersPlaylists: () =>
     spotifyFetch<ListOfCurrentUsersPlaylistsResponse>("GET", "/me/playlists"),
+  getUsersPlaylists: (user_id: string) =>
+    spotifyFetch<ListOfCurrentUsersPlaylistsResponse>(
+      "GET",
+      "/users/{user_id}/playlists",
+      { user_id },
+    ),
   getSinglePlaylistResponse: (playlist_id: string) =>
     spotifyFetch<SinglePlaylistResponse>("GET", "/playlists/{playlist_id}", {
       playlist_id,

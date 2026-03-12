@@ -1,10 +1,11 @@
-// middleware.ts
+// proxy.ts
 import { cookies } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server";
 import { match } from "path-to-regexp";
 
 const loginRoutes = ["/login"];
 const protectedRoutes = ["/dashboard", "/dashboard/:playlist_id"];
+const devRoutes = ["/dev{/*path}"];
 
 const matchesRoute = (patterns: string[], path: string) =>
   patterns.some((pattern) =>
@@ -16,9 +17,15 @@ export async function proxy(req: NextRequest) {
 
   const isLoginRoute = matchesRoute(loginRoutes, path);
   const isProtectedRoute = matchesRoute(protectedRoutes, path);
+  const isDevRoute = matchesRoute(devRoutes, path);
 
   const cookiesStore = await cookies();
   const authenticated = cookiesStore.has("access_token");
+
+  // Block dev routes in production
+  if (isDevRoute && process.env.NODE_ENV === "production") {
+    return NextResponse.redirect(new URL("/", req.nextUrl));
+  }
 
   // Redirect authenticated users away from login pages
   if (isLoginRoute && authenticated) {
