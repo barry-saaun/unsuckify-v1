@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { api } from "~/trpc/react";
 import { type RawTrack } from "~/lib/music/types";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 
 interface usePlaylistRecommendationsParams {
   playlist: RawTrack[];
@@ -10,7 +10,6 @@ interface usePlaylistRecommendationsParams {
     limit: number;
     minScore: number;
   };
-
   enabled?: boolean;
 }
 
@@ -19,7 +18,8 @@ export function usePlaylistRecommendations({
   querySettings,
   enabled,
 }: usePlaylistRecommendationsParams) {
-  const [page, setPage] = useState(1);
+  const [displayedCount, setDisplayedCount] = useState(PAGE_SIZE);
+  const prevPlaylistRef = useRef<RawTrack[]>([]);
 
   const isEnabled = (enabled ?? true) && playlist.length > 0;
 
@@ -39,29 +39,31 @@ export function usePlaylistRecommendations({
     },
   );
 
+  // Reset displayedCount when playlist changes
+  useEffect(() => {
+    if (playlist !== prevPlaylistRef.current) {
+      setDisplayedCount(PAGE_SIZE);
+      prevPlaylistRef.current = playlist;
+    }
+  }, [playlist]);
+
   const isLoading = isEnabled && isQueryLoading;
 
   const allRecs = data?.recommendations ?? [];
   const coverage = data?.meta.coverage ?? undefined;
 
-  const visibleRecs = allRecs.slice(0, page * PAGE_SIZE);
+  const visibleRecs = allRecs.slice(0, displayedCount);
+  const hasNextPage = displayedCount < allRecs.length;
 
-  const hasNextPage = visibleRecs.length < allRecs.length;
-
-  const nextPage = () => setPage((p) => p + 1);
-  const prevPage = () => setPage((p) => Math.min(1, p - 1));
-
-  const hasPrevPage = page > 1;
+  const loadMore = useCallback(() => {
+    setDisplayedCount((prev) => prev + PAGE_SIZE);
+  }, []);
 
   return {
     visibleRecs,
     allRecs,
     hasNextPage,
-    hasPrevPage,
-    nextPage,
-    prevPage,
-    page,
-    totalPages: Math.ceil(allRecs.length / PAGE_SIZE),
+    loadMore,
     coverage,
     isLoading,
     error,

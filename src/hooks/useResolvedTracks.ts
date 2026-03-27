@@ -22,12 +22,22 @@ export function useResolvedTracks(songs: SimilarSong[]): {
 } {
   const results = api.useQueries((t) =>
     songs.map((song) =>
-      t.track.searchForTrack({
-        songKey: song.songKey,
-        artists: song.artist,
-        track: song.track,
-        album: song.album,
-      }),
+      t.track.searchForTrack(
+        {
+          songKey: song.songKey,
+          artists: song.artist,
+          track: song.track,
+          album: song.album,
+        },
+        {
+          retry: (failureCount, error) => {
+            if (error.data?.code === "NOT_FOUND") return false;
+
+            return failureCount < 2;
+          },
+          staleTime: Infinity,
+        },
+      ),
     ),
   );
 
@@ -35,10 +45,12 @@ export function useResolvedTracks(songs: SimilarSong[]): {
     const map = new Map<string, ResolvedTrack>();
     songs.forEach((song, i) => {
       const result = results[i];
-      if (!result || result.isLoading) {
+      if (result?.error?.data?.code === "NOT_FOUND") {
+        // Definitively not on Spotify — treat as resolved with no data
+        map.set(song.songKey, null);
+      } else if (!result || result.isLoading) {
         map.set(song.songKey, null);
       } else {
-        // data is { trackUri, albumImage } | null (null = not found on Spotify)
         map.set(song.songKey, result.data ?? null);
       }
     });

@@ -1,7 +1,8 @@
 "use client";
 import { useParams, useSearchParams } from "next/navigation";
 import ErrorScreen from "~/components/error-screen";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { useInView } from "react-intersection-observer";
 import LoadingMessages from "~/components/loading-messages";
 import InfoBanner from "~/components/info-banner";
 import RecommendedTrackCardSkeleton from "~/components/rec-track-card-skeleton";
@@ -20,7 +21,7 @@ type TrackAddState = {
   snapshotId?: string;
 };
 
-const TRACK_PER_INF_PAGE = 6;
+const TRACK_PER_INF_PAGE = 20;
 
 type OwnedMode = "add" | "new";
 
@@ -63,11 +64,7 @@ export default function PlaylistContent() {
   const {
     visibleRecs,
     hasNextPage,
-    hasPrevPage,
-    nextPage,
-    prevPage,
-    page,
-    totalPages,
+    loadMore,
     coverage,
     isLoading: isLoadingRecs,
     error: recsError,
@@ -76,10 +73,22 @@ export default function PlaylistContent() {
     enabled:
       !isLoadingPlaylist && !playlistError && (playlist?.length ?? 0) > 0,
     querySettings: {
-      limit: 80,
+      limit: 200,
       minScore: 0.6,
     },
   });
+
+  // Intersection observer for infinite scroll
+  const { ref: loadMoreTriggerRef, inView } = useInView({
+    threshold: 0.2,
+    rootMargin: "100px",
+  });
+
+  useEffect(() => {
+    if (inView && hasNextPage && !isLoadingRecs) {
+      loadMore();
+    }
+  }, [inView, hasNextPage, isLoadingRecs, loadMore]);
 
   // Resolve Spotify data (trackUri + albumImage) for all visible recs in the parent
   const { resolvedMap, loadingMap } = useResolvedTracks(visibleRecs);
@@ -270,15 +279,35 @@ export default function PlaylistContent() {
               />
             );
           })}
-          {Array.from({ length: skeletonPages }, (_page, pageIndex) =>
-            Array.from({ length: TRACK_PER_INF_PAGE }, (_item, itemIndex) => (
-              <RecommendedTrackCardSkeleton
-                isOwned={isOwned}
-                key={`skeleton-${pageIndex}-${itemIndex}`}
-              />
-            )),
+          {/* Loading indicator */}
+          {isLoadingRecs && hasNextPage && (
+            <>
+              {Array.from(
+                { length: TRACK_PER_INF_PAGE },
+                (_item, itemIndex) => (
+                  <RecommendedTrackCardSkeleton
+                    isOwned={isOwned}
+                    key={`skeleton-${itemIndex}`}
+                  />
+                ),
+              )}
+            </>
+          )}
+          {/* Invisible trigger element for intersection observer */}
+          {hasNextPage && (
+            <div ref={loadMoreTriggerRef} className="col-span-full h-1" />
           )}
         </div>
+
+        {!hasNextPage && (
+          <>
+            <div className="mt-5 flex w-full items-center justify-center border border-black px-4 py-3 font-mono dark:border-white">
+              <p className="flex text-center text-xs font-bold tracking-wide text-black uppercase dark:text-white">
+                — End of Recommendations —
+              </p>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Create playlist panel — slides in when tracks are selected */}
@@ -295,29 +324,6 @@ export default function PlaylistContent() {
             user_id={userId}
             onDismiss={() => setSelectedTrackUris(new Set())}
           />
-        </div>
-      )}
-
-      {/* Pagination */}
-      {(hasNextPage || hasPrevPage) && (
-        <div className="border-border flex items-center border-t">
-          <button
-            onClick={prevPage}
-            disabled={!hasPrevPage}
-            className="border-border text-foreground flex-1 border-r py-4 text-xs font-bold tracking-widest uppercase transition-opacity hover:opacity-60 disabled:opacity-20"
-          >
-            ← Previous
-          </button>
-          <span className="text-muted-foreground px-6 text-xs tracking-widest uppercase">
-            {page} / {totalPages}
-          </span>
-          <button
-            onClick={nextPage}
-            disabled={!hasNextPage}
-            className="border-border text-foreground flex-1 border-l py-4 text-xs font-bold tracking-widest uppercase transition-opacity hover:opacity-60 disabled:opacity-20"
-          >
-            Next →
-          </button>
         </div>
       )}
     </div>

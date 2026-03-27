@@ -2,6 +2,7 @@ import z from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { spotifyApi } from "~/lib/music/spotify";
 import { songs } from "~/server/db/schema";
+import { TRPCError } from "@trpc/server";
 
 export const trackRouter = createTRPCRouter({
   searchForTrack: protectedProcedure
@@ -58,7 +59,10 @@ export const trackRouter = createTRPCRouter({
           query,
         });
 
-        return null;
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: `No result for ${query}`,
+        });
       }
 
       // Use optional chaining and provide a fallback image if possible
