@@ -77,7 +77,7 @@ export async function GET(req: Request) {
     cookiesStore.set(key, value ?? "", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      maxAge: expires_in,
+      maxAge: 7 * 24 * 60 * 60,
       path: "/",
     });
   }

@@ -13,6 +13,7 @@ import axios from "axios";
 import { tryCatch } from "../utils/try-catch";
 import { cookies } from "next/headers";
 import { TRPCError } from "@trpc/server";
+import { refreshIfNeeded } from "~/lib/auth/refresh-token";
 
 const spotifyApiEndpoints = [
   "/me",
@@ -45,6 +46,8 @@ async function spotifyFetch<T>(
   queryParams?: Record<string, number | string>,
   requestBody?: RequestBodyType,
 ) {
+  await refreshIfNeeded();
+
   const access_token = (await cookies()).get("access_token")?.value;
 
   if (!access_token) {

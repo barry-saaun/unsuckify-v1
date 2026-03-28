@@ -6,6 +6,8 @@ import { cookies } from "next/headers";
 
 const SPOTIFY_CLIENT_ID = env.SPOTIFY_CLIENT_ID;
 
+const ONE_WEEK = 7 * 24 * 60 * 60;
+
 export async function GET(req: Request) {
   const state = generateRandomString(16);
 
@@ -13,7 +15,7 @@ export async function GET(req: Request) {
     httpOnly: true,
     path: "/",
     secure: process.env.NODE_ENV === "production",
-    maxAge: 600,
+    maxAge: ONE_WEEK,
   });
 
   const scopes = [

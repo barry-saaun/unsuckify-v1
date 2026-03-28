@@ -43,7 +43,6 @@ const AuthButton = () => {
     const userId = getCookie("userId");
 
     if (!userId && userInfo) {
-      console.log("[auth button] userId:", userInfo.id);
       setUserId(userInfo.id);
     }
   }, [userInfo, setUserId]);

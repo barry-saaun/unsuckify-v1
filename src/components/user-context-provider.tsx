@@ -14,6 +14,8 @@ interface UserContextType {
   isLoading: boolean;
 }
 
+const ONE_WEEK = 7 * 24 * 60 * 60;
+
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: ReactNode }) {
@@ -35,7 +37,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     setCookie("userId", id, {
       secure: true,
       path: "/",
-      maxAge: 3600,
+      maxAge: ONE_WEEK,
     });
     setUserIdState(id);
   };
