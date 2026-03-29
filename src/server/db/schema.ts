@@ -27,6 +27,9 @@ export const songs = pgTable("songs", {
   trackUri: text("track_uri"),
   albumImage: text("albumImage"),
 
+  // From deezer '/search' endpoint
+  previewUrl: text("preview_url"),
+
   // Tracks whether this song has a vector in Pinecone
   embeddingStatus: embeddingStatusEnum("embedding_status")
     .default("pending")

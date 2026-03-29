@@ -3,9 +3,63 @@ import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { spotifyApi } from "~/lib/music/spotify";
 import { songs } from "~/server/db/schema";
 import { TRPCError } from "@trpc/server";
+import { deezerApi } from "~/lib/music/deezer";
+import { eq } from "drizzle-orm";
 
 export const trackRouter = createTRPCRouter({
-  searchForTrack: protectedProcedure
+  deezerSearchForPreviewUrl: protectedProcedure
+    .input(
+      z.object({
+        songKey: z.string(),
+        track: z.string(),
+        album: z.string(),
+        artists: z.string(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      const { track, artists, album, songKey } = input;
+
+      // 1. Check DB first before query
+      const existing = await ctx.db.query.songs.findFirst({
+        where: (songs, { eq }) => eq(songs.songKey, songKey),
+      });
+
+      if (existing?.previewUrl) {
+        return { previewUrl: existing.previewUrl };
+      }
+
+      const { data } = await deezerApi.getTrackSearch({
+        artistName: artists,
+        trackName: track,
+        albumName: album,
+      });
+
+      const firstTrack = data[0];
+
+      if (!firstTrack) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: `No previrw url for track:${track}, album:${album}, artist:${artists}`,
+        });
+      }
+
+      const previewUrl = firstTrack.preview;
+
+      if (!previewUrl) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: `No preview URL found for track: ${track}`,
+        });
+      }
+
+      await ctx.db
+        .update(songs)
+        .set({ previewUrl: previewUrl })
+        .where(eq(songs.songKey, songKey));
+
+      return { previewUrl };
+    }),
+  spotifySearchForTrack: protectedProcedure
     .input(
       z.object({
         songKey: z.string(),

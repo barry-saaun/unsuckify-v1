@@ -22,7 +22,7 @@ export function useResolvedTracks(songs: SimilarSong[]): {
 } {
   const results = api.useQueries((t) =>
     songs.map((song) =>
-      t.track.searchForTrack(
+      t.track.spotifySearchForTrack(
         {
           songKey: song.songKey,
           artists: song.artist,

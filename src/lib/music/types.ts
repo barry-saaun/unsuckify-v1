@@ -1,3 +1,14 @@
+export interface DeezerSearchResponse {
+  data: Array<{
+    id: number;
+    isrc: string;
+    link: string;
+    duration: number;
+    preview: string;
+  }>;
+  total: number;
+}
+
 export interface RawTrack {
   artistName: string;
   albumName?: string;
