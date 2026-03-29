@@ -12,7 +12,7 @@ import SessionExpiredAlertDialog from "~/components/session-expired-alert-dialog
 import { UserProvider } from "~/components/user-context-provider";
 
 export const metadata: Metadata = {
-  title: "🥟 UNSUCKify",
+  title: "UNSUCKify",
   description: "Make your favourite playlist less sucks.",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
 };

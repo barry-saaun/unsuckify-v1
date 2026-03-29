@@ -8,6 +8,10 @@ import type {
   LastFmGetTrackInfoResponse,
 } from "./types";
 import { fetchArtistData } from "../utils/artist";
+import {
+  extractPrimaryArtist,
+  stripFeaturedArtist,
+} from "../ingestion/sanitise";
 
 const lastFmApiEndpoints = [
   "track.getinfo",
@@ -81,9 +85,12 @@ export const lastFmApi = {
 };
 
 export async function fetchLastFmData(artist: string, track: string) {
+  const lastFmArtist = extractPrimaryArtist(artist);
+  const lastFmTrack = stripFeaturedArtist(track);
+
   const [trackInfo, artistData] = await Promise.all([
-    lastFmApi.getTrackInfo({ artist, track }),
-    fetchArtistData(artist),
+    lastFmApi.getTrackInfo({ artist: lastFmArtist, track: lastFmTrack }),
+    fetchArtistData(lastFmArtist),
   ]);
 
   // Last.fm returns a 200 with no `track` property when it doesn't recognise
