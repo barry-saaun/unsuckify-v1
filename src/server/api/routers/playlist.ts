@@ -45,7 +45,8 @@ export const playlistRouter = createTRPCRouter({
       if (res.error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Could not load playlist tracks.",
+          message:
+            "Could not load playlist tracks.\nMake sure the playlist ID is correct.",
           cause: res.error,
         });
       }

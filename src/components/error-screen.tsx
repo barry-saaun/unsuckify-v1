@@ -29,7 +29,9 @@ export default function ErrorScreen({ message }: ErrorScreenProp) {
           <p className="mb-2 text-xs tracking-widest text-black/40 uppercase dark:text-white/40">
             / Message
           </p>
-          <p className="text-sm text-black dark:text-white">{message}</p>
+          <p className="text-sm whitespace-pre-line text-black dark:text-white">
+            {message}
+          </p>
         </div>
 
         {/* Actions */}

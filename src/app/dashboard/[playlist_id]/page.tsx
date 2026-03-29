@@ -40,7 +40,6 @@ export default function PlaylistContent() {
 
   // Selected track URIs for "new playlist" flow
   const [selectedTrackUris, setSelectedTrackUris] = useState(new Set<string>());
-  const [skeletonPages] = useState(0);
 
   // Per-card state for "add to playlist" flow: status + snapshot_id for undo
   const [addStateMap, setAddStateMap] = useState(
