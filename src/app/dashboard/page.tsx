@@ -14,11 +14,15 @@ function Dashboard() {
   const [tabValue, setTabValue] = useState<TabStates>("my-playlists");
 
   const { userId, isLoading: isUserIdLoading } = useUserContext();
-  const { data: isUserAllowed, isLoading: isUserAllowedLoading } =
-    api.auth.isUserAllowed.useQuery(userId ? { userId } : skipToken, {
-      staleTime: 360 * 100 * 100,
-      enabled: !!userId,
-    });
+  const {
+    data: isUserAllowed,
+    isLoading: isUserAllowedLoading,
+    isError: isUserAllowedError,
+  } = api.auth.isUserAllowed.useQuery(userId ? { userId } : skipToken, {
+    staleTime: 360 * 100 * 100,
+    enabled: !!userId,
+    retry: false,
+  });
 
   if (isUserIdLoading || !userId || isUserAllowedLoading) {
     return (
@@ -33,7 +37,7 @@ function Dashboard() {
     );
   }
 
-  if (!isUserAllowed) {
+  if (!isUserAllowed || isUserAllowedError) {
     return <UserNotAllowedAlertDialog />;
   }
 
