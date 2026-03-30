@@ -1,6 +1,7 @@
 "use client";
 import type { SimilarSong } from "~/lib/pinecone/find-similar-songs";
 import type { ResolvedTrack } from "~/hooks/useResolvedTracks";
+import type { PreviewState } from "~/hooks/useTrackPreview";
 import Image from "next/image";
 import ImagePlaceholder from "./image-placeholder";
 
@@ -22,6 +23,10 @@ type RecommendedTrackCardProps = {
   onAddAction?: (song: SimilarSong, trackUri: string) => void;
   /** isOwned + add mode — fires when user clicks undo on an added card */
   onUndoAction?: (song: SimilarSong, trackUri: string) => void;
+  /** Current global preview state — used to reflect playing/paused on this card */
+  previewState?: PreviewState;
+  /** Called when user clicks the preview button on this card */
+  onPreviewAction?: (song: SimilarSong) => void;
 };
 
 export default function RecommendedTrackCard({
@@ -35,6 +40,8 @@ export default function RecommendedTrackCard({
   addStatus = "idle",
   onAddAction,
   onUndoAction,
+  previewState,
+  onPreviewAction,
 }: RecommendedTrackCardProps) {
   // Three states: loading -> dead (no data back) -> live (has trackUri)
   const isDead = !trackLoading && (!resolvedTrack || !resolvedTrack.trackUri);
@@ -58,6 +65,17 @@ export default function RecommendedTrackCard({
   const selectableNotOwned = !isOwned && isLive;
 
   const isClickable = selectableNew || selectableAdd || selectableNotOwned;
+
+  // Preview state for this card
+  const isThisCardPreviewing =
+    previewState?.status !== "idle" &&
+    previewState?.song.songKey === song.songKey;
+  const isThisPreviewFetching =
+    isThisCardPreviewing && previewState?.status === "fetching";
+  const isThisPreviewPlaying =
+    isThisCardPreviewing && previewState?.status === "playing";
+  const isThisPreviewNoMatch =
+    isThisCardPreviewing && previewState?.status === "no_preview";
 
   // Visual "selected / added" background inversion
   const showInverted = isSelected || (ownedMode === "add" && isAdded);
@@ -83,6 +101,12 @@ export default function RecommendedTrackCard({
     onUndoAction?.(song, resolvedTrack.trackUri);
   };
 
+  const handlePreviewClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isDead || trackLoading) return;
+    onPreviewAction?.(song);
+  };
+
   // ── Action strip ─────────────────────────────────────────────────────────
   const showActionStrip = !isOwned || (isOwned && ownedMode === "add");
 
@@ -96,12 +120,12 @@ export default function RecommendedTrackCard({
       const label = isRemoving ? "■ undoing" : "■ ...";
       return (
         <div
-          className={`${base} flex items-center justify-center gap-[3px] border-black/20 py-2 text-black/40 dark:border-white/10 dark:text-white/50`}
+          className={`${base} flex items-center justify-center gap-0.75 border-black/20 py-2 text-black/40 dark:border-white/10 dark:text-white/50`}
         >
           {[0, 1, 2, 3].map((i) => (
             <span
               key={i}
-              className="inline-block w-[3px] origin-bottom animate-[stretch_1s_ease-in-out_infinite] bg-current"
+              className="inline-block w-0.75 origin-bottom animate-[stretch_1s_ease-in-out_infinite] bg-current"
               style={{ height: "10px", animationDelay: `${i * 0.15}s` }}
             />
           ))}
@@ -196,11 +220,11 @@ export default function RecommendedTrackCard({
               <ImagePlaceholder />
             </div>
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-              <div className="flex gap-[3px]">
+              <div className="flex gap-0.75">
                 {[0, 1, 2, 3].map((i) => (
                   <span
                     key={i}
-                    className="inline-block h-4 w-[3px] origin-bottom animate-[stretch_1s_ease-in-out_infinite] bg-black dark:bg-white"
+                    className="inline-block h-4 w-0.75 origin-bottom animate-[stretch_1s_ease-in-out_infinite] bg-black dark:bg-white"
                     style={{ animationDelay: `${i * 0.15}s` }}
                   />
                 ))}
@@ -216,11 +240,11 @@ export default function RecommendedTrackCard({
               <ImagePlaceholder />
             </div>
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-              <div className="flex gap-[3px]">
+              <div className="flex gap-0.75">
                 {[0.25, 1, 0.5, 0.75].map((scale, i) => (
                   <span
                     key={i}
-                    className="inline-block w-[3px] origin-bottom bg-black/30 dark:bg-white/30"
+                    className="inline-block w-0.75 origin-bottom bg-black/30 dark:bg-white/30"
                     style={{ height: `${scale * 16}px` }}
                   />
                 ))}
@@ -242,11 +266,11 @@ export default function RecommendedTrackCard({
               />
             )}
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-              <div className="flex gap-[3px]">
+              <div className="flex gap-0.75">
                 {[0, 1, 2, 3].map((i) => (
                   <span
                     key={i}
-                    className="inline-block h-4 w-[3px] origin-bottom animate-[stretch_1s_ease-in-out_infinite] bg-black dark:bg-white"
+                    className="inline-block h-4 w-0.75 origin-bottom animate-[stretch_1s_ease-in-out_infinite] bg-black dark:bg-white"
                     style={{ animationDelay: `${i * 0.15}s` }}
                   />
                 ))}
@@ -316,6 +340,49 @@ export default function RecommendedTrackCard({
           >
             {song.album}
           </p>
+        )}
+
+        {/* Preview button */}
+        {onPreviewAction && (
+          <button
+            onClick={handlePreviewClick}
+            disabled={isDead || trackLoading}
+            className={`mt-2 w-full border text-[9px] font-bold tracking-[0.2em] uppercase transition-colors disabled:cursor-not-allowed ${
+              isDead || trackLoading
+                ? "border-black/10 text-black/20 dark:border-white/8 dark:text-white/20"
+                : isThisPreviewNoMatch
+                  ? "border-black/20 text-black/30 dark:border-white/10 dark:text-white/30"
+                  : isThisPreviewFetching
+                    ? "border-black/30 py-1 text-black/50 dark:border-white/20 dark:text-white/50"
+                    : isThisPreviewPlaying
+                      ? "border-black bg-black py-1 text-white dark:border-white/40 dark:bg-white/10 dark:text-white"
+                      : isThisCardPreviewing
+                        ? "border-black py-1 text-black dark:border-white/40 dark:text-white"
+                        : "border-black/20 py-1 text-black/40 hover:border-black hover:text-black dark:border-white/15 dark:text-white/40 dark:hover:border-white/50 dark:hover:text-white/80"
+            }`}
+          >
+            {isThisPreviewFetching ? (
+              <span className="flex items-center justify-center gap-0.75 py-0.5">
+                {[0, 1, 2].map((i) => (
+                  <span
+                    key={i}
+                    className="inline-block w-0.5 origin-bottom animate-[stretch_0.9s_ease-in-out_infinite] bg-current"
+                    style={{ height: "7px", animationDelay: `${i * 0.15}s` }}
+                  />
+                ))}
+              </span>
+            ) : isThisPreviewNoMatch ? (
+              "■ no preview"
+            ) : isThisPreviewPlaying ? (
+              "■ playing"
+            ) : isThisCardPreviewing ? (
+              "▶ resume"
+            ) : isDead ? (
+              "■ no preview"
+            ) : (
+              "▶ preview"
+            )}
+          </button>
         )}
       </div>
 

@@ -10,6 +10,8 @@ const deezerClient = axios.create({
   baseURL: "https://api.deezer.com",
 });
 
+const UNKNOWN = "Unknown" as const;
+
 async function deezeFetch<T>(
   endpoint: TDeezerApiEndpoints,
   queryParams?: Record<string, string>,
@@ -59,6 +61,9 @@ async function deezeFetch<T>(
 export const deezerApi = {
   getTrackSearch: ({ artistName, trackName, albumName }: RawTrack) =>
     deezeFetch<DeezerSearchResponse>("search", {
-      q: `artist:"${artistName}" album:"${albumName}" track:"${trackName}"`,
+      q:
+        albumName === UNKNOWN
+          ? `artist:"${artistName}" track:"${trackName}"`
+          : `artist:"${artistName}" album:"${albumName}" track:"${trackName}"`,
     }),
 };

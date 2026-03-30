@@ -15,6 +15,8 @@ import RecommendedTrackCard, {
   type AddStatus,
 } from "~/components/recommended-track-card";
 import CreateNewPlaylistCard from "~/components/create-new-playlist-card";
+import TrackPreviewWidget from "~/components/track-preview-widget";
+import { useTrackPreview } from "~/hooks/useTrackPreview";
 
 type TrackAddState = {
   status: AddStatus;
@@ -91,6 +93,10 @@ export default function PlaylistContent() {
 
   // Resolve Spotify data (trackUri + albumImage) for all visible recs in the parent
   const { resolvedMap, loadingMap } = useResolvedTracks(visibleRecs);
+
+  // Track preview (Deezer 30s clips)
+  const { previewState, progress, requestPreview, togglePlayPause, dismiss } =
+    useTrackPreview();
 
   // ── "New playlist" mode handlers ─────────────────────────────────────────
   const handleCardSelect = (_song: SimilarSong, trackUri: string) => {
@@ -247,7 +253,7 @@ export default function PlaylistContent() {
       </div>
 
       {/* Track grid */}
-      <div className="min-h-0 flex-1 overflow-y-auto p-6">
+      <div className="min-h-0 flex-1 overflow-y-auto p-6 pb-20">
         {playlistName && (
           <h1 className="text-foreground mb-6 text-center text-3xl font-bold tracking-tight uppercase">
             {playlistName}
@@ -275,6 +281,8 @@ export default function PlaylistContent() {
                 }
                 onAddAction={handleCardAdd}
                 onUndoAction={handleCardUndo}
+                previewState={previewState}
+                onPreviewAction={requestPreview}
               />
             );
           })}
@@ -325,6 +333,14 @@ export default function PlaylistContent() {
           />
         </div>
       )}
+
+      {/* Audio preview widget — fixed to bottom, slides in when active */}
+      <TrackPreviewWidget
+        previewState={previewState}
+        progress={progress}
+        togglePlayPause={togglePlayPause}
+        dismiss={dismiss}
+      />
     </div>
   );
 }
