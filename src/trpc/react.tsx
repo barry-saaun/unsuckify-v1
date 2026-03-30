@@ -66,6 +66,13 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
                     err instanceof TRPCClientError &&
                     err.data?.code === "UNAUTHORIZED"
                   ) {
+                    // isUserAllowed is an access check, not a session check —
+                    // let it propagate so the dashboard can show the correct dialog
+                    if (op.path === "auth.isUserAllowed") {
+                      observer.error(err);
+                      return;
+                    }
+
                     const manualLogout = localStorage.getItem("manualLogout");
 
                     if (manualLogout || isHandlingSessionExpiryRef.current) {
