@@ -4,12 +4,39 @@ import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogContent,
-  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
 } from "~/components/ui/alert-dialog";
 import { useAuth } from "~/hooks/useAuth";
+
+const ACCESS_DENIED_MESSAGE = {
+  title: "/ Access Denied",
+  description:
+    "Thanks for visiting! We're currently limited by Spotify's API policies, which require 250k users for full access. Head over to the README to see a demo instead.",
+  docsUrl:
+    "https://developer.spotify.com/documentation/web-api/concepts/quota-modes",
+  docsLabel: "Read more",
+  action: "Return to Homepage →",
+};
+
+function AccessDeniedDescription() {
+  return (
+    <p className="px-6 py-5 text-sm text-black/60 dark:text-white/60">
+      {ACCESS_DENIED_MESSAGE.description}
+      <br />
+      <a
+        href={ACCESS_DENIED_MESSAGE.docsUrl}
+        className="font-bold italic underline underline-offset-1"
+        target="_blank"
+      >
+        {ACCESS_DENIED_MESSAGE.docsLabel}
+      </a>
+      <br />
+      <br />
+    </p>
+  );
+}
 
 export default function UserNotAllowedAlertDialog() {
   const { logout } = useAuth();
@@ -22,18 +49,12 @@ export default function UserNotAllowedAlertDialog() {
     <AlertDialog open>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>/ Access Denied</AlertDialogTitle>
+          <AlertDialogTitle>{ACCESS_DENIED_MESSAGE.title}</AlertDialogTitle>
         </AlertDialogHeader>
-        <AlertDialogDescription className="px-6 py-5 text-sm text-black/60 dark:text-white/60">
-          This app is currently awaiting Spotify production approval. Access is
-          limited to approved accounts during review.
-          <br />
-          <br />
-          Check the project README for demo.
-        </AlertDialogDescription>
+        <AccessDeniedDescription />
         <AlertDialogFooter>
           <AlertDialogAction onClick={handleDialogAction}>
-            Return to Homepage →
+            {ACCESS_DENIED_MESSAGE.action}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
