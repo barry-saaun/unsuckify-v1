@@ -45,6 +45,7 @@
     "cookies-next": "^6.1.1",
     "drizzle-orm": "^0.45.1",
     "eslint-config-next": "^16.1.1",
+    "fuse.js": "^7.3.0",
     "inngest": "^3.52.3",
     "lodash.debounce": "^4.0.8",
     "lucide-react": "^0.562.0",

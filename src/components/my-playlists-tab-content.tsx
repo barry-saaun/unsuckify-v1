@@ -6,6 +6,7 @@ import ImagePlaceholder from "./image-placeholder";
 import useIsAuthenticated from "~/hooks/useIsAuthenticated";
 import ErrorScreen from "./error-screen";
 import { useAppToast } from "~/hooks/useAppToast";
+import Fuse from "fuse.js";
 import { useMemo, useState } from "react";
 
 const numberOfSkeleton = 10;
@@ -30,18 +31,25 @@ export default function MyPlaylistsTabContent() {
     });
   }
 
+  const fuse = useMemo(
+    () =>
+      new Fuse(fresh ?? [], {
+        keys: ["name", "owner"],
+        threshold: 0.4,
+        includeScore: true,
+        shouldSort: true,
+      }),
+    [fresh],
+  );
+
   const filtered = useMemo(() => {
     if (!fresh) return [];
-    const q = search.trim().toLowerCase();
+    const q = search.trim();
 
     if (!q) return fresh;
 
-    return fresh.filter(
-      (item) =>
-        item.name.toLowerCase().includes(q) ||
-        item.owner.toLowerCase().includes(q),
-    );
-  }, [fresh, search]);
+    return fuse.search(q).map((result) => result.item);
+  }, [fresh, fuse, search]);
 
   if (!isAuthenticated) return null;
 
