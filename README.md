@@ -90,7 +90,7 @@ DATABASE_URL=
 # Spotify API
 SPOTIFY_CLIENT_ID=
 SPOTIFY_CLIENT_SECRET=
-SPOTIFY_REDIRECT_URI=
+PORT=3001
 
 # AI & Vectors
 OPENAI_API_KEY=
@@ -101,6 +101,8 @@ PINECONE_INDEX=
 INNGEST_EVENT_KEY=
 INNGEST_SIGNING_KEY=
 ```
+
+> **Note:** `SPOTIFY_REDIRECT_URI` is automatically derived as `http://127.0.0.1:{PORT}/api/callback` and does not need to be set manually.
 
 ### 3. Installation
 
