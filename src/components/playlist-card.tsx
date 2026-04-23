@@ -1,6 +1,25 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
+const SPOTIFY_HOSTS = [
+  "i.scdn.co",
+  "mosaic.scdn.co",
+  "image-cdn-fa.spotifycdn.com",
+  "image-cdn-ak.spotifycdn.com",
+];
+
+function toProxiedUrl(src: string): string {
+  try {
+    const { hostname } = new URL(src);
+    if (SPOTIFY_HOSTS.includes(hostname)) {
+      return `/api/image-proxy?url=${encodeURIComponent(src)}`;
+    }
+  } catch {
+    // not a valid URL, return as-is
+  }
+  return src;
+}
+
 interface PlaylistCardProps {
   playlistImg: string | React.ReactNode;
   playlistName: string;
@@ -36,10 +55,11 @@ const PlaylistCard = ({
         {typeof playlistImg === "string" ? (
           <Image
             fill
-            src={playlistImg}
+            src={toProxiedUrl(playlistImg)}
             alt={playlistName}
             className="object-cover transition-opacity duration-200 group-hover:opacity-80"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            unoptimized
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center">

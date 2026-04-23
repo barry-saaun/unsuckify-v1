@@ -36,7 +36,7 @@ export const userRouter = createTRPCRouter({
         (item) => ({
           id: item.id,
           description: item.description ?? "",
-          url: item.images?.[0]?.url ?? "",
+          url: item.images?.slice().sort((a, b) => (b.width ?? 0) - (a.width ?? 0))[0]?.url ?? "",
           name: item.name,
           owner: item.owner.display_name ?? "",
           ownerId: item.owner.id ?? "",
