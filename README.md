@@ -1,6 +1,6 @@
-# Unsuckify
+# Resonant
 
-Unsuckify recommends music by meaning instead of popularity. It reads the tags, related artists, and sonic descriptors behind every track in your Spotify playlist, turns that into a vector, and finds songs that sit close to it in embedding space. No "because it's trending." No genre-tag matching that calls everything "pop."
+Resonant recommends music by meaning instead of popularity. It reads the tags, related artists, and sonic descriptors behind every track in your Spotify playlist, turns that into a vector, and finds songs that sit close to it in embedding space. No "because it's trending." No genre-tag matching that calls everything "pop."
 
 Two things carry this app: a retrieval pipeline that decides what to recommend, and a typed full-stack that gets your playlists in and results onto the screen. This README walks through both.
 

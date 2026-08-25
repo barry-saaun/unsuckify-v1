@@ -14,7 +14,7 @@ const NavBar: React.FC = () => {
           href="/"
           className="text-sm font-bold tracking-widest text-black uppercase transition-opacity hover:opacity-60 dark:text-white"
         >
-          🥟 UNSUCKify
+          🥟 Resonant
         </Link>
         <div className="flex items-center divide-x divide-black dark:divide-white">
           <StarUs />

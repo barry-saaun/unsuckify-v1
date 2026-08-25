@@ -35,7 +35,7 @@ const LoginPage = () => {
           {/* Title block */}
           <div className="mb-0 border border-black p-8 dark:border-white">
             <p className="mb-4 text-xs tracking-widest text-black/40 uppercase dark:text-white/40">
-              / UNSUCKify
+              / Resonant
             </p>
             <h1 className="mb-4 text-4xl leading-none font-bold tracking-tight text-black dark:text-white">
               FIX YOUR
