@@ -18,6 +18,8 @@ export const env = createEnv({
     PORT: z.string(),
     PINECONE: z.string(),
     LAST_FM: z.string(),
+    INNGEST_SIGNING_KEY: z.string(),
+    INNGEST_EVENT_KEY: z.string(),
   },
 
   /**
@@ -46,6 +48,8 @@ export const env = createEnv({
     OPENROUTER: process.env.OPENROUTER,
     PINECONE: process.env.PINECONE,
     LAST_FM: process.env.LAST_FM,
+    INNGEST_SIGNING_KEY: process.env.INNGEST_SIGNING_KEY,
+    INNGEST_EVENT_KEY: process.env.INNGEST_EVENT_KEY,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially
