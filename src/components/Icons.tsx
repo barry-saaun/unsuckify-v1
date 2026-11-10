@@ -1,4 +1,16 @@
 export const Icons = {
+  // Brand mark: equaliser bars resolving into an "R". Source of truth for public/icon.svg.
+  resonant: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg
+      viewBox="2 8 60 48"
+      fill="currentColor"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+      {...props}
+    >
+      <path d="M2 34h6v22H2zM11 24h6v32h-6zM20 8h6v48h-6zM29 8h17a14 14 0 0 1 0 28h-8V26h-9zM29 29h6v27h-6zM38 39h6v17h-6zM47 39h4l11 17H47z" />
+    </svg>
+  ),
   spotify: (props: React.SVGProps<SVGSVGElement>) => (
     <svg
       role="img"

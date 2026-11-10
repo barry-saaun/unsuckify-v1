@@ -5,6 +5,7 @@ import React from "react";
 import ThemeToggle from "./theme-toggler";
 import AuthButton from "./auth-button";
 import StarUs from "./star-us";
+import { Icons } from "./Icons";
 
 const NavBar: React.FC = () => {
   return (
@@ -12,9 +13,10 @@ const NavBar: React.FC = () => {
       <div className="flex h-12 items-center justify-between px-6">
         <Link
           href="/"
-          className="text-sm font-bold tracking-widest text-black uppercase transition-opacity hover:opacity-60 dark:text-white"
+          className="flex items-center gap-2.5 text-sm font-bold tracking-widest text-black uppercase transition-opacity hover:opacity-60 dark:text-white"
         >
-          🥟 Resonant
+          <Icons.resonant className="h-5 w-auto" />
+          Resonant
         </Link>
         <div className="flex items-center divide-x divide-black dark:divide-white">
           <StarUs />
