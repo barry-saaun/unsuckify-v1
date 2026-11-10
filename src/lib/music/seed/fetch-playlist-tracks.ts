@@ -4,7 +4,7 @@ const LIMIT = 50;
 
 export async function fetchPlaylistTracksAll(
   playlistId: string,
-): Promise<Array<{ artist: string; track: string; album: string }>> {
+): Promise<Array<{ artist: string; track: string; album: string; url: string }>> {
   let offset = 0;
   const limit = LIMIT;
   const allTracks = [];
@@ -22,6 +22,7 @@ export async function fetchPlaylistTracksAll(
         track: item.track.name,
         album: item.track.album.name,
         artist: item.track.artists.map((a: any) => a.name).join(" & "),
+        url: item.track.external_urls.spotify,
       }));
 
     allTracks.push(...tracks);

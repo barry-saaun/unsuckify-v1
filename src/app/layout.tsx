@@ -14,7 +14,13 @@ import { UserProvider } from "~/components/user-context-provider";
 export const metadata: Metadata = {
   title: "Resonant",
   description: "Make your favourite playlist less sucks.",
-  icons: [{ rel: "icon", url: "/favicon.ico" }],
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 const geist = Geist({
