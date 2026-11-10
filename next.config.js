@@ -7,6 +7,9 @@ import "./src/env.js";
 /** @type {import("next").NextConfig} */
 const config = {
   reactMaxHeadersLength: 100000,
+  outputFileTracingIncludes: {
+    "/api/playlist": ["./node_modules/youtube-dl-exec/bin/yt-dlp"],
+  },
   // allowedDevOrigins: ['local-origin.dev', '*.local-origin.dev'],
   images: {
     remotePatterns: [
